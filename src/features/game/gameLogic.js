@@ -10,6 +10,15 @@ import { isPawnMove } from './rules/pawnRules.js'
 export const RED = 'red'
 export const BLACK = 'black'
 
+// All the values `status` (from useGame) can take. Kept as one object so
+// callers compare against a name instead of a raw string literal.
+export const GAME_STATUS = {
+  PLAYING: 'playing',
+  CHECKMATE: 'checkmate',
+  TIMEOUT_MOVE: 'timeout-move',
+  TIMEOUT_GAME: 'timeout-game',
+}
+
 export { findPieceAt }
 
 const MOVE_RULES_BY_TYPE = {

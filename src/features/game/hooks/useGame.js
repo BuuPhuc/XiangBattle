@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { findPieceAt, isOwnPiece, movePiece, otherTurn } from '../gameLogic.js'
+import { findPieceAt, isOwnPiece, movePiece, otherTurn, GAME_STATUS } from '../gameLogic.js'
 import { isInCheck } from '../utils/checkUtils.js'
 import { isFullyLegalMove } from '../utils/moveUtils.js'
 import { isCheckmate } from '../utils/checkmateUtils.js'
@@ -12,6 +12,11 @@ export function useGame() {
   // moveHistory: the board as it stood right after that move.
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1)
   const [selectedId, setSelectedId] = useState(null)
+  // A clock running out ends the game from outside the board state, so unlike
+  // checkmate it must NOT be derived from (moveHistory, currentMoveIndex) —
+  // otherwise browsing history with undo/redo after a timeout would "undo"
+  // the loss. { side, reason: GAME_STATUS.TIMEOUT_MOVE | TIMEOUT_GAME } | null
+  const [timeoutResult, setTimeoutResult] = useState(null)
 
   // The board is always DERIVED from (moveHistory, currentMoveIndex) rather
   // than tracked as its own state — that's what lets "browse an old move"
@@ -24,9 +29,18 @@ export function useGame() {
   const inCheck = isInCheck(pieces, turn)
   // Checkmate is evaluated against whatever position is currently displayed,
   // not "the game" in the abstract — so browsing back to a position before
-  // the mate happened correctly reads as playable again.
-  const isGameOver = isCheckmate(pieces, turn)
-  const winner = isGameOver ? otherTurn(turn) : null
+  // the mate happened correctly reads as playable again. A timeout loss has
+  // no such position to browse back to, so it stays true regardless of
+  // currentMoveIndex until the next resetGame().
+  const isCheckmateNow = isCheckmate(pieces, turn)
+  const isGameOver = isCheckmateNow || timeoutResult !== null
+
+  const status = timeoutResult
+    ? timeoutResult.reason
+    : isCheckmateNow
+      ? GAME_STATUS.CHECKMATE
+      : GAME_STATUS.PLAYING
+  const winner = timeoutResult ? otherTurn(timeoutResult.side) : isCheckmateNow ? otherTurn(turn) : null
 
   const selectSquare = useCallback(
     (col, row) => {
@@ -97,10 +111,31 @@ export function useGame() {
     [moveHistory.length]
   )
 
+  // Undo/redo are just navigation one step back/forward through moveHistory —
+  // they never mutate it, so redo always restores exactly what undo hid,
+  // as long as no new (branching) move was made in between.
+  const canUndo = currentMoveIndex > -1
+  const canRedo = currentMoveIndex < moveHistory.length - 1
+  const undo = useCallback(() => goToMove(currentMoveIndex - 1), [goToMove, currentMoveIndex])
+  const redo = useCallback(() => goToMove(currentMoveIndex + 1), [goToMove, currentMoveIndex])
+
+  // Called by the timer when a clock reaches zero. First timeout to arrive
+  // wins the race (e.g. against a checkmate landing the same instant) —
+  // once set it can only be cleared by starting a new game.
+  const endGameByTimeout = useCallback((side, reason) => {
+    setTimeoutResult((current) => current ?? { side, reason })
+  }, [])
+
+  // Starts a brand new match from scratch, fully independent of the old one:
+  // clearing moveHistory and resetting currentMoveIndex to -1 is enough,
+  // because pieces/turn/inCheck/status/winner are all derived from those two
+  // — nothing else needs to be reset by hand, aside from the timeout result
+  // (the one piece of state that isn't derived from move history).
   const resetGame = useCallback(() => {
     setMoveHistory([])
     setCurrentMoveIndex(-1)
     setSelectedId(null)
+    setTimeoutResult(null)
   }, [])
 
   return {
@@ -109,13 +144,19 @@ export function useGame() {
     selectedPiece,
     turn,
     inCheck,
-    status: isGameOver ? 'checkmate' : 'playing',
+    status,
     winner,
+    isGameOver,
     moveHistory,
     currentMoveIndex,
     isViewingHistory,
     selectSquare,
     goToMove,
+    canUndo,
+    canRedo,
+    undo,
+    redo,
+    endGameByTimeout,
     resetGame,
   }
 }

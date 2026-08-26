@@ -1,7 +1,7 @@
 import Icon from '../../../components/ui/Icon'
 import { cn } from '../../../components/utils/cn'
 
-export function PlayerCard({ name, elo, side, clock, clockActive, online, accentClassName = '' }) {
+export function PlayerCard({ name, elo, side, moveTime, gameTime, clockActive, online, accentClassName = '' }) {
   const isRed = side === 'red'
 
   return (
@@ -27,7 +27,20 @@ export function PlayerCard({ name, elo, side, clock, clockActive, online, accent
         </div>
       </div>
       <div className="w-full text-center xl:text-left">
-        <div className={cn('player-clock', clockActive && 'active')}>{clock}</div>
+        <div className="flex items-baseline justify-center xl:justify-start gap-2 mb-1">
+          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+            Giờ/nước
+          </span>
+          <span
+            className={cn(
+              'font-label-md text-label-md tabular-nums',
+              clockActive ? 'text-primary font-bold' : 'text-on-surface-variant'
+            )}
+          >
+            {moveTime}
+          </span>
+        </div>
+        <div className={cn('player-clock', clockActive && 'active')}>{gameTime}</div>
       </div>
     </div>
   )
