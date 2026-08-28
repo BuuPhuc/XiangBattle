@@ -14,7 +14,13 @@ import { DEFAULT_TIME_CONTROL } from '../utils/timeUtils.js'
 // same fixed boundary. `committedRef` itself is only ever written at a
 // boundary, never per tick, so nothing compounds. All of that math happens
 // inside effects/callbacks, never during render — render only reads `times`.
-export function useTimer({ turn, isGameOver, onTimeUp, timeControl = DEFAULT_TIME_CONTROL }) {
+// `initialTimes` (shape: { red: {moveTime, gameTime}, black: {...} }) seeds
+// the clocks from a server-restored snapshot (reconnect) instead of the
+// full time control — e.g. resuming a match already in progress. Only read
+// once, at mount; a caller that needs to re-seed an already-mounted
+// instance should force a remount (matching useGame's same convention).
+// Omitting it (fresh/local play) behaves exactly as before.
+export function useTimer({ turn, isGameOver, onTimeUp, timeControl = DEFAULT_TIME_CONTROL, initialTimes }) {
   const { moveTimeMs, gameTimeMs } = timeControl
 
   const makeFreshTimes = useCallback(
@@ -25,9 +31,9 @@ export function useTimer({ turn, isGameOver, onTimeUp, timeControl = DEFAULT_TIM
     [moveTimeMs, gameTimeMs]
   )
 
-  const [times, setTimes] = useState(makeFreshTimes)
+  const [times, setTimes] = useState(() => initialTimes ?? makeFreshTimes())
 
-  const committedRef = useRef(makeFreshTimes()) // remaining time as of the last boundary
+  const committedRef = useRef(initialTimes ?? makeFreshTimes()) // remaining time as of the last boundary
   const anchorRef = useRef(null) // wall-clock ms of that boundary; set on mount below
   const activeTurnRef = useRef(null) // whose clocks are currently anchored/running
   const expiredRef = useRef(false) // guards onTimeUp from firing more than once per game

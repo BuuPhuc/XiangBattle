@@ -6,17 +6,32 @@ import { isCheckmate } from '../utils/checkmateUtils.js'
 import { formatMoveNotation } from '../utils/notationUtils.js'
 import { getPiecesAtIndex, getTurnAtIndex } from '../utils/historyUtils.js'
 
-export function useGame() {
-  const [moveHistory, setMoveHistory] = useState([])
+// `initialMoveHistory`/`initialMatchResult` let a caller seed the hook from
+// a server-restored snapshot (reconnect) instead of always starting a
+// brand new game — they're only ever read once, as lazy useState
+// initializers, so the caller is expected to force a remount (e.g. a
+// React `key` change) if it needs to re-seed an already-mounted instance.
+// Omitting them (the offline/local-play default) behaves exactly as before.
+export function useGame({ initialMoveHistory, initialMatchResult } = {}) {
+  const [moveHistory, setMoveHistory] = useState(() => initialMoveHistory ?? [])
   // -1 = initial position (before any move). Otherwise an index into
   // moveHistory: the board as it stood right after that move.
-  const [currentMoveIndex, setCurrentMoveIndex] = useState(-1)
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(() =>
+    initialMoveHistory && initialMoveHistory.length > 0 ? initialMoveHistory.length - 1 : -1
+  )
   const [selectedId, setSelectedId] = useState(null)
   // A clock running out ends the game from outside the board state, so unlike
   // checkmate it must NOT be derived from (moveHistory, currentMoveIndex) —
   // otherwise browsing history with undo/redo after a timeout would "undo"
   // the loss. { side, reason: GAME_STATUS.TIMEOUT_MOVE | TIMEOUT_GAME } | null
-  const [timeoutResult, setTimeoutResult] = useState(null)
+  const [timeoutResult, setTimeoutResult] = useState(() =>
+    initialMatchResult ? { side: initialMatchResult.loser, reason: initialMatchResult.status } : null
+  )
+  // The most recently committed move that originated from *this* client's
+  // own selectSquare (never set by applyRemoteMove) — a side-channel an
+  // online-play layer can watch to know when to relay a move to the
+  // server, without this hook needing to know Socket.IO exists at all.
+  const [lastLocalMove, setLastLocalMove] = useState(null)
 
   // The board is always DERIVED from (moveHistory, currentMoveIndex) rather
   // than tracked as its own state — that's what lets "browse an old move"
@@ -97,8 +112,25 @@ export function useGame() {
       setMoveHistory((current) => [...current.slice(0, currentMoveIndex + 1), move])
       setCurrentMoveIndex((current) => current + 1)
       setSelectedId(null)
+      setLastLocalMove(move)
     },
     [pieces, turn, selectedPiece, currentMoveIndex, isGameOver]
+  )
+
+  // Applies a move that came from the opponent via the server, rather than
+  // from this client's own selectSquare — same move-entry shape, but always
+  // appended at the true end of history regardless of where this client's
+  // view currently is (e.g. mid-undo/browsing an older position), since an
+  // incoming move is authoritative and must snap the view back to live.
+  // Never touches lastLocalMove, so it can't be echoed back to the server.
+  const applyRemoteMove = useCallback(
+    (move) => {
+      const nextHistory = [...moveHistory, move]
+      setMoveHistory(nextHistory)
+      setCurrentMoveIndex(nextHistory.length - 1)
+      setSelectedId(null)
+    },
+    [moveHistory]
   )
 
   // Jump to viewing the board right after moveHistory[index] (or -1 for the
@@ -136,6 +168,7 @@ export function useGame() {
     setCurrentMoveIndex(-1)
     setSelectedId(null)
     setTimeoutResult(null)
+    setLastLocalMove(null)
   }, [])
 
   return {
@@ -158,6 +191,8 @@ export function useGame() {
     redo,
     endGameByTimeout,
     resetGame,
+    lastLocalMove,
+    applyRemoteMove,
   }
 }
 

@@ -3,7 +3,7 @@ import Icon from '../ui/Icon'
 
 const NAV_ITEMS = [
   { icon: 'home', label: 'Trang chủ', to: '/play' },
-  { icon: 'sports_esports', label: 'Chơi cờ', to: '/game' },
+  { icon: 'sports_esports', label: 'Chơi cờ', to: '/play' },
   { icon: 'memory', label: 'Đối đầu AI' },
   { icon: 'extension', label: 'Cờ thế' },
   { icon: 'school', label: 'Học viện' },

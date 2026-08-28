@@ -17,6 +17,10 @@ export const GAME_STATUS = {
   CHECKMATE: 'checkmate',
   TIMEOUT_MOVE: 'timeout-move',
   TIMEOUT_GAME: 'timeout-game',
+  // Reported by the server, not derived locally: the opponent didn't
+  // reconnect within the grace period after disconnecting mid-match. Value
+  // must match server/rooms/room.js's GAME_STATUS.OPPONENT_LEFT exactly.
+  OPPONENT_LEFT: 'opponent-left',
 }
 
 export { findPieceAt }

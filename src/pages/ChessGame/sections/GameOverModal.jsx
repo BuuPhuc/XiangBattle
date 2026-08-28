@@ -5,6 +5,7 @@ const REASON_HEADING = {
   [GAME_STATUS.CHECKMATE]: 'Chiếu bí!',
   [GAME_STATUS.TIMEOUT_MOVE]: 'Hết giờ đi quân!',
   [GAME_STATUS.TIMEOUT_GAME]: 'Hết giờ ván đấu!',
+  [GAME_STATUS.OPPONENT_LEFT]: 'Đối thủ đã rời trận!',
 }
 
 export function GameOverModal({ winner, status, redName, blackName, onClose, onPlayAgain }) {
