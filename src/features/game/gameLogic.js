@@ -21,6 +21,13 @@ export const GAME_STATUS = {
   // reconnect within the grace period after disconnecting mid-match. Value
   // must match server/rooms/room.js's GAME_STATUS.OPPONENT_LEFT exactly.
   OPPONENT_LEFT: 'opponent-left',
+  // Also server-reported: either side conceded via MatchActions' Đầu hàng
+  // button. Value must match server/rooms/room.js's GAME_STATUS.RESIGN.
+  RESIGN: 'resign',
+  // Also server-reported: one side offered a draw and the other accepted.
+  // The one status with no winning side — value must match
+  // server/rooms/room.js's GAME_STATUS.DRAW exactly.
+  DRAW: 'draw',
 }
 
 export { findPieceAt }

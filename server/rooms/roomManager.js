@@ -73,6 +73,17 @@ class RoomManager {
     if (!room) {
       throw roomError('ROOM_NOT_FOUND', 'Phòng không tồn tại.')
     }
+
+    // This exact player identity is already seated in this room — a
+    // reopened tab whose silent auto-rejoin lost its saved roomId (fresh
+    // localStorage tab, or the save simply raced a disconnect), so they
+    // fell back to retyping the room code and hit the plain join form
+    // instead of rejoin_room. Always resume them here rather than letting
+    // the ALREADY_IN_ROOM/ROOM_FULL checks below reject their own seat.
+    if (room.getPlayerByPlayerId(playerId)) {
+      return { room: this.reconnect(roomId, playerId, socketId), reconnected: true }
+    }
+
     if (this.isSocketInRoom(socketId) || this.isPlayerIdInRoom(playerId)) {
       throw roomError('ALREADY_IN_ROOM', 'Bạn đang ở trong một phòng khác.')
     }
@@ -93,7 +104,7 @@ class RoomManager {
       room.startGame()
     }
 
-    return { room, player }
+    return { room, player, reconnected: false }
   }
 
   // Reattaches a fresh socket (after a refresh, or Socket.IO's own

@@ -1,11 +1,15 @@
+const dotenv = require('dotenv')
+dotenv.config()
+
+// Loaded only after dotenv.config() — utils/token.js reads JWT_SECRET at
+// module-load time, so anything requiring it (directly or transitively)
+// must come after the env is populated.
 const express = require('express')
 const http = require('http')
 const cors = require('cors')
-const dotenv = require('dotenv')
 const { Server } = require('socket.io')
 const registerSocketHandlers = require('./sockets/socketHandler')
-
-dotenv.config()
+const authRoutes = require('./routes/authRoutes')
 
 const PORT = process.env.PORT || 3000
 
@@ -25,10 +29,13 @@ const corsOptions = {
 
 const app = express()
 app.use(cors(corsOptions))
+app.use(express.json())
 
 app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'XiangBattle backend is running' })
 })
+
+app.use('/api/auth', authRoutes)
 
 const httpServer = http.createServer(app)
 

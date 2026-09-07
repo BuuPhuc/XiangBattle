@@ -3,10 +3,15 @@ import { Provider } from 'react-redux'
 import store from './store'
 import AppRouter from './routes'
 import socket from './socket/socket'
+import useAuth from './components/hooks/useAuth'
 
-function App() {
-  // One connection for the app's whole lifetime: connect on mount, clean up
-  // listeners and disconnect on unmount.
+// Runs inside <Provider> so useAuth (Redux) is available: on mount, restore
+// a saved login session (if any) and arm the socket with its token *before*
+// connecting, so the very first connection already carries the right
+// identity instead of connecting as a guest and reconnecting a moment later.
+function AppContent() {
+  const { restoreSession } = useAuth()
+
   useEffect(() => {
     function handleConnect() {
       console.log('[socket] connected:', socket.id)
@@ -17,18 +22,26 @@ function App() {
 
     socket.on('connect', handleConnect)
     socket.on('disconnect', handleDisconnect)
-    socket.connect()
+
+    restoreSession().finally(() => {
+      socket.connect()
+    })
 
     return () => {
       socket.off('connect', handleConnect)
       socket.off('disconnect', handleDisconnect)
       socket.disconnect()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount only
   }, [])
 
+  return <AppRouter />
+}
+
+function App() {
   return (
     <Provider store={store}>
-      <AppRouter />
+      <AppContent />
     </Provider>
   )
 }

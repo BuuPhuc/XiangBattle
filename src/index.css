@@ -318,16 +318,33 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
+    /* Query container for .piece's font-size below — ties the glyph size to
+       this layer's own rendered width (which a piece is always exactly 10%
+       of) instead of the viewport. A vw-based font-size drifts out of sync
+       with the piece's actual box once the board's own width stops tracking
+       the viewport 1:1 (see ChessBoard.jsx's viewport-height-based sizing),
+       which is what let the character overflow the circle. */
+    container-type: inline-size;
   }
   .piece {
     position: absolute;
     width: 10%;
     aspect-ratio: 1 / 1;
+    /* Flex items default to min-width/min-height: auto, which lets the
+       character glyph's own line-height override the aspect-ratio-computed
+       height (a well-known flexbox trap) — without this the piece stretches
+       taller than it is wide instead of staying a perfect circle. */
+    min-width: 0;
+    min-height: 0;
     border-radius: 9999px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(1.2rem, 4.5vw, 2.2rem);
+    /* 5cqw = 50% of this piece's own width (each piece is 10% of the
+       container piece-layer sizes font-size is queried against) — a fixed
+       fraction of the circle's own size, so the glyph always fits with room
+       to spare no matter how big or small the board ends up. */
+    font-size: 5cqw;
     font-weight: bold;
     font-family: "Noto Serif SC", serif;
     cursor: pointer;
@@ -371,6 +388,65 @@
       0 0 15px 5px rgba(228, 208, 160, 0.8),
       0 8px 16px rgba(0, 0, 0, 0.5);
     z-index: 11;
+  }
+
+  /* Replaces the old "Lượt của Đỏ/Đen" text banner — the general belonging
+     to whichever side is on move gets this small ring instead (see
+     Piece.jsx/ChessBoard.jsx: turnActive is only ever true for that one
+     piece). A pseudo-element rather than the piece's own box/shadow, so it
+     can never affect the piece's own size or shape — just a ring hugging
+     it, with a slow, subtle opacity pulse (no scale/position change, so it
+     never reads as jittery). Inherits the piece's own transform (lift +
+     scale on hover/selected), so it stays correctly attached even then. */
+  .piece.turn-active::after {
+    content: "";
+    position: absolute;
+    inset: -8%;
+    border-radius: 9999px;
+    border: 2px solid var(--color-secondary);
+    box-shadow: 0 0 6px 1px rgba(27, 109, 36, 0.45);
+    pointer-events: none;
+    animation: turn-active-pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes turn-active-pulse {
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  /* Legal-move dots for the currently selected piece (see ChessBoard.jsx —
+     positions come straight from moveUtils.js's existing move validation,
+     this is rendering only). Sits between the grid/coords and the piece
+     layer in paint order, so a capture ring (sized a bit larger than a
+     piece) shows around the enemy piece sitting on top of it, while a plain
+     dot sits directly on the empty intersection it marks. */
+  .move-marker-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .move-marker {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    border-radius: 9999px;
+    pointer-events: none;
+  }
+  .move-marker-dot {
+    width: 3%;
+    aspect-ratio: 1 / 1;
+    background: rgba(84, 48, 19, 0.5);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  }
+  .move-marker-capture {
+    width: 11.5%;
+    aspect-ratio: 1 / 1;
+    box-sizing: border-box;
+    background: transparent;
+    border: 3px solid rgba(186, 26, 26, 0.6);
   }
 
   .player-clock {

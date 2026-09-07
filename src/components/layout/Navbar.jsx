@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Button from '../ui/Button'
+import useAuth from '../hooks/useAuth'
 
 const NAV_LINKS = [
   { label: 'Play', href: '#', active: true },
@@ -9,6 +10,14 @@ const NAV_LINKS = [
 ]
 
 export function Navbar() {
+  const { isAuthenticated, user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
+
   return (
     <nav className="w-full bg-surface/90 dark:bg-surface-dim/90 backdrop-blur-md border-b border-outline-variant/30 shadow-sm sticky top-0 z-50">
       <div className="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-20">
@@ -35,10 +44,21 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Button variant="outline-sm" size="sm" className="hidden md:inline-flex">
-            Sign In
-          </Button>
-          <Button variant="container" size="md">
+          {isAuthenticated ? (
+            <>
+              <span className="hidden md:inline font-label-md text-label-md text-on-surface-variant">
+                {user?.username}
+              </span>
+              <Button variant="outline-sm" size="sm" className="hidden md:inline-flex" onClick={handleLogout}>
+                Đăng xuất
+              </Button>
+            </>
+          ) : (
+            <Button as={Link} to="/login" variant="outline-sm" size="sm" className="hidden md:inline-flex">
+              Sign In
+            </Button>
+          )}
+          <Button as={Link} to="/play" variant="container" size="md">
             Start Match
           </Button>
         </div>

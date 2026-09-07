@@ -55,7 +55,16 @@ export function useGame({ initialMoveHistory, initialMatchResult } = {}) {
     : isCheckmateNow
       ? GAME_STATUS.CHECKMATE
       : GAME_STATUS.PLAYING
-  const winner = timeoutResult ? otherTurn(timeoutResult.side) : isCheckmateNow ? otherTurn(turn) : null
+  // A draw (timeoutResult.side === null, from a server-recorded
+  // GAME_STATUS.DRAW) has no losing side to invert — winner stays null,
+  // same as "game still in progress".
+  const winner = timeoutResult
+    ? timeoutResult.side
+      ? otherTurn(timeoutResult.side)
+      : null
+    : isCheckmateNow
+      ? otherTurn(turn)
+      : null
 
   const selectSquare = useCallback(
     (col, row) => {

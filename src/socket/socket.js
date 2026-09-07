@@ -7,6 +7,15 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000'
 
 export const socket = io(SOCKET_URL, {
   autoConnect: false,
+  auth: {},
 })
+
+// Updates the JWT the socket presents on its next (re)connect — the
+// server's io.use() middleware (see server/sockets/socketHandler.js) reads
+// this to attach socket.user, but never requires it: passing `null` just
+// makes the next connection a guest one, exactly like before auth existed.
+export function setSocketAuthToken(token) {
+  socket.auth = token ? { token } : {}
+}
 
 export default socket

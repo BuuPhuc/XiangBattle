@@ -1,5 +1,6 @@
 import Piece from './Piece'
 import Square from './Square'
+import MoveMarker from './MoveMarker'
 
 const CROSS_MARK_POINTS = [
   { left: 12.5, top: 22.22 },
@@ -13,9 +14,29 @@ const ALL_SQUARES = Array.from({ length: 10 }, (_, row) =>
   Array.from({ length: 9 }, (_, col) => ({ col, row }))
 ).flat()
 
-export function ChessBoard({ pieces, selectedId, onSquareClick }) {
+// `turn` and `legalMoves` are purely for UI feedback layered on top of the
+// existing engine/game-state — turn already comes from useGame's own turn
+// state (never a new state), and legalMoves is whatever the caller derived
+// from moveUtils.js's existing getLegalMovesForPiece for the selected piece
+// (never re-implemented here). legalMoves entries are `{ col, row, capture }`.
+export function ChessBoard({ pieces, selectedId, turn, legalMoves = [], onSquareClick }) {
   return (
-    <div className="xiangqi-board-container relative w-full max-w-[600px] mx-auto">
+    // Bounded by three things at once, whichever is smallest: the parent
+    // column's own width, an absolute cap, and — the important one — the
+    // viewport's actual height, so a shorter window shrinks the board
+    // instead of pushing content below the fold and forcing the page to
+    // scroll. The buffer constant is this page's measured non-board
+    // vertical chrome (just the "Đang xem lịch sử" pill when browsing
+    // history, gaps, the compact resign/draw row below the board — now that
+    // the old turn banner and the Room status bar are gone, this is a lot
+    // smaller than it used to be, which is what let the board grow) at a
+    // typical desktop size; `* 0.9` converts an available height budget into
+    // a matching width for this board's fixed 9:10 aspect ratio (height =
+    // width * 10/9).
+    <div
+      className="xiangqi-board-container relative mx-auto"
+      style={{ width: 'min(100%, 760px, calc((100vh - 155px) * 0.9))' }}
+    >
       <div className="board-coords coords-top">
         {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((label) => (
           <span key={`top-${label}`}>{label}</span>
@@ -67,6 +88,12 @@ export function ChessBoard({ pieces, selectedId, onSquareClick }) {
             ))}
           </div>
 
+          <div className="move-marker-layer">
+            {legalMoves.map((move) => (
+              <MoveMarker key={`${move.col}-${move.row}`} col={move.col} row={move.row} capture={move.capture} />
+            ))}
+          </div>
+
           <div className="piece-layer">
             {pieces.map((piece) => (
               <Piece
@@ -76,6 +103,7 @@ export function ChessBoard({ pieces, selectedId, onSquareClick }) {
                 col={piece.col}
                 row={piece.row}
                 selected={selectedId === piece.id}
+                turnActive={piece.type === 'general' && piece.side === turn}
                 onSelect={() => onSquareClick(piece.col, piece.row)}
               />
             ))}

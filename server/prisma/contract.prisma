@@ -1,0 +1,130 @@
+// use prisma-next
+
+model User {
+  id            Int       @id @default(autoincrement())
+  username      String    @unique
+  displayName   String?
+  email         String?   @unique
+  passwordHash  String?
+  avatarUrl     String?
+  emailVerified Boolean   @default(false)
+
+  rating       Int       @default(1200)
+  wins         Int       @default(0)
+  losses       Int       @default(0)
+  draws        Int       @default(0)
+
+  redGames     Game[]    @relation("RedPlayer")
+  blackGames   Game[]    @relation("BlackPlayer")
+  wonGames     Game[]    @relation("Winner")
+  moves        Move[]
+  chatMessages ChatMessage[]
+  verificationTokens EmailVerificationToken[]
+
+  createdAt    TimestamptzString @default(now())
+  updatedAt    temporal.updatedAtString()
+}
+
+model EmailVerificationToken {
+  id         Int       @id @default(autoincrement())
+
+  userId     Int
+  tokenHash  String    @unique
+
+  expiresAt  TimestamptzString
+  consumedAt TimestamptzString?
+  createdAt  TimestamptzString @default(now())
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Game {
+  id             Int       @id @default(autoincrement())
+
+  roomCode       String    @unique
+
+  redPlayerId    Int
+  blackPlayerId  Int
+  winnerPlayerId Int?
+
+  status         GameStatus @default(PLAYING)
+  result         GameResult?
+  endReason      EndReason?
+
+  initialTime    Int
+  increment      Int       @default(0)
+
+  startedAt      TimestamptzString?
+  endedAt        TimestamptzString?
+  createdAt      TimestamptzString @default(now())
+
+  redPlayer      User      @relation("RedPlayer", fields: [redPlayerId], references: [id])
+  blackPlayer    User      @relation("BlackPlayer", fields: [blackPlayerId], references: [id])
+  winner         User?     @relation("Winner", fields: [winnerPlayerId], references: [id])
+
+  moves          Move[]
+  chatMessages   ChatMessage[]
+}
+
+model Move {
+  id             Int       @id @default(autoincrement())
+
+  gameId         Int
+  playerId       Int
+
+  moveNumber     Int
+
+  fromPosition   String
+  toPosition     String
+
+  piece          String
+  capturedPiece  String?
+  notation       String?
+
+  createdAt      TimestamptzString @default(now())
+
+  game            Game      @relation(fields: [gameId], references: [id])
+  player          User      @relation(fields: [playerId], references: [id])
+
+  @@index([gameId, moveNumber])
+}
+
+model ChatMessage {
+  id          Int       @id @default(autoincrement())
+
+  gameId      Int
+  playerId    Int
+
+  message     String
+
+  createdAt   TimestamptzString @default(now())
+
+  game        Game      @relation(fields: [gameId], references: [id])
+  player      User      @relation(fields: [playerId], references: [id])
+
+  @@index([gameId, createdAt])
+}
+
+enum GameStatus {
+  PLAYING
+  FINISHED
+  CANCELLED
+}
+
+enum GameResult {
+  RED_WIN
+  BLACK_WIN
+  DRAW
+}
+
+enum EndReason {
+  CHECKMATE
+  RESIGN
+  TIMEOUT
+  DRAW_AGREEMENT
+  STALEMATE
+  REPETITION
+  CANCELLED
+}

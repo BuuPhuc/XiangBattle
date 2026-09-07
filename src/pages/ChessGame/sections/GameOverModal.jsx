@@ -6,14 +6,26 @@ const REASON_HEADING = {
   [GAME_STATUS.TIMEOUT_MOVE]: 'Hết giờ đi quân!',
   [GAME_STATUS.TIMEOUT_GAME]: 'Hết giờ ván đấu!',
   [GAME_STATUS.OPPONENT_LEFT]: 'Đối thủ đã rời trận!',
+  [GAME_STATUS.DRAW]: 'Hòa cờ!',
 }
 
-export function GameOverModal({ winner, status, redName, blackName, onClose, onPlayAgain }) {
+export function GameOverModal({ winner, status, redName, blackName, youWon, onClose, onPlayAgain }) {
+  const isDraw = status === GAME_STATUS.DRAW
   const winnerName = winner === 'red' ? redName : blackName
   const loserName = winner === 'red' ? blackName : redName
   const winnerBg = winner === 'red' ? 'bg-piece-red' : 'bg-piece-black'
   const loserBg = winner === 'red' ? 'bg-piece-black' : 'bg-piece-red'
-  const heading = REASON_HEADING[status] ?? REASON_HEADING[GAME_STATUS.CHECKMATE]
+  // Resign is the one reason whose heading depends on which side is
+  // reading it (everyone reads "Chiếu bí!" the same way, but "you resigned"
+  // and "they resigned" are different sentences) — the winner/loser cards
+  // below already read correctly from either side via redName/blackName
+  // ("Bạn"/"Đối thủ"), this only needs the same treatment for the heading.
+  const heading =
+    status === GAME_STATUS.RESIGN
+      ? youWon
+        ? 'Đối thủ đã đầu hàng!'
+        : 'Bạn đã đầu hàng!'
+      : REASON_HEADING[status] ?? REASON_HEADING[GAME_STATUS.CHECKMATE]
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-onyx-ink/60 backdrop-blur-sm">
@@ -27,32 +39,54 @@ export function GameOverModal({ winner, status, redName, blackName, onClose, onP
           <Icon name="close" />
         </button>
 
-        <div className="w-16 h-16 rounded-2xl bg-error/10 text-error flex items-center justify-center mx-auto mb-4">
-          <Icon name="bolt" className="text-4xl" filled />
+        <div
+          className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
+            isDraw ? 'bg-secondary/10 text-secondary' : 'bg-error/10 text-error'
+          }`}
+        >
+          <Icon name={isDraw ? 'handshake' : 'bolt'} className="text-4xl" filled />
         </div>
         <h2 className="font-headline-lg text-headline-lg text-on-surface mb-6">{heading}</h2>
 
-        <div className="flex items-center justify-center gap-6 mb-8">
-          <div className="flex flex-col items-center gap-2">
-            <span className="font-label-sm text-label-sm font-bold text-secondary uppercase tracking-wider">
-              Thắng
-            </span>
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white ${winnerBg}`}>
-              {winnerName[0]}
+        {isDraw ? (
+          <div className="flex items-center justify-center gap-6 mb-8">
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white bg-piece-red">
+                {redName[0]}
+              </div>
+              <span className="font-label-md text-label-md text-on-surface">{redName}</span>
             </div>
-            <span className="font-label-md text-label-md text-on-surface">{winnerName}</span>
-          </div>
-          <span className="font-body-md text-body-md text-on-surface-variant">và</span>
-          <div className="flex flex-col items-center gap-2">
-            <span className="font-label-sm text-label-sm font-bold text-error uppercase tracking-wider">Thua</span>
-            <div
-              className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white opacity-60 ${loserBg}`}
-            >
-              {loserName[0]}
+            <span className="font-label-sm text-label-sm font-bold text-secondary uppercase tracking-wider">Hòa</span>
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white bg-piece-black">
+                {blackName[0]}
+              </div>
+              <span className="font-label-md text-label-md text-on-surface">{blackName}</span>
             </div>
-            <span className="font-label-md text-label-md text-on-surface-variant">{loserName}</span>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center justify-center gap-6 mb-8">
+            <div className="flex flex-col items-center gap-2">
+              <span className="font-label-sm text-label-sm font-bold text-secondary uppercase tracking-wider">
+                Thắng
+              </span>
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white ${winnerBg}`}>
+                {winnerName[0]}
+              </div>
+              <span className="font-label-md text-label-md text-on-surface">{winnerName}</span>
+            </div>
+            <span className="font-body-md text-body-md text-on-surface-variant">và</span>
+            <div className="flex flex-col items-center gap-2">
+              <span className="font-label-sm text-label-sm font-bold text-error uppercase tracking-wider">Thua</span>
+              <div
+                className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white opacity-60 ${loserBg}`}
+              >
+                {loserName[0]}
+              </div>
+              <span className="font-label-md text-label-md text-on-surface-variant">{loserName}</span>
+            </div>
+          </div>
+        )}
 
         <button
           type="button"

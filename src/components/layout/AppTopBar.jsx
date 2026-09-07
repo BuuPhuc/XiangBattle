@@ -1,6 +1,10 @@
+import { Link } from 'react-router-dom'
 import Icon from '../ui/Icon'
+import useAuth from '../hooks/useAuth'
 
 export function AppTopBar() {
+  const { isAuthenticated, user } = useAuth()
+
   return (
     <nav
       aria-label="Top Navigation"
@@ -13,10 +17,21 @@ export function AppTopBar() {
         <button aria-label="Thông báo" className="text-on-surface-variant/70 hover:text-primary transition-colors duration-300 active:scale-95">
           <Icon name="notifications" />
         </button>
-        <button aria-label="Tài khoản" className="text-on-surface-variant/70 hover:text-primary transition-colors duration-300 active:scale-95 flex items-center">
-          <Icon name="person" className="mr-2" />
-          <span className="font-label-md text-label-md hidden sm:inline">Người chơi</span>
-        </button>
+        {isAuthenticated ? (
+          <span className="text-on-surface-variant/70 flex items-center" aria-label="Tài khoản">
+            <Icon name="person" className="mr-2" />
+            <span className="font-label-md text-label-md hidden sm:inline">{user?.username}</span>
+          </span>
+        ) : (
+          <Link
+            to="/login"
+            aria-label="Đăng nhập"
+            className="text-on-surface-variant/70 hover:text-primary transition-colors duration-300 active:scale-95 flex items-center"
+          >
+            <Icon name="person" className="mr-2" />
+            <span className="font-label-md text-label-md hidden sm:inline">Đăng nhập</span>
+          </Link>
+        )}
       </div>
     </nav>
   )

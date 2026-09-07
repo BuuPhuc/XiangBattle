@@ -1,7 +1,36 @@
 const RoomManager = require('../rooms/roomManager')
 const { ROOM_STATUS } = require('../rooms/room')
 const { registerGameHandlers, broadcastGameStarted } = require('./gameHandler')
-const { registerReconnectHandlers, scheduleDisconnectForfeit, cancelDisconnectForfeit } = require('./reconnectHandler')
+const {
+  registerReconnectHandlers,
+  completeRejoin,
+  scheduleDisconnectForfeit,
+  cancelDisconnectForfeit,
+} = require('./reconnectHandler')
+const { registerMatchmakingHandlers, removeFromQuickPlayQueue } = require('./matchmakingHandler')
+const { registerChatHandlers } = require('./chatHandler')
+const { verifyAccessToken } = require('../utils/token')
+
+// Best-effort identity attach: a client that connected with a valid JWT
+// (see src/socket/socket.js's `auth.token`) gets `socket.user = { id,
+// username }`; anyone else (not logged in, or an expired/invalid token)
+// still connects as a guest with `socket.user = null` — the whole Room /
+// matchmaking system keeps working off the client-supplied playerId either
+// way, so auth is purely additive here, never a requirement to connect.
+function attachSocketUser(socket, next) {
+  const token = socket.handshake.auth && socket.handshake.auth.token
+  if (!token) {
+    socket.user = null
+    return next()
+  }
+  try {
+    const payload = verifyAccessToken(token)
+    socket.user = { id: payload.userId, username: payload.username }
+  } catch {
+    socket.user = null
+  }
+  return next()
+}
 
 function normalizeRoomId(rawRoomId) {
   return typeof rawRoomId === 'string' ? rawRoomId.trim().toUpperCase() : ''
@@ -70,11 +99,16 @@ function handleMidMatchDisconnect(io, roomManager, socket, room) {
 function registerSocketHandlers(io) {
   const roomManager = new RoomManager()
 
+  io.use(attachSocketUser)
+
   io.on('connection', (socket) => {
-    console.log(`[socket] client connected: ${socket.id} (${socket.handshake.address})`)
+    const who = socket.user ? `${socket.user.username} (user ${socket.user.id})` : 'guest'
+    console.log(`[socket] client connected: ${socket.id} (${socket.handshake.address}) — ${who}`)
 
     registerGameHandlers(io, socket, roomManager)
     registerReconnectHandlers(io, socket, roomManager)
+    registerMatchmakingHandlers(io, socket, roomManager)
+    registerChatHandlers(io, socket, roomManager)
 
     socket.on('create_room', (payload) => {
       const playerId = payload && payload.playerId
@@ -116,7 +150,19 @@ function registerSocketHandlers(io) {
         return
       }
 
-      const { room, player } = result
+      const { room, reconnected } = result
+
+      // roomManager recognized this playerId as already seated in the room
+      // (e.g. a reopened tab that retyped the room code instead of relying
+      // on the silent auto-rejoin) — resume them exactly like rejoin_room
+      // would, never treat it as a brand new seat.
+      if (reconnected) {
+        console.log(`[reconnect] ${playerId} rejoined ${room.roomId} via join_room as ${socket.id}`)
+        completeRejoin(io, socket, room, playerId)
+        return
+      }
+
+      const { player } = result
       socket.join(room.roomId)
       console.log(`[room] ${room.roomId} joined by ${socket.id}`)
       socket.emit('room_joined', { ...room.toPublic(), you: { playerNumber: player.playerNumber, color: player.color } })
@@ -143,6 +189,7 @@ function registerSocketHandlers(io) {
     // after a finished match).
     socket.on('disconnect', (reason) => {
       console.log(`[socket] client disconnected: ${socket.id} (${reason})`)
+      removeFromQuickPlayQueue(socket.id)
       const room = roomManager.getRoomBySocket(socket.id)
       if (isActiveMatch(room)) {
         handleMidMatchDisconnect(io, roomManager, socket, room)

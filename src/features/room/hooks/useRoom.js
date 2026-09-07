@@ -3,12 +3,12 @@ import socket from '../../../socket/socket'
 import { getPlayerId, getSavedRoomId, saveRoomId, clearSavedRoomId } from '../roomSession'
 
 // Thin state layer over the shared socket connection for the Room + online
-// match handshake, including reconnect: a refresh always wipes this hook's
-// state, but sessionStorage (roomSession.js) survives it, so on every
-// (re)connect this hook asks the server to resume whatever room/match it
-// was last in — never to create a new one. One listener registration for
-// the whole hook lifetime (cleaned up on unmount) — nothing here opens its
-// own socket connection.
+// match handshake, including reconnect: a refresh (or a closed-then-reopened
+// tab) always wipes this hook's state, but localStorage (roomSession.js)
+// survives both, so on every (re)connect this hook asks the server to
+// resume whatever room/match it was last in — never to create a new one.
+// One listener registration for the whole hook lifetime (cleaned up on
+// unmount) — nothing here opens its own socket connection.
 export function useRoom() {
   const [room, setRoom] = useState(null) // { roomId, status, players } | null
   const [you, setYou] = useState(null) // { playerNumber, color } | null — color is null until game_started
@@ -17,11 +17,13 @@ export function useRoom() {
   const [moveHistory, setMoveHistory] = useState([]) // authoritative history from the server, for seeding/restoring useGame
   const [matchResult, setMatchResult] = useState(null) // { status, winner, loser } | null — only for server-declared outcomes (e.g. opponent-left)
   const [timerState, setTimerState] = useState(null) // { red: {moveTime,gameTime}, black: {...} } | null — for seeding/restoring useTimer
+  const [messages, setMessages] = useState([]) // authoritative chat log from the server, for seeding useChat (same restore pattern as moveHistory)
   const [opponentConnected, setOpponentConnected] = useState(true)
   const [error, setError] = useState(null)
   const [notice, setNotice] = useState(null) // one-off info message, e.g. "opponent left mid-game"
   const [pending, setPending] = useState(false)
   const [rejoining, setRejoining] = useState(false) // true while an auto-rejoin attempt is in flight
+  const [searching, setSearching] = useState(false) // true while queued for Quick Play, waiting for an opponent
 
   // Bumped on every event that hands down a full, authoritative game
   // snapshot (game_started, a successful reconnect, or a server-declared
@@ -46,7 +48,7 @@ export function useRoom() {
   // The other half of what makes "refresh resumes a finished game (Test 6)
   // but navigating away and starting a new Room doesn't (Test 3)" work: a
   // hard refresh tears down the whole page before React ever gets to run
-  // this cleanup, so it never fires then — sessionStorage's saved roomId
+  // this cleanup, so it never fires then — localStorage's saved roomId
   // survives, and the next connect's rejoin_room faithfully restores
   // whatever state the room is actually in, finished or not. But a genuine
   // in-app navigation away from this page *does* unmount cleanly — if the
@@ -73,6 +75,7 @@ export function useRoom() {
       setMoveHistory(payload.moveHistory ?? [])
       setMatchResult(payload.matchResult ?? null)
       setTimerState(payload.timerState ?? null)
+      setMessages(payload.messages ?? [])
       setOpponentConnected(payload.opponent ? payload.opponent.connected !== false : true)
       setRoom({ roomId: payload.roomId, status: payload.status, players: payload.players })
       setRestoreVersion((v) => v + 1)
@@ -89,6 +92,7 @@ export function useRoom() {
       setMoveHistory([])
       setMatchResult(null)
       setTimerState(null)
+      setMessages([])
       setRoom({ roomId: payload.roomId, status: payload.status, players: payload.players })
       saveRoomId(payload.roomId)
       wasPlayingRef.current = false
@@ -113,12 +117,40 @@ export function useRoom() {
       applySnapshot(payload)
     }
 
-    // Response to a successful rejoin_room: the full current match state,
-    // exactly like game_started but possibly with moves/timer/result
-    // already in progress. Never resets anything — just restores it.
+    // Response to a successful reconnect — either the silent rejoin_room
+    // handshake, or join_room recognizing a retyped room code as an
+    // existing player (see roomManager's `reconnected` case) — the full
+    // current match state, exactly like game_started but possibly with
+    // moves/timer/result already in progress. Never resets anything, just
+    // restores it. Also clears `pending`: a manual joinRoom() call that
+    // turns out to be this player reconnecting never gets a room_joined
+    // (which would normally clear it) since this event replaces it.
     function handleGameState(payload) {
       setRejoining(false)
+      setPending(false)
       setError(null)
+      saveRoomId(payload.roomId)
+      applySnapshot(payload)
+    }
+
+    // Acknowledges this socket is now waiting in the server's Quick Play
+    // queue — flips the UI to the "Đang tìm đối thủ..." screen.
+    function handleQuickPlayQueued() {
+      setPending(false)
+      setError(null)
+      setSearching(true)
+    }
+
+    // The server matched this player with someone else waiting — same
+    // payload shape as game_started (a fresh match, freshly created room),
+    // so it's restored the exact same way. Whichever of the two players
+    // triggered the match goes straight from "click Quick Play" to this,
+    // without ever seeing quick_play_queued.
+    function handleMatchFound(payload) {
+      setPending(false)
+      setSearching(false)
+      setError(null)
+      setNotice(null)
       saveRoomId(payload.roomId)
       applySnapshot(payload)
     }
@@ -139,6 +171,7 @@ export function useRoom() {
       setMoveHistory([])
       setMatchResult(null)
       setTimerState(null)
+      setMessages([])
       setRoom((current) => (current ? { ...current, status: payload.status, players: payload.players } : current))
       wasPlayingRef.current = false
     }
@@ -165,6 +198,7 @@ export function useRoom() {
 
     function handleRoomError(payload) {
       setPending(false)
+      setSearching(false)
       setError(payload.message)
     }
 
@@ -193,6 +227,8 @@ export function useRoom() {
     socket.on('opponent_reconnected', handleOpponentReconnected)
     socket.on('game_over', handleGameOver)
     socket.on('room_error', handleRoomError)
+    socket.on('quick_play_queued', handleQuickPlayQueued)
+    socket.on('match_found', handleMatchFound)
 
     return () => {
       socket.off('connect', attemptRejoin)
@@ -206,6 +242,8 @@ export function useRoom() {
       socket.off('opponent_reconnected', handleOpponentReconnected)
       socket.off('game_over', handleGameOver)
       socket.off('room_error', handleRoomError)
+      socket.off('quick_play_queued', handleQuickPlayQueued)
+      socket.off('match_found', handleMatchFound)
     }
   }, [])
 
@@ -221,6 +259,25 @@ export function useRoom() {
     socket.emit('join_room', { roomId, playerId: getPlayerId() })
   }, [])
 
+  // Joins the server's Quick Play queue. If someone's already waiting the
+  // server matches immediately and this player goes straight to
+  // handleMatchFound; otherwise handleQuickPlayQueued flips the UI to
+  // "Đang tìm đối thủ...".
+  const startQuickPlay = useCallback(() => {
+    setError(null)
+    setPending(true)
+    socket.emit('quick_play', { playerId: getPlayerId() })
+  }, [])
+
+  // Leaves the queue. No round trip needed to update the UI — this
+  // player's own action, so the search screen clears immediately, same as
+  // leaveRoom() below.
+  const cancelQuickPlay = useCallback(() => {
+    socket.emit('cancel_quick_play', { playerId: getPlayerId() })
+    setSearching(false)
+    setPending(false)
+  }, [])
+
   // No room_left confirmation is sent back to the player who left (only to
   // whoever remains), so the local view clears itself right away.
   const leaveRoom = useCallback(() => {
@@ -234,6 +291,7 @@ export function useRoom() {
     setMoveHistory([])
     setMatchResult(null)
     setTimerState(null)
+    setMessages([])
     setPending(false)
     setError(null)
     setNotice(null)
@@ -248,15 +306,19 @@ export function useRoom() {
     moveHistory,
     matchResult,
     timerState,
+    messages,
     opponentConnected,
     error,
     notice,
     pending,
     rejoining,
+    searching,
     restoreVersion,
     createRoom,
     joinRoom,
     leaveRoom,
+    startQuickPlay,
+    cancelQuickPlay,
   }
 }
 

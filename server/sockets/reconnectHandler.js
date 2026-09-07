@@ -50,10 +50,35 @@ function normalizeRoomId(rawRoomId) {
   return typeof rawRoomId === 'string' ? rawRoomId.trim().toUpperCase() : ''
 }
 
+// Shared tail end of any successful reconnect, regardless of which event
+// triggered it (rejoin_room below, or join_room in socketHandler.js
+// recognizing a retyped room code as an existing player): attach the new
+// socket to the room's Socket.IO channel, cancel any forfeit countdown
+// that was ticking, and hand the reconnecting client the full current
+// match snapshot (board/turn/history/timer/result) instead of a "you
+// joined a fresh room" payload — this is what lets the client resume
+// exactly where it left off instead of resetting anything.
+function completeRejoin(io, socket, room, playerId) {
+  socket.join(room.roomId)
+  cancelDisconnectForfeit(playerId)
+
+  const player = room.getPlayerByPlayerId(playerId)
+  console.log(`[reconnect] ${playerId} reconnected to ${room.roomId} as ${socket.id}`)
+
+  socket.emit('game_state', room.toGameStarted(socket.id))
+
+  if (room.status === ROOM_STATUS.PLAYING) {
+    socket.to(room.roomId).emit('opponent_reconnected', { playerNumber: player.playerNumber })
+  }
+
+  return player
+}
+
 // Registers the reconnect handshake for one socket: a client that already
 // has a { roomId, playerId } from a previous session (kept in
-// sessionStorage across refreshes) sends it here to resume — never to
-// create a new room or player, only to reattach to what's already there.
+// localStorage across refreshes/closed tabs) sends it here to resume —
+// never to create a new room or player, only to reattach to what's
+// already there.
 function registerReconnectHandlers(io, socket, roomManager) {
   socket.on('rejoin_room', (payload) => {
     const roomId = normalizeRoomId(payload && payload.roomId)
@@ -72,22 +97,13 @@ function registerReconnectHandlers(io, socket, roomManager) {
       return
     }
 
-    socket.join(room.roomId)
-    cancelDisconnectForfeit(playerId)
-
-    const player = room.getPlayerByPlayerId(playerId)
-    console.log(`[reconnect] ${playerId} reconnected to ${room.roomId} as ${socket.id}`)
-
-    socket.emit('game_state', room.toGameStarted(socket.id))
-
-    if (room.status === ROOM_STATUS.PLAYING) {
-      socket.to(room.roomId).emit('opponent_reconnected', { playerNumber: player.playerNumber })
-    }
+    completeRejoin(io, socket, room, playerId)
   })
 }
 
 module.exports = {
   registerReconnectHandlers,
+  completeRejoin,
   scheduleDisconnectForfeit,
   cancelDisconnectForfeit,
   DISCONNECT_GRACE_PERIOD_MS,

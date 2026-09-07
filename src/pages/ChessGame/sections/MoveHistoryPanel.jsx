@@ -42,14 +42,7 @@ export function MoveHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove }
   const isLastRow = (row) => row.number === rows.length
 
   return (
-    <div className="glass-panel border border-gold-shimmer/30 rounded-xl flex-grow flex flex-col h-64 xl:h-[400px]">
-      <div className="p-4 border-b border-outline-variant/30 bg-surface-container-low rounded-t-xl">
-        <h4 className="font-label-md text-label-md text-on-surface flex items-center gap-2">
-          <Icon name="history" className="text-[18px]" />
-          Lịch sử trận đấu
-        </h4>
-      </div>
-
+    <div className="flex flex-col flex-grow min-h-0">
       {rows.length === 0 ? (
         <div className="flex-grow flex items-center justify-center p-4">
           <p className="font-label-sm text-label-sm text-on-surface-variant text-center">Chưa có nước đi nào</p>

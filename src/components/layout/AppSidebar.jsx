@@ -1,8 +1,9 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Icon from '../ui/Icon'
+import useAuth from '../hooks/useAuth'
 
 const NAV_ITEMS = [
-  { icon: 'home', label: 'Trang chủ', to: '/play' },
+  // { icon: 'home', label: 'Trang chủ', to: '/play' },
   { icon: 'sports_esports', label: 'Chơi cờ', to: '/play' },
   { icon: 'memory', label: 'Đối đầu AI' },
   { icon: 'extension', label: 'Cờ thế' },
@@ -13,24 +14,45 @@ const NAV_ITEMS = [
 
 export function AppSidebar() {
   const { pathname } = useLocation()
+  const { isAuthenticated, user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
 
   return (
-    <aside className="hidden md:flex flex-col h-full pt-20 pb-8 px-4 fixed left-0 top-0 w-64 z-40 bg-surface dark:bg-inverse-surface border-r border-onyx-ink/10 shadow-md">
+    <aside className="hidden md:flex flex-col h-full pt-10 pb-8 px-4 fixed left-0 top-0 w-64 z-40 bg-surface dark:bg-inverse-surface border-r border-onyx-ink/10 shadow-md">
       <div className="mb-8 px-4">
         <div className="flex items-center gap-3 mb-6">
           <Link to="/" className="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed-dim tracking-tight">
             Xiangqi Master
           </Link>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
-            <Icon name="person" />
+        {isAuthenticated ? (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+              <Icon name="person" />
+            </div>
+            <div>
+              <p className="font-label-md text-label-md font-semibold text-on-surface">{user?.username}</p>
+              <p className="font-label-sm text-label-sm text-on-surface-variant">Hạng: {user?.rating ?? 1200}</p>
+            </div>
           </div>
-          <div>
-            <p className="font-label-md text-label-md font-semibold text-on-surface">Đại sư</p>
-            <p className="font-label-sm text-label-sm text-on-surface-variant">Hạng: Hàn lâm viện</p>
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-bold">
+              <Icon name="person" />
+            </div>
+            <div>
+              <Link to="/login" className="font-label-md text-label-md font-semibold text-primary hover:underline">
+                Đăng nhập
+              </Link>
+              <p className="font-label-sm text-label-sm text-on-surface-variant">Khách</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <nav className="flex-1 space-y-2">
@@ -69,6 +91,16 @@ export function AppSidebar() {
           <Icon name="info" />
           <span>Giới thiệu</span>
         </a>
+        {isAuthenticated && (
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full flex items-center space-x-3 text-on-surface-variant dark:text-on-surface-variant px-4 py-2 hover:bg-surface-container dark:hover:bg-primary-container/50 transition-all duration-200 font-label-md text-label-md rounded-lg"
+          >
+            <Icon name="logout" />
+            <span>Đăng xuất</span>
+          </button>
+        )}
       </div>
     </aside>
   )

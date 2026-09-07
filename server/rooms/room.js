@@ -8,15 +8,24 @@ const COLORS = {
   BLACK: 'black',
 }
 
-// The only server-produced game-over reason that isn't a chess outcome —
-// mirrors the frontend's GAME_STATUS.OPPONENT_LEFT value exactly (the two
+// Server-produced game-over reasons that aren't a chess outcome the client
+// derived on its own — each mirrors the matching frontend
+// GAME_STATUS.* value in src/features/game/gameLogic.js exactly (the two
 // codebases can't share a module, red/black and 'waiting'/'playing' are
 // duplicated the same way already).
 const GAME_STATUS = {
   OPPONENT_LEFT: 'opponent-left',
+  RESIGN: 'resign',
+  DRAW: 'draw',
 }
 
 const MAX_PLAYERS = 2
+
+// Simple memory safeguard for a very long-lived room/match — chat is never
+// persisted or paginated, so this just stops the in-memory array from
+// growing without bound. Well above anything a real 2-player match chat
+// would ever reach.
+const MAX_MESSAGES = 200
 
 const DEFAULT_TIME_CONTROL = {
   moveTimeMs: 2 * 60 * 1000,
@@ -45,6 +54,21 @@ class Room {
     // client re-derives it identically via the existing (unchanged) rule
     // engine. { status, winner, loser } | null
     this.matchResult = null
+    // Color of whichever player currently has an outstanding draw offer
+    // awaiting the other side's response, or null. Purely a live
+    // request/response handshake between the two connected sockets — never
+    // part of the reconnect snapshot (toGameStarted), so it's never
+    // persisted beyond the moment it's resolved. Always cleared the instant
+    // any match result is recorded (see recordMatchResult), which is what
+    // guarantees a resign/checkmate/timeout cancels a pending offer.
+    this.drawOfferBy = null
+    // In-memory-only chat log for this room — never persisted anywhere, and
+    // wiped on every rematch/leave alongside moveHistory (see startGame()
+    // and removePlayer() below) so a new match never carries over the old
+    // one's chat. Garbage-collected along with the rest of the Room when
+    // roomManager deletes it (empty room, or explicit deleteRoom) — nothing
+    // extra needed for "room destroy frees the chat".
+    this.messages = []
     // No auth/user system yet, so playerId is a client-generated identity
     // (persisted in sessionStorage) used purely to recognize "this new
     // socket is still the same player" across a refresh/reconnect —
@@ -94,8 +118,10 @@ class Room {
     this.currentTurn = null
     this.moveHistory = []
     this.matchResult = null
+    this.drawOfferBy = null
     this.turnStartedAt = null
     this.remainingGameTime = { red: this.timeControl.gameTimeMs, black: this.timeControl.gameTimeMs }
+    this.messages = []
     this.players.forEach((player) => {
       player.color = null
     })
@@ -135,8 +161,43 @@ class Room {
     this.currentTurn = COLORS.RED
     this.moveHistory = []
     this.matchResult = null
+    this.drawOfferBy = null
     this.remainingGameTime = { red: this.timeControl.gameTimeMs, black: this.timeControl.gameTimeMs }
     this.turnStartedAt = Date.now()
+    // A rematch (play_again reuses this same Room) starts a clean chat too —
+    // never let the previous match's messages bleed into the new one.
+    this.messages = []
+  }
+
+  // Appends a chat message to this room's in-memory log — the only place
+  // messages are ever stored, never a database. Server-authoritative shape:
+  // callers (chatHandler.js) supply the already-validated/trimmed text plus
+  // the sender identity it derived itself from the socket/room, never
+  // anything the client claims about who it is.
+  addMessage(playerId, playerName, message) {
+    const entry = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      playerId,
+      playerName,
+      message,
+      createdAt: Date.now(),
+    }
+    this.messages.push(entry)
+    if (this.messages.length > MAX_MESSAGES) this.messages.shift()
+    return entry
+  }
+
+  // Marks `color` as having just offered a draw. Callers are expected to
+  // have already checked there isn't one pending (see gameHandler.js) —
+  // this never overwrites/stacks offers itself.
+  offerDraw(color) {
+    this.drawOfferBy = color
+  }
+
+  // Withdraws/resolves whatever draw offer is currently pending, without
+  // touching anything else about the match.
+  clearDrawOffer() {
+    this.drawOfferBy = null
   }
 
   // Appends a move the mover's own client already fully computed and
@@ -168,11 +229,17 @@ class Room {
   }
 
   // First (and only) result ever recorded for a match — idempotent so a
-  // late-firing grace-period timeout can never overwrite/contest a result
-  // that already exists for some other reason.
+  // late-firing grace-period timeout (or a draw response arriving after
+  // the game already ended some other way) can never overwrite/contest a
+  // result that already exists for some other reason. `winner` is null
+  // for a draw (GAME_STATUS.DRAW) — the only case with no losing side —
+  // and a real color for every other outcome. Always clears any pending
+  // draw offer, since a match result of any kind (resign/checkmate/timeout
+  // included) makes an outstanding offer moot.
   recordMatchResult(status, winner) {
     if (this.matchResult) return this.matchResult
-    const loser = winner === COLORS.RED ? COLORS.BLACK : COLORS.RED
+    this.drawOfferBy = null
+    const loser = winner ? (winner === COLORS.RED ? COLORS.BLACK : COLORS.RED) : null
     this.matchResult = { status, winner, loser }
     return this.matchResult
   }
@@ -227,6 +294,10 @@ class Room {
       moveHistory: this.moveHistory,
       matchResult: this.matchResult,
       timerState: this.getTimerSnapshot(),
+      // Empty for a brand new match, populated on a reconnect's game_state —
+      // this is what lets a reconnecting client restore the chat log without
+      // a separate chat:history round trip.
+      messages: this.messages,
     }
   }
 }
