@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { setCredentials, logout as logoutAction, setStatus, setError } from '../../store/slices/authSlice'
+import { setCredentials, updateUser as updateUserAction, logout as logoutAction, setStatus, setError } from '../../store/slices/authSlice'
 import authService from '../../services/authService'
 import { saveAuthSession, clearAuthSession, loadAuthSession } from '../../features/auth/authStorage'
 import socket, { setSocketAuthToken } from '../../socket/socket'
@@ -65,6 +65,21 @@ export function useAuth() {
     [dispatch],
   )
 
+  // Patches the current user (e.g. after Edit Profile saves a new
+  // username/bio/avatarUrl) everywhere it's read from: Redux (so
+  // Header/Sidebar/Profile re-render immediately, no logout/login needed)
+  // and the localStorage snapshot authStorage.js keeps (read synchronously
+  // elsewhere, e.g. roomSession's getPlayerId) — same token, since only the
+  // user object actually changed.
+  const updateUser = useCallback(
+    (patch) => {
+      const merged = { ...user, ...patch }
+      saveAuthSession(token, merged)
+      dispatch(updateUserAction(patch))
+    },
+    [dispatch, user, token],
+  )
+
   const logout = useCallback(() => {
     clearAuthSession()
     setSocketAuthToken(null)
@@ -95,7 +110,7 @@ export function useAuth() {
     }
   }, [dispatch])
 
-  return { user, token, isAuthenticated, status, error, login, register, logout, restoreSession }
+  return { user, token, isAuthenticated, status, error, login, register, updateUser, logout, restoreSession }
 }
 
 export default useAuth

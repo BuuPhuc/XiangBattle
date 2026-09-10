@@ -21,11 +21,13 @@ function toPublicUser(user) {
     displayName: user.displayName,
     email: user.email,
     avatarUrl: user.avatarUrl,
+    bio: user.bio,
     emailVerified: user.emailVerified,
     rating: user.rating,
     wins: user.wins,
     losses: user.losses,
     draws: user.draws,
+    createdAt: user.createdAt,
   }
 }
 

@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Icon from '../ui/Icon'
+import Avatar from '../ui/Avatar'
 import useAuth from '../hooks/useAuth'
 
 const NAV_ITEMS = [
@@ -31,15 +32,15 @@ export function AppSidebar() {
           </Link>
         </div>
         {isAuthenticated ? (
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
-              <Icon name="person" />
-            </div>
+          <Link to="/profile" className="flex items-center gap-3 group" aria-label="Hồ sơ của bạn">
+            <Avatar src={user?.avatarUrl} name={user?.displayName || user?.username} size={40} />
             <div>
-              <p className="font-label-md text-label-md font-semibold text-on-surface">{user?.username}</p>
+              <p className="font-label-md text-label-md font-semibold text-on-surface group-hover:text-primary transition-colors">
+                {user?.username}
+              </p>
               <p className="font-label-sm text-label-sm text-on-surface-variant">Hạng: {user?.rating ?? 1200}</p>
             </div>
-          </div>
+          </Link>
         ) : (
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-bold">

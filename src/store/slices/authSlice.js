@@ -19,6 +19,13 @@ const authSlice = createSlice({
       state.status = 'succeeded'
       state.error = null
     },
+    // Patches the current user object in place (e.g. after a profile edit)
+    // without touching token/isAuthenticated — unlike setCredentials, which
+    // requires a full { user, token } pair and is meant for actually
+    // (re)establishing a session.
+    updateUser: (state, action) => {
+      if (state.user) state.user = { ...state.user, ...action.payload }
+    },
     logout: (state) => {
       state.user = null
       state.token = null
@@ -35,5 +42,5 @@ const authSlice = createSlice({
   },
 })
 
-export const { setCredentials, logout, setStatus, setError } = authSlice.actions
+export const { setCredentials, updateUser, logout, setStatus, setError } = authSlice.actions
 export default authSlice.reducer
