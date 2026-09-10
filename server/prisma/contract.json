@@ -59,6 +59,10 @@
               {
                 "name": "CANCELLED",
                 "value": "CANCELLED"
+              },
+              {
+                "name": "DISCONNECT",
+                "value": "DISCONNECT"
               }
             ]
           },
@@ -663,6 +667,13 @@
                   "kind": "scalar"
                 }
               },
+              "bio": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "createdAt": {
                 "nullable": false,
                 "type": {
@@ -844,6 +855,9 @@
               "fields": {
                 "avatarUrl": {
                   "column": "avatarUrl"
+                },
+                "bio": {
+                  "column": "bio"
                 },
                 "createdAt": {
                   "column": "createdAt"
@@ -1085,8 +1099,8 @@
             "game": {
               "checks": [
                 {
-                  "expression": "\"endReason\" IN ('CHECKMATE', 'RESIGN', 'TIMEOUT', 'DRAW_AGREEMENT', 'STALEMATE', 'REPETITION', 'CANCELLED')",
-                  "name": "game_endReason_check_441b7f5a",
+                  "expression": "\"endReason\" IN ('CHECKMATE', 'RESIGN', 'TIMEOUT', 'DRAW_AGREEMENT', 'STALEMATE', 'REPETITION', 'CANCELLED', 'DISCONNECT')",
+                  "name": "game_endReason_check_3f8443e8",
                   "prefix": "game_endReason_check"
                 },
                 {
@@ -1426,6 +1440,11 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "bio": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "createdAt": {
                   "codecId": "pg/timestamptz-string@1",
                   "default": {
@@ -1546,7 +1565,8 @@
                 "DRAW_AGREEMENT",
                 "STALEMATE",
                 "REPETITION",
-                "CANCELLED"
+                "CANCELLED",
+                "DISCONNECT"
               ]
             },
             "GameResult": {
@@ -1571,7 +1591,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "3a2b20ce8ec3306884cd7c739759b31ed7fb0074525d105e140f2e1342ca3726"
+    "storageHash": "e0aab3161796f312947ca00ed12162fbd812b8ba163fc0e62645b04c684d9631"
   },
   "execution": {
     "executionHash": "a499031370d1fd1891ca11072d3f7e11be752b686057f7c6d0900ee0159f4ed0",

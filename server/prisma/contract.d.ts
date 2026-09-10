@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'3a2b20ce8ec3306884cd7c739759b31ed7fb0074525d105e140f2e1342ca3726'>;
+  StorageHashBase<'e0aab3161796f312947ca00ed12162fbd812b8ba163fc0e62645b04c684d9631'>;
 export type ExecutionHash =
   ExecutionHashBase<'a499031370d1fd1891ca11072d3f7e11be752b686057f7c6d0900ee0159f4ed0'>;
 export type ProfileHash =
@@ -272,6 +272,7 @@ export type FieldOutputTypes = {
         | 'STALEMATE'
         | 'REPETITION'
         | 'CANCELLED'
+        | 'DISCONNECT'
         | null;
       readonly initialTime: CodecTypes['pg/int4@1']['output'];
       readonly increment: CodecTypes['pg/int4@1']['output'];
@@ -298,6 +299,7 @@ export type FieldOutputTypes = {
       readonly email: CodecTypes['pg/text@1']['output'] | null;
       readonly passwordHash: CodecTypes['pg/text@1']['output'] | null;
       readonly avatarUrl: CodecTypes['pg/text@1']['output'] | null;
+      readonly bio: CodecTypes['pg/text@1']['output'] | null;
       readonly emailVerified: CodecTypes['pg/bool@1']['output'];
       readonly rating: CodecTypes['pg/int4@1']['output'];
       readonly wins: CodecTypes['pg/int4@1']['output'];
@@ -341,6 +343,7 @@ export type FieldInputTypes = {
         | 'STALEMATE'
         | 'REPETITION'
         | 'CANCELLED'
+        | 'DISCONNECT'
         | null;
       readonly initialTime: CodecTypes['pg/int4@1']['input'];
       readonly increment: CodecTypes['pg/int4@1']['input'];
@@ -367,6 +370,7 @@ export type FieldInputTypes = {
       readonly email: CodecTypes['pg/text@1']['input'] | null;
       readonly passwordHash: CodecTypes['pg/text@1']['input'] | null;
       readonly avatarUrl: CodecTypes['pg/text@1']['input'] | null;
+      readonly bio: CodecTypes['pg/text@1']['input'] | null;
       readonly emailVerified: CodecTypes['pg/bool@1']['input'];
       readonly rating: CodecTypes['pg/int4@1']['input'];
       readonly wins: CodecTypes['pg/int4@1']['input'];
@@ -406,6 +410,7 @@ export type StorageColumnTypes = {
         | 'STALEMATE'
         | 'REPETITION'
         | 'CANCELLED'
+        | 'DISCONNECT'
         | null;
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly increment: CodecTypes['pg/int4@1']['output'];
@@ -431,6 +436,7 @@ export type StorageColumnTypes = {
     };
     readonly user: {
       readonly avatarUrl: CodecTypes['pg/text@1']['output'] | null;
+      readonly bio: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly displayName: CodecTypes['pg/text@1']['output'] | null;
       readonly draws: CodecTypes['pg/int4@1']['output'];
@@ -475,6 +481,7 @@ export type StorageColumnInputTypes = {
         | 'STALEMATE'
         | 'REPETITION'
         | 'CANCELLED'
+        | 'DISCONNECT'
         | null;
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly increment: CodecTypes['pg/int4@1']['input'];
@@ -500,6 +507,7 @@ export type StorageColumnInputTypes = {
     };
     readonly user: {
       readonly avatarUrl: CodecTypes['pg/text@1']['input'] | null;
+      readonly bio: CodecTypes['pg/text@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly displayName: CodecTypes['pg/text@1']['input'] | null;
       readonly draws: CodecTypes['pg/int4@1']['input'];
@@ -963,6 +971,11 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
+                readonly bio: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
                 readonly emailVerified: {
                   readonly nativeType: 'bool';
                   readonly codecId: 'pg/bool@1';
@@ -1040,6 +1053,7 @@ type ContractBase = Omit<
                 'STALEMATE',
                 'REPETITION',
                 'CANCELLED',
+                'DISCONNECT',
               ];
             };
             readonly GameResult: {
@@ -1428,6 +1442,10 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly bio: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly emailVerified: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
@@ -1529,6 +1547,7 @@ type ContractBase = Omit<
                 readonly email: { readonly column: 'email' };
                 readonly passwordHash: { readonly column: 'passwordHash' };
                 readonly avatarUrl: { readonly column: 'avatarUrl' };
+                readonly bio: { readonly column: 'bio' };
                 readonly emailVerified: { readonly column: 'emailVerified' };
                 readonly rating: { readonly column: 'rating' };
                 readonly wins: { readonly column: 'wins' };
@@ -1567,6 +1586,7 @@ type ContractBase = Omit<
               { readonly name: 'STALEMATE'; readonly value: 'STALEMATE' },
               { readonly name: 'REPETITION'; readonly value: 'REPETITION' },
               { readonly name: 'CANCELLED'; readonly value: 'CANCELLED' },
+              { readonly name: 'DISCONNECT'; readonly value: 'DISCONNECT' },
             ];
           };
         };

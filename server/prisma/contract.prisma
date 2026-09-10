@@ -7,6 +7,7 @@ model User {
   email         String?   @unique
   passwordHash  String?
   avatarUrl     String?
+  bio           String?
   emailVerified Boolean   @default(false)
 
   rating       Int       @default(1200)
@@ -127,4 +128,5 @@ enum EndReason {
   STALEMATE
   REPETITION
   CANCELLED
+  DISCONNECT
 }
