@@ -164,10 +164,17 @@ export function useRoom() {
       applySnapshot(payload)
     }
 
+    // rejoin_room only ever fires from attemptRejoin below — a background
+    // attempt on mount/connect, never something the user directly clicked —
+    // so a failure here (the saved room expired, e.g. after a server
+    // restart) is stale state to quietly clean up, not something to alarm
+    // the user with. Surfacing payload.message as a visible error would
+    // read as "Phòng không còn tồn tại." on a screen the user just opened
+    // and hasn't touched yet, which is confusing rather than informative.
     function handleRejoinFailed(payload) {
       setRejoining(false)
       clearSavedRoomId()
-      setError(payload.message)
+      console.log('[room] stale saved room could not be resumed:', payload.message)
     }
 
     // Sent to whichever player remains after the other one leaves for good
