@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import ChessBoard from '../../components/game/ChessBoard'
 import { useGame } from '../../features/game/hooks/useGame'
 import { useTimer } from '../../features/game/hooks/useTimer'
@@ -30,6 +31,7 @@ const BLACK_NAME = 'Đại sư Lý'
 // expected to change this component's `key` whenever it hands down a new
 // restored snapshot, so these seed values are only ever consulted at mount.
 export function ChessGame({ onlineGame }) {
+  const navigate = useNavigate()
   const {
     pieces,
     selectedId,
@@ -73,7 +75,18 @@ export function ChessGame({ onlineGame }) {
   // moveHistory, so this is safe to call on an already-live game.
   const isOnline = Boolean(onlineGame && onlineGame.yourColor)
   const handleGameOver = useCallback((result) => endGameByTimeout(result.loser, result.status), [endGameByTimeout])
-  const { sendMove, error: moveError, reportGameOver, playAgain, resign, drawOffer, offerDraw, respondDraw } = useOnlineGame({
+  const {
+    sendMove,
+    error: moveError,
+    reportGameOver,
+    requestPlayAgain,
+    respondPlayAgain,
+    playAgainRequest,
+    resign,
+    drawOffer,
+    offerDraw,
+    respondDraw,
+  } = useOnlineGame({
     enabled: isOnline,
     onOpponentMove: applyRemoteMove,
     onMoveRejected: undo,
@@ -141,28 +154,21 @@ export function ChessGame({ onlineGame }) {
 
   const handlePlayAgain = () => {
     if (isOnline) {
-      // Ask the server for a rematch in this same room — it resets the
-      // shared match (board/history/timer/result, same colors) and
-      // broadcasts a fresh game_started to both players, which is what
-      // actually remounts this component with clean state (see the `key`
-      // the parent sets from useRoom's restoreVersion). Resetting only
-      // this client's local state here would desync it from the
-      // opponent's realtime-synced copy, so this never touches resetGame.
-      playAgain()
+      // Asks the server for a rematch in this same room — it only actually
+      // resets the shared match (board/history/timer/result, same colors)
+      // and broadcasts a fresh game_started once the opponent agrees too
+      // (see playAgainRequest/GameOverModal below), which is what remounts
+      // this component with clean state (the `key` the parent sets from
+      // useRoom's restoreVersion). Resetting only this client's local state
+      // here would desync it from the opponent's realtime-synced copy, so
+      // this never touches resetGame.
+      requestPlayAgain()
       return
     }
     resetGame()
     resetTimer()
     setModalDismissed(false)
   }
-
-  // Captured pieces should reflect whatever position is currently displayed,
-  // not the whole (possibly still-ongoing) game — so only count captures up
-  // to the move being viewed. Only black's captures (i.e. red pieces black
-  // has taken) are tracked here, same scope the old standalone
-  // CapturedPieces panel had — shown inline on black's PlayerCard now.
-  const visibleHistory = moveHistory.slice(0, currentMoveIndex + 1)
-  const blackCapturedPieces = visibleHistory.filter((move) => move.turn === 'black' && move.captured).map((move) => move.captured)
 
   // Legal-move dots for whichever piece is currently selected — reuses the
   // existing move-validation engine (moveUtils.js) as-is, this only maps its
@@ -186,6 +192,9 @@ export function ChessGame({ onlineGame }) {
           youWon={isOnline ? onlineGame.yourColor === winner : undefined}
           onClose={() => setModalDismissed(true)}
           onPlayAgain={handlePlayAgain}
+          onViewReplay={isOnline && onlineGame.dbGameId ? () => navigate(`/replay/${onlineGame.dbGameId}`) : undefined}
+          playAgainRequest={isOnline ? playAgainRequest : undefined}
+          onRespondPlayAgain={isOnline ? respondPlayAgain : undefined}
         />
       )}
 
@@ -227,7 +236,6 @@ export function ChessGame({ onlineGame }) {
           gameTime={formatClockTime(blackTime.gameTime)}
           online
           clockActive={!isGameOver && turn === 'black'}
-          capturedPieces={blackCapturedPieces}
         />
         <GameHistoryPanel
           moveHistory={moveHistory}

@@ -1,4 +1,5 @@
 const { ROOM_STATUS, GAME_STATUS } = require('../rooms/room')
+const { createGameRecord, saveMoveRecord, finishGameRecord } = require('../services/gameHistoryService')
 
 function moveError(code, message) {
   return { code, message }
@@ -8,10 +9,12 @@ function moveError(code, message) {
 // a different `you`/`opponent`, so this can't be a single io.to().emit()).
 // Used both for a brand new match (join_room, in socketHandler.js) and for
 // a same-room rematch (play_again, below) — a fresh match is a fresh match
-// either way, and both cases hand down the exact same shape.
+// either way, and both cases hand down the exact same shape. `dbGameId` is
+// null until gameHistoryService's async create resolves (see
+// `game_persisted`, emitted separately once it does) — never blocks this.
 function broadcastGameStarted(io, room) {
   room.players.forEach((player) => {
-    io.to(player.socketId).emit('game_started', room.toGameStarted(player.socketId))
+    io.to(player.socketId).emit('game_started', { ...room.toGameStarted(player.socketId), dbGameId: room.dbGameId || null })
   })
 }
 
@@ -57,6 +60,7 @@ function registerGameHandlers(io, socket, roomManager) {
 
     const entry = room.recordMove(move)
     console.log(`[game] ${room.roomId} move #${entry.ply} (${entry.piece.char}) by ${player.color}`)
+    saveMoveRecord(room, entry, player)
 
     // The mover already applied this move to their own board optimistically
     // (same as local play) — only the opponent needs it relayed.
@@ -78,9 +82,15 @@ function registerGameHandlers(io, socket, roomManager) {
     const { status, winner } = payload || {}
     if (!status || (winner !== 'red' && winner !== 'black')) return
 
+    // Unlike resign/offer_draw below, this handler has no earlier
+    // matchResult guard — a checkmate report can race a resign/forfeit that
+    // already concluded the match, and recordMatchResult's own idempotency
+    // only protects the in-memory result, not the DB write.
+    const wasFinished = Boolean(room.matchResult)
     const result = room.recordMatchResult(status, winner)
     console.log(`[game] ${room.roomId} reported over (${status}) — ${result.winner} wins`)
     io.to(room.roomId).emit('game_over', result)
+    if (!wasFinished) finishGameRecord(room, status, winner)
   })
 
   // A player conceding outright, independent of the board position — the
@@ -110,6 +120,7 @@ function registerGameHandlers(io, socket, roomManager) {
     const result = room.recordMatchResult(GAME_STATUS.RESIGN, winner)
     console.log(`[game] ${room.roomId} ${player.color} resigned — ${winner} wins`)
     io.to(room.roomId).emit('game_over', result)
+    finishGameRecord(room, GAME_STATUS.RESIGN, winner)
   })
 
   // One player proposing a draw. Same active-match/seated-player guards as
@@ -175,6 +186,7 @@ function registerGameHandlers(io, socket, roomManager) {
       const result = room.recordMatchResult(GAME_STATUS.DRAW, null)
       console.log(`[game] ${room.roomId} draw accepted by ${player.color}`)
       io.to(room.roomId).emit('game_over', result)
+      finishGameRecord(room, GAME_STATUS.DRAW, null)
     } else {
       room.clearDrawOffer()
       console.log(`[game] ${room.roomId} draw declined by ${player.color}`)
@@ -182,12 +194,28 @@ function registerGameHandlers(io, socket, roomManager) {
     }
   })
 
-  // Either player asking for a rematch in the same room, once the current
-  // match has actually concluded. Reuses startGame() — a rematch is just a
-  // fresh match started on a room that already has both seats filled,
-  // same colors as before, board/history/timer/result all reset exactly
+  // A rematch actually starting — shared by both the mutual-request and the
+  // explicit-accept paths below. Reuses startGame() on the same Room: same
+  // seats/colors as before, board/history/timer/result all reset exactly
   // like a brand new game_started.
-  socket.on('play_again', () => {
+  function startRematch(room) {
+    room.clearPlayAgainRequest()
+    room.startGame()
+    console.log(`[game] ${room.roomId} rematch started`)
+    // Resets room.dbGameId (synchronously, before its own DB work) ahead of
+    // the broadcast below — otherwise the just-finished match's dbGameId
+    // would briefly leak into this brand new match's game_started payload.
+    createGameRecord(io, room)
+    broadcastGameStarted(io, room)
+  }
+
+  // One player asking for a rematch once the current match has actually
+  // concluded. This never restarts the match unilaterally — the other side
+  // has to agree first, exactly like a draw offer. If the other side
+  // already asked (both players clicked "Chơi lại" independently), this
+  // call is treated as accepting that existing request outright, since the
+  // outcome — both wanting a rematch — is identical either way.
+  socket.on('request_play_again', () => {
     const room = roomManager.getRoomBySocket(socket.id)
     if (!room) {
       socket.emit('room_error', { code: 'NOT_IN_ROOM', message: 'Bạn không ở trong phòng nào.' })
@@ -197,14 +225,62 @@ function registerGameHandlers(io, socket, roomManager) {
       socket.emit('room_error', { code: 'GAME_STILL_PLAYING', message: 'Trận đấu hiện tại chưa kết thúc.' })
       return
     }
-    if (!room.isFull() || !room.players.every((player) => player.connected)) {
+    const player = room.getPlayer(socket.id)
+    if (!player || !player.color) {
+      socket.emit('room_error', { code: 'NOT_A_PLAYER', message: 'Bạn không phải người chơi trong trận này.' })
+      return
+    }
+    if (!room.isFull() || !room.players.every((p) => p.connected)) {
       socket.emit('room_error', { code: 'OPPONENT_UNAVAILABLE', message: 'Đối thủ hiện không có mặt để chơi lại.' })
       return
     }
 
-    room.startGame()
-    console.log(`[game] ${room.roomId} rematch started`)
-    broadcastGameStarted(io, room)
+    if (room.playAgainRequestBy === player.color) {
+      // Duplicate click from the same player — nothing new to do, just
+      // re-ack so their own UI stays in the "waiting" state.
+      socket.emit('play_again_request_sent')
+      return
+    }
+
+    if (room.playAgainRequestBy) {
+      console.log(`[game] ${room.roomId} rematch requested by both players — starting`)
+      startRematch(room)
+      return
+    }
+
+    room.requestPlayAgain(player.color)
+    console.log(`[game] ${room.roomId} ${player.color} requested a rematch`)
+    socket.emit('play_again_request_sent')
+    socket.to(room.roomId).emit('play_again_requested', { fromColor: player.color })
+  })
+
+  // The other player's answer to a pending rematch request — never the
+  // requester's own socket (playAgainRequestBy === player.color is rejected,
+  // same as there being no request at all).
+  socket.on('respond_play_again', (payload) => {
+    const room = roomManager.getRoomBySocket(socket.id)
+    if (!room) {
+      socket.emit('room_error', { code: 'NOT_IN_ROOM', message: 'Bạn không ở trong phòng nào.' })
+      return
+    }
+    const player = room.getPlayer(socket.id)
+    if (!player || !player.color) {
+      socket.emit('room_error', { code: 'NOT_A_PLAYER', message: 'Bạn không phải người chơi trong trận này.' })
+      return
+    }
+    if (!room.playAgainRequestBy || room.playAgainRequestBy === player.color) {
+      socket.emit('room_error', { code: 'NO_PLAY_AGAIN_REQUEST', message: 'Không có lời mời chơi lại nào để phản hồi.' })
+      return
+    }
+
+    if (payload && payload.accept) {
+      console.log(`[game] ${room.roomId} rematch accepted by ${player.color}`)
+      startRematch(room)
+    } else {
+      room.clearPlayAgainRequest()
+      console.log(`[game] ${room.roomId} rematch declined by ${player.color}`)
+      io.to(room.roomId).emit('play_again_declined')
+    }
   })
 }
 

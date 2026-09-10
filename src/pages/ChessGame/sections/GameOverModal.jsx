@@ -9,7 +9,18 @@ const REASON_HEADING = {
   [GAME_STATUS.DRAW]: 'Hòa cờ!',
 }
 
-export function GameOverModal({ winner, status, redName, blackName, youWon, onClose, onPlayAgain }) {
+export function GameOverModal({
+  winner,
+  status,
+  redName,
+  blackName,
+  youWon,
+  onClose,
+  onPlayAgain,
+  onViewReplay,
+  playAgainRequest,
+  onRespondPlayAgain,
+}) {
   const isDraw = status === GAME_STATUS.DRAW
   const winnerName = winner === 'red' ? redName : blackName
   const loserName = winner === 'red' ? blackName : redName
@@ -88,14 +99,52 @@ export function GameOverModal({ winner, status, redName, blackName, youWon, onCl
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={onPlayAgain}
-          className="w-full bg-primary text-on-primary py-3 rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform shadow-md"
-        >
-          <Icon name="refresh" />
-          Chơi lại
-        </button>
+        {playAgainRequest === 'incoming' ? (
+          <div className="space-y-3">
+            <p className="font-label-md text-label-md text-on-surface-variant">Đối thủ muốn chơi lại ván mới</p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => onRespondPlayAgain?.(false)}
+                className="flex-1 py-3 rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md hover:bg-surface-container transition-colors"
+              >
+                Từ chối
+              </button>
+              <button
+                type="button"
+                onClick={() => onRespondPlayAgain?.(true)}
+                className="flex-1 bg-primary text-on-primary py-3 rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform shadow-md"
+              >
+                <Icon name="refresh" />
+                Đồng ý
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={onPlayAgain}
+            disabled={playAgainRequest === 'outgoing'}
+            className="w-full bg-primary text-on-primary py-3 rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform shadow-md disabled:opacity-60 disabled:hover:scale-100 disabled:cursor-not-allowed"
+          >
+            <Icon name="refresh" />
+            {playAgainRequest === 'outgoing' ? 'Đang chờ đối thủ...' : 'Chơi lại'}
+          </button>
+        )}
+
+        {/* Only rendered once the match is actually persisted (both players
+            logged in, see gameHistoryService.js on the server) — a local or
+            guest match has nothing saved to replay. */}
+        {onViewReplay && (
+          <button
+            type="button"
+            onClick={onViewReplay}
+            className="w-full mt-3 bg-transparent border-2 border-primary text-primary py-3 rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 hover:bg-primary/5 transition-colors"
+          >
+            <Icon name="history" />
+            Xem lại ván đấu
+          </button>
+        )}
       </div>
     </div>
   )

@@ -18,6 +18,11 @@ export function useOnlineGame({ enabled, onOpponentMove, onMoveRejected, onGameO
   // live UI signal — the server is what actually decides/records DRAW; this
   // only tracks which confirm prompt (if any) MatchActions should show.
   const [drawOffer, setDrawOffer] = useState(null)
+  // Same null/'outgoing'/'incoming' shape as drawOffer, but for a rematch
+  // request once the match has ended — GameOverModal reads this to show
+  // "Đang chờ đối thủ..." or an accept/decline prompt instead of starting a
+  // new match unilaterally on a single click.
+  const [playAgainRequest, setPlayAgainRequest] = useState(null)
 
   useEffect(() => {
     if (!enabled) return
@@ -68,6 +73,28 @@ export function useOnlineGame({ enabled, onOpponentMove, onMoveRejected, onGameO
       })
     }
 
+    // Ack to the requesting client only: flips its own "Chơi lại" button to
+    // a "waiting for response" state.
+    function handlePlayAgainRequestSent() {
+      setPlayAgainRequest('outgoing')
+    }
+
+    // Sent to the other player only: opens the accept/decline prompt in
+    // GameOverModal.
+    function handlePlayAgainRequested() {
+      setError(null)
+      setPlayAgainRequest('incoming')
+    }
+
+    // Broadcast to the room when the request is declined. Only the
+    // requester gets a notice out of it, same as a declined draw offer.
+    function handlePlayAgainDeclined() {
+      setPlayAgainRequest((current) => {
+        if (current === 'outgoing') setError('Đối thủ đã từ chối chơi lại.')
+        return null
+      })
+    }
+
     socket.on('move_made', handleMoveMade)
     socket.on('move_rejected', handleMoveRejected)
     socket.on('game_over', handleGameOver)
@@ -75,6 +102,9 @@ export function useOnlineGame({ enabled, onOpponentMove, onMoveRejected, onGameO
     socket.on('draw_offer_sent', handleDrawOfferSent)
     socket.on('draw_offered', handleDrawOffered)
     socket.on('draw_offer_declined', handleDrawOfferDeclined)
+    socket.on('play_again_request_sent', handlePlayAgainRequestSent)
+    socket.on('play_again_requested', handlePlayAgainRequested)
+    socket.on('play_again_declined', handlePlayAgainDeclined)
 
     return () => {
       socket.off('move_made', handleMoveMade)
@@ -84,6 +114,9 @@ export function useOnlineGame({ enabled, onOpponentMove, onMoveRejected, onGameO
       socket.off('draw_offer_sent', handleDrawOfferSent)
       socket.off('draw_offered', handleDrawOffered)
       socket.off('draw_offer_declined', handleDrawOfferDeclined)
+      socket.off('play_again_request_sent', handlePlayAgainRequestSent)
+      socket.off('play_again_requested', handlePlayAgainRequested)
+      socket.off('play_again_declined', handlePlayAgainDeclined)
     }
   }, [enabled, onOpponentMove, onMoveRejected, onGameOver])
 
@@ -100,8 +133,20 @@ export function useOnlineGame({ enabled, onOpponentMove, onMoveRejected, onGameO
     socket.emit('report_game_over', { status, winner })
   }, [])
 
-  const playAgain = useCallback(() => {
-    socket.emit('play_again')
+  // Asks for a rematch. Never starts one unilaterally — the server only
+  // actually restarts the match once the other side agrees too (or had
+  // already asked first itself), same handshake as offerDraw/respondDraw.
+  const requestPlayAgain = useCallback(() => {
+    socket.emit('request_play_again')
+  }, [])
+
+  // The opponent's answer to a pending incoming rematch request. Clears the
+  // local prompt immediately (optimistic, same as respondDraw below); the
+  // actual restart (or staying on the game-over screen) always comes from
+  // the server via game_started / play_again_declined.
+  const respondPlayAgain = useCallback((accept) => {
+    setPlayAgainRequest(null)
+    socket.emit('respond_play_again', { accept })
   }, [])
 
   // Concedes the match outright. The server is the sole authority on the
@@ -130,7 +175,18 @@ export function useOnlineGame({ enabled, onOpponentMove, onMoveRejected, onGameO
     socket.emit('respond_draw', { accept })
   }, [])
 
-  return { sendMove, error, reportGameOver, playAgain, resign, drawOffer, offerDraw, respondDraw }
+  return {
+    sendMove,
+    error,
+    reportGameOver,
+    requestPlayAgain,
+    respondPlayAgain,
+    playAgainRequest,
+    resign,
+    drawOffer,
+    offerDraw,
+    respondDraw,
+  }
 }
 
 export default useOnlineGame

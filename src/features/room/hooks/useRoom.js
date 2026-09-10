@@ -18,6 +18,13 @@ export function useRoom() {
   const [matchResult, setMatchResult] = useState(null) // { status, winner, loser } | null — only for server-declared outcomes (e.g. opponent-left)
   const [timerState, setTimerState] = useState(null) // { red: {moveTime,gameTime}, black: {...} } | null — for seeding/restoring useTimer
   const [messages, setMessages] = useState([]) // authoritative chat log from the server, for seeding useChat (same restore pattern as moveHistory)
+  // The Game row's id once the current match is persisted (both players
+  // logged in — see gameHistoryService.js), or null for a guest match that
+  // isn't saved at all. Arrives either inline on game_started/game_state/
+  // match_found, or slightly later via game_persisted once the server's
+  // async DB insert resolves — this is what lets GameOverModal show "Xem
+  // lại ván đấu" only when there's actually something to replay.
+  const [dbGameId, setDbGameId] = useState(null)
   const [opponentConnected, setOpponentConnected] = useState(true)
   const [error, setError] = useState(null)
   const [notice, setNotice] = useState(null) // one-off info message, e.g. "opponent left mid-game"
@@ -76,6 +83,7 @@ export function useRoom() {
       setMatchResult(payload.matchResult ?? null)
       setTimerState(payload.timerState ?? null)
       setMessages(payload.messages ?? [])
+      setDbGameId(payload.dbGameId ?? null)
       setOpponentConnected(payload.opponent ? payload.opponent.connected !== false : true)
       setRoom({ roomId: payload.roomId, status: payload.status, players: payload.players })
       setRestoreVersion((v) => v + 1)
@@ -93,6 +101,7 @@ export function useRoom() {
       setMatchResult(null)
       setTimerState(null)
       setMessages([])
+      setDbGameId(null)
       setRoom({ roomId: payload.roomId, status: payload.status, players: payload.players })
       saveRoomId(payload.roomId)
       wasPlayingRef.current = false
@@ -172,6 +181,7 @@ export function useRoom() {
       setMatchResult(null)
       setTimerState(null)
       setMessages([])
+      setDbGameId(null)
       setRoom((current) => (current ? { ...current, status: payload.status, players: payload.players } : current))
       wasPlayingRef.current = false
     }
@@ -202,6 +212,14 @@ export function useRoom() {
       setError(payload.message)
     }
 
+    // The server's async DB insert for this match resolved after
+    // game_started/game_state/match_found had already gone out with
+    // dbGameId still null — this is what fills it in a moment later,
+    // without needing a full snapshot re-apply.
+    function handleGamePersisted(payload) {
+      setDbGameId(payload.gameId)
+    }
+
     // Ask the server to resume whatever room/match this identity was last
     // in. Runs immediately if already connected, and again on every future
     // (re)connect — that one listener covers both a hard refresh (brand
@@ -229,6 +247,7 @@ export function useRoom() {
     socket.on('room_error', handleRoomError)
     socket.on('quick_play_queued', handleQuickPlayQueued)
     socket.on('match_found', handleMatchFound)
+    socket.on('game_persisted', handleGamePersisted)
 
     return () => {
       socket.off('connect', attemptRejoin)
@@ -244,6 +263,7 @@ export function useRoom() {
       socket.off('room_error', handleRoomError)
       socket.off('quick_play_queued', handleQuickPlayQueued)
       socket.off('match_found', handleMatchFound)
+      socket.off('game_persisted', handleGamePersisted)
     }
   }, [])
 
@@ -292,6 +312,7 @@ export function useRoom() {
     setMatchResult(null)
     setTimerState(null)
     setMessages([])
+    setDbGameId(null)
     setPending(false)
     setError(null)
     setNotice(null)
@@ -307,6 +328,7 @@ export function useRoom() {
     matchResult,
     timerState,
     messages,
+    dbGameId,
     opponentConnected,
     error,
     notice,

@@ -23,6 +23,7 @@ export function Room() {
     matchResult,
     timerState,
     messages,
+    dbGameId,
     opponentConnected,
     error,
     notice,
@@ -100,6 +101,7 @@ export function Room() {
             matchResult,
             timerState,
             messages,
+            dbGameId,
           }}
         />
       </div>

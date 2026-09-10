@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../components/hooks/useAuth'
 import Dashboard from '../pages/Dashboard/Dashboard'
+import Replay from '../pages/Replay/Replay'
 
 function RequireAuth() {
   const { isAuthenticated } = useAuth()
@@ -10,7 +11,10 @@ function RequireAuth() {
 export const privateRoutes = [
   {
     element: <RequireAuth />,
-    children: [{ path: '/dashboard', element: <Dashboard /> }],
+    children: [
+      { path: '/dashboard', element: <Dashboard /> },
+      { path: '/replay/:gameId', element: <Replay /> },
+    ],
   },
 ]
 

@@ -10,6 +10,7 @@ const cors = require('cors')
 const { Server } = require('socket.io')
 const registerSocketHandlers = require('./sockets/socketHandler')
 const authRoutes = require('./routes/authRoutes')
+const gameRoutes = require('./routes/gameRoutes')
 
 const PORT = process.env.PORT || 3000
 
@@ -36,6 +37,7 @@ app.get('/', (req, res) => {
 })
 
 app.use('/api/auth', authRoutes)
+app.use('/api/games', gameRoutes)
 
 const httpServer = http.createServer(app)
 

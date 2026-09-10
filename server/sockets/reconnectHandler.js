@@ -1,4 +1,5 @@
 const { ROOM_STATUS, GAME_STATUS } = require('../rooms/room')
+const { finishGameRecord } = require('../services/gameHistoryService')
 
 // How long a mid-match disconnect is given to come back before the match is
 // forfeited to the other player. A plain refresh reconnects in well under a
@@ -41,6 +42,7 @@ function scheduleDisconnectForfeit(io, roomManager, roomId, playerId) {
     const result = room.recordMatchResult(GAME_STATUS.OPPONENT_LEFT, winner)
     console.log(`[reconnect] ${playerId} did not reconnect in time — ${winner} wins ${room.roomId} by forfeit`)
     io.to(room.roomId).emit('game_over', result)
+    finishGameRecord(room, GAME_STATUS.OPPONENT_LEFT, winner)
   }, DISCONNECT_GRACE_PERIOD_MS)
 
   pendingForfeits.set(playerId, handle)
@@ -65,7 +67,7 @@ function completeRejoin(io, socket, room, playerId) {
   const player = room.getPlayerByPlayerId(playerId)
   console.log(`[reconnect] ${playerId} reconnected to ${room.roomId} as ${socket.id}`)
 
-  socket.emit('game_state', room.toGameStarted(socket.id))
+  socket.emit('game_state', { ...room.toGameStarted(socket.id), dbGameId: room.dbGameId || null })
 
   if (room.status === ROOM_STATUS.PLAYING) {
     socket.to(room.roomId).emit('opponent_reconnected', { playerNumber: player.playerNumber })

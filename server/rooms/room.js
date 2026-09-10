@@ -62,6 +62,12 @@ class Room {
     // any match result is recorded (see recordMatchResult), which is what
     // guarantees a resign/checkmate/timeout cancels a pending offer.
     this.drawOfferBy = null
+    // Color of whichever player has asked for a rematch once this match
+    // concluded and is waiting on the other side's response, or null. Same
+    // lifecycle as drawOfferBy — a live handshake only, cleared the instant
+    // a new match actually starts (startGame) or a player leaves for good
+    // (removePlayer).
+    this.playAgainRequestBy = null
     // In-memory-only chat log for this room — never persisted anywhere, and
     // wiped on every rematch/leave alongside moveHistory (see startGame()
     // and removePlayer() below) so a new match never carries over the old
@@ -119,6 +125,7 @@ class Room {
     this.moveHistory = []
     this.matchResult = null
     this.drawOfferBy = null
+    this.playAgainRequestBy = null
     this.turnStartedAt = null
     this.remainingGameTime = { red: this.timeControl.gameTimeMs, black: this.timeControl.gameTimeMs }
     this.messages = []
@@ -162,6 +169,7 @@ class Room {
     this.moveHistory = []
     this.matchResult = null
     this.drawOfferBy = null
+    this.playAgainRequestBy = null
     this.remainingGameTime = { red: this.timeControl.gameTimeMs, black: this.timeControl.gameTimeMs }
     this.turnStartedAt = Date.now()
     // A rematch (play_again reuses this same Room) starts a clean chat too —
@@ -198,6 +206,19 @@ class Room {
   // touching anything else about the match.
   clearDrawOffer() {
     this.drawOfferBy = null
+  }
+
+  // Marks `color` as having just asked for a rematch. Callers are expected
+  // to have already checked there isn't one pending from this same color
+  // (see gameHandler.js) — this never overwrites/stacks requests itself.
+  requestPlayAgain(color) {
+    this.playAgainRequestBy = color
+  }
+
+  // Withdraws/resolves whatever rematch request is currently pending,
+  // without touching anything else about the match.
+  clearPlayAgainRequest() {
+    this.playAgainRequestBy = null
   }
 
   // Appends a move the mover's own client already fully computed and

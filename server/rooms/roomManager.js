@@ -99,12 +99,17 @@ class RoomManager {
     this.playerIdToRoom.set(playerId, roomId)
 
     // Filling the last seat starts the match immediately — there is no
-    // separate "ready, waiting to start" step at this stage.
+    // separate "ready, waiting to start" step at this stage. `justStarted`
+    // tells callers this exact call is what began it (vs. an already-playing
+    // room), which is what gameHistoryService.createGameRecord uses to
+    // avoid persisting a Game more than once per match.
+    let justStarted = false
     if (room.isFull()) {
       room.startGame()
+      justStarted = true
     }
 
-    return { room, player, reconnected: false }
+    return { room, player, reconnected: false, justStarted }
   }
 
   // Reattaches a fresh socket (after a refresh, or Socket.IO's own

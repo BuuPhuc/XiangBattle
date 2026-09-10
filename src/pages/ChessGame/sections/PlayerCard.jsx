@@ -3,11 +3,8 @@ import { cn } from '../../../components/utils/cn'
 
 // A single compact row — clocks, name/elo, and avatar — meant to sandwich
 // GameHistoryPanel (see ChessGame.jsx) rather than stand as its own tall
-// card the way this used to. `capturedPieces` is optional and only ever
-// passed for the side whose captures are being shown (see ChessGame.jsx,
-// which only tracks what black has captured, same as before this was a
-// separate CapturedPieces panel).
-export function PlayerCard({ name, elo, side, moveTime, gameTime, clockActive, online, accentClassName = '', capturedPieces = [] }) {
+// card the way this used to.
+export function PlayerCard({ name, elo, side, moveTime, gameTime, clockActive, online, accentClassName = '' }) {
   const isRed = side === 'red'
 
   return (
@@ -46,19 +43,6 @@ export function PlayerCard({ name, elo, side, moveTime, gameTime, clockActive, o
         <h3 className="font-label-md text-label-md text-on-surface truncate">{name}</h3>
         <p className="font-label-sm text-label-sm text-on-surface-variant">ELO {elo}</p>
       </div>
-
-      {capturedPieces.length > 0 && (
-        <div className="hidden sm:flex items-center gap-1 flex-wrap justify-end max-w-[25%]">
-          {capturedPieces.slice(0, 6).map((piece, i) => (
-            <span
-              key={`${piece.id}-${i}`}
-              className="w-5 h-5 rounded-full bg-piece-red border border-white flex items-center justify-center text-white text-[9px] font-bold shadow-sm"
-            >
-              {piece.char}
-            </span>
-          ))}
-        </div>
-      )}
 
       <div className="relative shrink-0">
         <div
