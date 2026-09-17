@@ -1,4 +1,5 @@
 const { db } = require('../prisma/db')
+const { canViewGameReplay } = require('../services/gameAccessService')
 
 const Game = db.orm.public.Game
 
@@ -10,9 +11,10 @@ function toPublicPlayer(user) {
 
 // GET /api/games/:id — returns one finished match plus its full move list
 // (ascending by moveNumber) for the frontend's replay viewer to reconstruct
-// the board from. Only the two players who were actually in the match may
-// fetch it, and only once it's finished — an in-progress room's state
-// belongs to the live Socket.IO flow, never this REST endpoint.
+// the board from. Any authenticated user may fetch any FINISHED match —
+// see gameAccessService.canViewGameReplay for the (currently PUBLIC)
+// access policy — but an in-progress room's state never comes through this
+// REST endpoint; that stays exclusive to the live Socket.IO flow.
 async function getGameById(req, res) {
   const gameId = Number(req.params.id)
   if (!Number.isInteger(gameId) || gameId <= 0) {
@@ -35,12 +37,11 @@ async function getGameById(req, res) {
     return res.status(404).json({ success: false, code: 'GAME_NOT_FOUND', message: 'Không tìm thấy trận đấu.' })
   }
 
-  if (req.auth.userId !== game.redPlayerId && req.auth.userId !== game.blackPlayerId) {
+  if (!canViewGameReplay(req.auth.userId, game)) {
+    if (game.status !== 'FINISHED') {
+      return res.status(409).json({ success: false, code: 'GAME_NOT_FINISHED', message: 'Trận đấu chưa kết thúc.' })
+    }
     return res.status(403).json({ success: false, code: 'FORBIDDEN', message: 'Bạn không có quyền xem lại trận đấu này.' })
-  }
-
-  if (game.status !== 'FINISHED') {
-    return res.status(409).json({ success: false, code: 'GAME_NOT_FINISHED', message: 'Trận đấu chưa kết thúc.' })
   }
 
   return res.json({

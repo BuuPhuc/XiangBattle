@@ -1,3 +1,8 @@
+// Reused as-is rather than re-deriving the same `u:<userId>` parsing here —
+// gameHistoryService.js already owns the one definition of "which playerId
+// strings are a real logged-in account".
+const { parseUserId } = require('../services/gameHistoryService')
+
 const ROOM_STATUS = {
   WAITING: 'waiting',
   PLAYING: 'playing',
@@ -68,6 +73,16 @@ class Room {
     // a new match actually starts (startGame) or a player leaves for good
     // (removePlayer).
     this.playAgainRequestBy = null
+    // { red: number|null, black: number|null } | null — each seated
+    // account's rating as of match start, looked up once both colors are
+    // assigned (see gameHistoryService.js's attachPlayerRatings, called
+    // alongside createGameRecord). null for a guest seat (no User row to
+    // read), and null for the whole object until the lookup resolves —
+    // toPublic()/toGameStarted() below fall back to null per player rather
+    // than ever inventing a number. Reset on every fresh match (startGame)
+    // and cleared when the room empties back out (removePlayer), same
+    // lifecycle as moveHistory/matchResult.
+    this.playerRatings = null
     // In-memory-only chat log for this room — never persisted anywhere, and
     // wiped on every rematch/leave alongside moveHistory (see startGame()
     // and removePlayer() below) so a new match never carries over the old
@@ -129,6 +144,7 @@ class Room {
     this.turnStartedAt = null
     this.remainingGameTime = { red: this.timeControl.gameTimeMs, black: this.timeControl.gameTimeMs }
     this.messages = []
+    this.playerRatings = null
     this.players.forEach((player) => {
       player.color = null
     })
@@ -175,6 +191,11 @@ class Room {
     // A rematch (play_again reuses this same Room) starts a clean chat too —
     // never let the previous match's messages bleed into the new one.
     this.messages = []
+    // Cleared here (rather than left stale from the previous match) — the
+    // caller re-fetches it fresh right after this (see
+    // gameHistoryService.js's attachPlayerRatings), same async-fill-in
+    // pattern as dbGameId/createGameRecord below it.
+    this.playerRatings = null
   }
 
   // Appends a chat message to this room's in-memory log — the only place
@@ -284,6 +305,14 @@ class Room {
     return { red: build(COLORS.RED), black: build(COLORS.BLACK) }
   }
 
+  // This seat's rating as of match start, or null — before playerRatings
+  // has resolved, for a color-less (not-yet-seated) player, or for a guest
+  // seat with no User row to read. Never a guessed/placeholder number.
+  ratingFor(color) {
+    if (!this.playerRatings || !color) return null
+    return this.playerRatings[color] ?? null
+  }
+
   // Shape sent to clients — never leak socketId, clients only need seat
   // numbers/colors/connection status and (via the separate `you`/`opponent`
   // fields on their own events) which seat is theirs.
@@ -295,6 +324,7 @@ class Room {
         playerNumber: player.playerNumber,
         color: player.color,
         connected: player.connected,
+        rating: this.ratingFor(player.color),
       })),
     }
   }
@@ -309,8 +339,21 @@ class Room {
     const opponent = this.getOpponent(recipientSocketId)
     return {
       ...this.toPublic(),
-      you: you ? { playerNumber: you.playerNumber, color: you.color } : null,
-      opponent: opponent ? { playerNumber: opponent.playerNumber, color: opponent.color, connected: opponent.connected } : null,
+      // userId (never the raw playerId string) is what lets a client link a
+      // PlayerCard to /profile/:userId — see src/pages/ChessGame/sections/
+      // PlayerCard.jsx. null for a guest seat, same as ratingFor.
+      you: you
+        ? { playerNumber: you.playerNumber, color: you.color, rating: this.ratingFor(you.color), userId: parseUserId(you.playerId) }
+        : null,
+      opponent: opponent
+        ? {
+            playerNumber: opponent.playerNumber,
+            color: opponent.color,
+            connected: opponent.connected,
+            rating: this.ratingFor(opponent.color),
+            userId: parseUserId(opponent.playerId),
+          }
+        : null,
       currentTurn: this.currentTurn,
       moveHistory: this.moveHistory,
       matchResult: this.matchResult,

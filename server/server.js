@@ -12,6 +12,7 @@ const registerSocketHandlers = require('./sockets/socketHandler')
 const authRoutes = require('./routes/authRoutes')
 const gameRoutes = require('./routes/gameRoutes')
 const userRoutes = require('./routes/userRoutes')
+const leaderboardRoutes = require('./routes/leaderboardRoutes')
 
 const PORT = process.env.PORT || 3000
 
@@ -40,6 +41,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/games', gameRoutes)
 app.use('/api/users', userRoutes)
+app.use('/api/leaderboard', leaderboardRoutes)
 
 const httpServer = http.createServer(app)
 

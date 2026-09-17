@@ -1,7 +1,9 @@
 const { db } = require('../prisma/db')
+const { calculateElo } = require('./eloService')
 
 const Game = db.orm.public.Game
 const Move = db.orm.public.Move
+const User = db.orm.public.User
 
 // Maps the client-derived / server-declared GAME_STATUS strings (see
 // src/features/game/gameLogic.js and server/rooms/room.js's GAME_STATUS)
@@ -75,6 +77,38 @@ async function createGameRecord(io, room) {
   }
 }
 
+// Looks up each seated account's *current* rating (the same User.rating
+// column Elo/Profile/Sidebar already read) so PlayerCard can show it during
+// the match, not just afterward. Runs independently of createGameRecord
+// above — a guest opponent still has no rating to show, but that must never
+// stop the logged-in side from seeing their own — and, like it, only ever
+// reads, never invents or trusts anything from the client. Called
+// alongside createGameRecord at every point a match starts (join_room,
+// quick_play, play_again); resolves slightly after game_started/game_state
+// go out, so this broadcasts the result as its own event the moment it's
+// ready, same fill-in-later pattern as game_persisted.
+async function attachPlayerRatings(io, room) {
+  const redPlayer = room.players.find((player) => player.color === 'red')
+  const blackPlayer = room.players.find((player) => player.color === 'black')
+  const redPlayerId = parseUserId(redPlayer && redPlayer.playerId)
+  const blackPlayerId = parseUserId(blackPlayer && blackPlayer.playerId)
+  if (!redPlayerId && !blackPlayerId) return // both guests — nothing to look up
+
+  try {
+    const [redUser, blackUser] = await Promise.all([
+      redPlayerId ? User.first({ id: redPlayerId }) : null,
+      blackPlayerId ? User.first({ id: blackPlayerId }) : null,
+    ])
+    room.playerRatings = {
+      red: redUser ? redUser.rating : null,
+      black: blackUser ? blackUser.rating : null,
+    }
+    io.to(room.roomId).emit('player_ratings', room.playerRatings)
+  } catch (error) {
+    console.error(`[rating] failed to load player ratings for room ${room.roomId}:`, error.message)
+  }
+}
+
 // Persists one already-committed move. A no-op for a room whose match isn't
 // being persisted (guest involved, or the create above failed). moveNumber
 // reuses the same `ply` the in-memory room already stamped on the entry
@@ -101,20 +135,41 @@ async function saveMoveRecord(room, moveEntry, player) {
   }
 }
 
-// Persists the final result and updates both players' win/loss/draw
-// tallies. Guarded by its own one-shot flag (independent of
-// room.recordMatchResult's in-memory idempotency) so this can never run
-// twice for the same match — a second write here would double-count stats,
-// which must never happen. `winnerColor` is null for a draw.
-async function finishGameRecord(room, status, winnerColor) {
-  if (!room.dbGameId || room.dbResultSaved) return
+// Thrown inside the transaction below to trigger a rollback when the DB
+// itself says this game is no longer PLAYING — see finishGameRecord.
+class AlreadyFinishedError extends Error {}
+
+// Persists the final result, runs the Elo update, and updates both
+// players' win/loss/draw tallies — all inside one transaction, so a Game
+// can never end up FINISHED with only one side's rating/stats applied.
+//
+// Guarded twice against ever processing the same match twice:
+//   1. `room.dbResultSaved` — a synchronous in-memory flag set before any
+//      `await`, so two calls arriving in the same tick (duplicate socket
+//      event, a report racing a forfeit, etc.) can't both pass it.
+//   2. The transaction's own `.where({ id, status: 'PLAYING' })` update —
+//      a database-level check that the Game row itself hasn't already
+//      been finished, independent of this process's in-memory state (the
+//      guard that actually matters if the server restarted mid-match, or
+//      anything else made #1 unreliable).
+//
+// `winnerColor` is null for a draw. On success, broadcasts the rating
+// change to the room as `rating_updated` (kept separate from the caller's
+// own immediate `game_over` emit, so the chess result reaches clients
+// without waiting on this DB round trip) — mirrors createGameRecord's own
+// io.emit('game_persisted', ...) above. Returns the rating info too so
+// tests/callers can inspect it; returns null when nothing was persisted
+// (a guest was playing) or this game was already processed.
+async function finishGameRecord(io, room, status, winnerColor) {
+  if (!room.dbGameId || room.dbResultSaved) return null
   room.dbResultSaved = true
+  const gameId = room.dbGameId
 
   const redPlayer = room.players.find((player) => player.color === 'red')
   const blackPlayer = room.players.find((player) => player.color === 'black')
   const redPlayerId = parseUserId(redPlayer && redPlayer.playerId)
   const blackPlayerId = parseUserId(blackPlayer && blackPlayer.playerId)
-  if (!redPlayerId || !blackPlayerId) return
+  if (!redPlayerId || !blackPlayerId) return null
 
   const isDraw = status === 'draw'
   const result = isDraw ? 'DRAW' : winnerColor === 'red' ? 'RED_WIN' : 'BLACK_WIN'
@@ -122,40 +177,74 @@ async function finishGameRecord(room, status, winnerColor) {
   const endReason = END_REASON_BY_STATUS[status] || 'CANCELLED'
 
   try {
-    await db.transaction(async (tx) => {
-      await tx.orm.public.Game.where({ id: room.dbGameId }).update({
+    const ratingInfo = await db.transaction(async (tx) => {
+      const updatedGame = await tx.orm.public.Game.where({ id: gameId, status: 'PLAYING' }).update({
         status: 'FINISHED',
         result,
         endReason,
         winnerPlayerId,
         endedAt: new Date(),
       })
+      if (!updatedGame) throw new AlreadyFinishedError()
 
+      const [redUser, blackUser] = await Promise.all([
+        tx.orm.public.User.first({ id: redPlayerId }),
+        tx.orm.public.User.first({ id: blackPlayerId }),
+      ])
+      if (!redUser || !blackUser) {
+        console.error(`[elo] game #${gameId} missing player row (red=${!!redUser} black=${!!blackUser}) — skip rating update`)
+        return null
+      }
+
+      const scoreRed = isDraw ? 0.5 : winnerColor === 'red' ? 1 : 0
+      const elo = calculateElo(redUser.rating, blackUser.rating, scoreRed)
+
+      // Full new stat lines for both sides — computed once here so the
+      // update and the returned/emitted payload can never disagree about
+      // what was actually written.
+      const redStats = { wins: redUser.wins, losses: redUser.losses, draws: redUser.draws }
+      const blackStats = { wins: blackUser.wins, losses: blackUser.losses, draws: blackUser.draws }
       if (isDraw) {
-        const [redUser, blackUser] = await Promise.all([
-          tx.orm.public.User.first({ id: redPlayerId }),
-          tx.orm.public.User.first({ id: blackPlayerId }),
-        ])
-        await Promise.all([
-          tx.orm.public.User.where({ id: redPlayerId }).update({ draws: (redUser ? redUser.draws : 0) + 1 }),
-          tx.orm.public.User.where({ id: blackPlayerId }).update({ draws: (blackUser ? blackUser.draws : 0) + 1 }),
-        ])
+        redStats.draws += 1
+        blackStats.draws += 1
+      } else if (winnerColor === 'red') {
+        redStats.wins += 1
+        blackStats.losses += 1
       } else {
-        const loserPlayerId = winnerColor === 'red' ? blackPlayerId : redPlayerId
-        const [winnerUser, loserUser] = await Promise.all([
-          tx.orm.public.User.first({ id: winnerPlayerId }),
-          tx.orm.public.User.first({ id: loserPlayerId }),
-        ])
-        await Promise.all([
-          tx.orm.public.User.where({ id: winnerPlayerId }).update({ wins: (winnerUser ? winnerUser.wins : 0) + 1 }),
-          tx.orm.public.User.where({ id: loserPlayerId }).update({ losses: (loserUser ? loserUser.losses : 0) + 1 }),
-        ])
+        redStats.losses += 1
+        blackStats.wins += 1
+      }
+
+      await Promise.all([
+        tx.orm.public.User.where({ id: redPlayerId }).update({ rating: elo.newRatingA, ...redStats }),
+        tx.orm.public.User.where({ id: blackPlayerId }).update({ rating: elo.newRatingB, ...blackStats }),
+      ])
+
+      console.log(
+        `[elo] game #${gameId} red player #${redPlayerId} rating ${redUser.rating} → ${elo.newRatingA} (${elo.changeA >= 0 ? '+' : ''}${elo.changeA})`,
+      )
+      console.log(
+        `[elo] game #${gameId} black player #${blackPlayerId} rating ${blackUser.rating} → ${elo.newRatingB} (${elo.changeB >= 0 ? '+' : ''}${elo.changeB})`,
+      )
+
+      return {
+        gameId,
+        red: { userId: redPlayerId, rating: { before: redUser.rating, after: elo.newRatingA, change: elo.changeA }, ...redStats },
+        black: { userId: blackPlayerId, rating: { before: blackUser.rating, after: elo.newRatingB, change: elo.changeB }, ...blackStats },
       }
     })
-    console.log(`[game-db] game #${room.dbGameId} finished — ${result} (${endReason})`)
+
+    console.log(`[game-db] game #${gameId} finished — ${result} (${endReason})`)
+    if (ratingInfo) io.to(room.roomId).emit('rating_updated', ratingInfo)
+    return ratingInfo
   } catch (error) {
-    console.error(`[game-db] game #${room.dbGameId} failed to record result:`, error.message)
+    if (error instanceof AlreadyFinishedError) {
+      console.log(`[elo] game #${gameId} already processed — skip`)
+      return null
+    }
+    console.error(`[game-db] game #${gameId} failed to record result:`, error.message)
+    return null
   }
 }
 
-module.exports = { parseUserId, createGameRecord, saveMoveRecord, finishGameRecord }
+module.exports = { parseUserId, createGameRecord, attachPlayerRatings, saveMoveRecord, finishGameRecord }

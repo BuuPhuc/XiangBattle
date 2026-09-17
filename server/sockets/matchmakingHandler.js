@@ -5,7 +5,7 @@
 // everything downstream (color assignment, startGame, reconnect, resign,
 // draw, game_over) keeps working unmodified.
 //
-const { createGameRecord } = require('../services/gameHistoryService')
+const { createGameRecord, attachPlayerRatings } = require('../services/gameHistoryService')
 
 // playerId -> { socketId, playerId }, in the order players started
 // waiting. Module-level (like reconnectHandler's pendingForfeits) since a
@@ -83,6 +83,7 @@ function registerMatchmakingHandlers(io, socket, roomManager) {
     // always "just started" the match — same persistence entry point as a
     // manual join_room (see socketHandler.js).
     createGameRecord(io, room)
+    attachPlayerRatings(io, room)
 
     // Same per-recipient shape as game_started/game_state (you/opponent
     // differ per socket) — the frontend treats this identically to a

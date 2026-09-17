@@ -12,6 +12,18 @@ export const userService = {
     formData.append('avatar', file)
     return api.post('/users/me/avatar', formData).then((res) => res.data)
   },
+  // Another user's read-only public profile (Public Profile page,
+  // PlayerCard links). Server strips this to public-safe fields only.
+  getPublicProfile: (userId) => api.get(`/users/${userId}`).then((res) => res.data),
+  // A user's FINISHED-match history (Public Profile's "Ván đấu gần đây").
+  // Public today (any authenticated viewer, any user) — see the server's
+  // gameAccessService for where that policy actually lives.
+  getUserGames: (userId, { page = 1, limit = 10 } = {}) =>
+    api.get(`/users/${userId}/games`, { params: { page, limit } }).then((res) => res.data),
+  // Leaderboard — players ranked by rating DESC (computed server-side).
+  // Also returns the caller's own rank/stats, even off the requested page.
+  getLeaderboard: ({ page = 1, limit = 50 } = {}) =>
+    api.get('/leaderboard', { params: { page, limit } }).then((res) => res.data),
 }
 
 export default userService

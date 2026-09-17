@@ -10,7 +10,7 @@ const {
 const { registerMatchmakingHandlers, removeFromQuickPlayQueue } = require('./matchmakingHandler')
 const { registerChatHandlers } = require('./chatHandler')
 const { verifyAccessToken } = require('../utils/token')
-const { createGameRecord } = require('../services/gameHistoryService')
+const { createGameRecord, attachPlayerRatings } = require('../services/gameHistoryService')
 
 // Best-effort identity attach: a client that connected with a valid JWT
 // (see src/socket/socket.js's `auth.token`) gets `socket.user = { id,
@@ -170,7 +170,10 @@ function registerSocketHandlers(io) {
 
       if (room.status === ROOM_STATUS.PLAYING) {
         console.log(`[room] ${room.roomId} game started (red=${room.players[0].socketId})`)
-        if (justStarted) createGameRecord(io, room)
+        if (justStarted) {
+          createGameRecord(io, room)
+          attachPlayerRatings(io, room)
+        }
         broadcastGameStarted(io, room)
       }
     })

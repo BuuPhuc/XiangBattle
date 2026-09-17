@@ -42,7 +42,7 @@ function scheduleDisconnectForfeit(io, roomManager, roomId, playerId) {
     const result = room.recordMatchResult(GAME_STATUS.OPPONENT_LEFT, winner)
     console.log(`[reconnect] ${playerId} did not reconnect in time — ${winner} wins ${room.roomId} by forfeit`)
     io.to(room.roomId).emit('game_over', result)
-    finishGameRecord(room, GAME_STATUS.OPPONENT_LEFT, winner)
+    finishGameRecord(io, room, GAME_STATUS.OPPONENT_LEFT, winner)
   }, DISCONNECT_GRACE_PERIOD_MS)
 
   pendingForfeits.set(playerId, handle)

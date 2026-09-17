@@ -5,6 +5,7 @@ import Button from '../../components/ui/Button'
 import Avatar from '../../components/ui/Avatar'
 import useAuth from '../../components/hooks/useAuth'
 import userService from '../../services/userService'
+import GameHistorySection from './sections/GameHistorySection'
 
 function StatCard({ label, value }) {
   return (
@@ -116,6 +117,8 @@ export function Profile() {
           <StatCard label="Tỷ lệ thắng" value={`${winRate}%`} />
         </div>
       </div>
+
+      <GameHistorySection userId={user.id} />
     </div>
   )
 }

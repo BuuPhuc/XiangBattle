@@ -23,6 +23,15 @@ export function useOnlineGame({ enabled, onOpponentMove, onMoveRejected, onGameO
   // "Đang chờ đối thủ..." or an accept/decline prompt instead of starting a
   // new match unilaterally on a single click.
   const [playAgainRequest, setPlayAgainRequest] = useState(null)
+  // { gameId, red: { userId, rating: {before,after,change}, wins, losses,
+  // draws }, black: {...} } | null — the server's authoritative Elo/stat
+  // update for this match, arriving slightly after game_over once the DB
+  // transaction in gameHistoryService.js resolves (never before: this is
+  // never computed or trusted from the client). Stays null for a
+  // non-persisted match (a guest played) or while the update is still in
+  // flight. Reset to null on every mount, same as drawOffer/playAgainRequest
+  // — ChessGame remounts (key={restoreVersion}) on every fresh match.
+  const [ratingUpdate, setRatingUpdate] = useState(null)
 
   useEffect(() => {
     if (!enabled) return
@@ -49,6 +58,13 @@ export function useOnlineGame({ enabled, onOpponentMove, onMoveRejected, onGameO
 
     function handleRoomError(payload) {
       setError(payload.message)
+    }
+
+    // The server's Elo/stats update for the match that (per handleGameOver
+    // above) just ended — always arrives after game_over, never instead of
+    // it, so this only ever adds rating info to an already-shown result.
+    function handleRatingUpdated(payload) {
+      setRatingUpdate(payload)
     }
 
     // Ack to the offering client only: flips its own button to a "waiting
@@ -105,6 +121,7 @@ export function useOnlineGame({ enabled, onOpponentMove, onMoveRejected, onGameO
     socket.on('play_again_request_sent', handlePlayAgainRequestSent)
     socket.on('play_again_requested', handlePlayAgainRequested)
     socket.on('play_again_declined', handlePlayAgainDeclined)
+    socket.on('rating_updated', handleRatingUpdated)
 
     return () => {
       socket.off('move_made', handleMoveMade)
@@ -117,6 +134,7 @@ export function useOnlineGame({ enabled, onOpponentMove, onMoveRejected, onGameO
       socket.off('play_again_request_sent', handlePlayAgainRequestSent)
       socket.off('play_again_requested', handlePlayAgainRequested)
       socket.off('play_again_declined', handlePlayAgainDeclined)
+      socket.off('rating_updated', handleRatingUpdated)
     }
   }, [enabled, onOpponentMove, onMoveRejected, onGameOver])
 
@@ -186,6 +204,7 @@ export function useOnlineGame({ enabled, onOpponentMove, onMoveRejected, onGameO
     drawOffer,
     offerDraw,
     respondDraw,
+    ratingUpdate,
   }
 }
 

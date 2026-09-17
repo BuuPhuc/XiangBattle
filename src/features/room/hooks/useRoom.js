@@ -25,6 +25,15 @@ export function useRoom() {
   // async DB insert resolves — this is what lets GameOverModal show "Xem
   // lại ván đấu" only when there's actually something to replay.
   const [dbGameId, setDbGameId] = useState(null)
+  // { red: number|null, black: number|null } | null — each seated
+  // account's rating as of match start (see room.js's ratingFor /
+  // gameHistoryService.js's attachPlayerRatings). Present inline on
+  // game_started/game_state/match_found once resolved server-side, or
+  // arrives a moment later via player_ratings — same eventually-consistent
+  // fill-in pattern as dbGameId/game_persisted. null for a color with no
+  // real account (guest) or before the lookup resolves; PlayerCard falls
+  // back to a loading/placeholder display for those, never a fake number.
+  const [playerRatings, setPlayerRatings] = useState(null)
   const [opponentConnected, setOpponentConnected] = useState(true)
   const [error, setError] = useState(null)
   const [notice, setNotice] = useState(null) // one-off info message, e.g. "opponent left mid-game"
@@ -75,6 +84,18 @@ export function useRoom() {
   }, [])
 
   useEffect(() => {
+    // `players` is the room.toPublic() array, each entry now carrying its
+    // own `rating` (see room.js) — reduced here into the {red,black} shape
+    // PlayerCard wants, keyed by color rather than seat number. A player
+    // with no color yet (still waiting) or no rating yet contributes null.
+    function ratingsFromPlayers(players) {
+      const ratings = { red: null, black: null }
+      ;(players || []).forEach((player) => {
+        if (player.color) ratings[player.color] = player.rating ?? null
+      })
+      return ratings
+    }
+
     function applySnapshot(payload) {
       setYou(payload.you)
       setOpponent(payload.opponent)
@@ -84,6 +105,7 @@ export function useRoom() {
       setTimerState(payload.timerState ?? null)
       setMessages(payload.messages ?? [])
       setDbGameId(payload.dbGameId ?? null)
+      setPlayerRatings(ratingsFromPlayers(payload.players))
       setOpponentConnected(payload.opponent ? payload.opponent.connected !== false : true)
       setRoom({ roomId: payload.roomId, status: payload.status, players: payload.players })
       setRestoreVersion((v) => v + 1)
@@ -102,6 +124,7 @@ export function useRoom() {
       setTimerState(null)
       setMessages([])
       setDbGameId(null)
+      setPlayerRatings(null)
       setRoom({ roomId: payload.roomId, status: payload.status, players: payload.players })
       saveRoomId(payload.roomId)
       wasPlayingRef.current = false
@@ -189,6 +212,7 @@ export function useRoom() {
       setTimerState(null)
       setMessages([])
       setDbGameId(null)
+      setPlayerRatings(null)
       setRoom((current) => (current ? { ...current, status: payload.status, players: payload.players } : current))
       wasPlayingRef.current = false
     }
@@ -227,6 +251,14 @@ export function useRoom() {
       setDbGameId(payload.gameId)
     }
 
+    // The server's rating lookup (attachPlayerRatings) resolved after
+    // game_started/game_state/match_found already went out with ratings
+    // still null — same fill-in-later shape as game_persisted above, just
+    // for playerRatings instead of dbGameId.
+    function handlePlayerRatings(payload) {
+      setPlayerRatings(payload)
+    }
+
     // Ask the server to resume whatever room/match this identity was last
     // in. Runs immediately if already connected, and again on every future
     // (re)connect — that one listener covers both a hard refresh (brand
@@ -255,6 +287,7 @@ export function useRoom() {
     socket.on('quick_play_queued', handleQuickPlayQueued)
     socket.on('match_found', handleMatchFound)
     socket.on('game_persisted', handleGamePersisted)
+    socket.on('player_ratings', handlePlayerRatings)
 
     return () => {
       socket.off('connect', attemptRejoin)
@@ -271,6 +304,7 @@ export function useRoom() {
       socket.off('quick_play_queued', handleQuickPlayQueued)
       socket.off('match_found', handleMatchFound)
       socket.off('game_persisted', handleGamePersisted)
+      socket.off('player_ratings', handlePlayerRatings)
     }
   }, [])
 
@@ -320,6 +354,7 @@ export function useRoom() {
     setTimerState(null)
     setMessages([])
     setDbGameId(null)
+    setPlayerRatings(null)
     setPending(false)
     setError(null)
     setNotice(null)
@@ -336,6 +371,7 @@ export function useRoom() {
     timerState,
     messages,
     dbGameId,
+    playerRatings,
     opponentConnected,
     error,
     notice,

@@ -1,5 +1,5 @@
 const { ROOM_STATUS, GAME_STATUS } = require('../rooms/room')
-const { createGameRecord, saveMoveRecord, finishGameRecord } = require('../services/gameHistoryService')
+const { createGameRecord, attachPlayerRatings, saveMoveRecord, finishGameRecord } = require('../services/gameHistoryService')
 
 function moveError(code, message) {
   return { code, message }
@@ -90,7 +90,7 @@ function registerGameHandlers(io, socket, roomManager) {
     const result = room.recordMatchResult(status, winner)
     console.log(`[game] ${room.roomId} reported over (${status}) — ${result.winner} wins`)
     io.to(room.roomId).emit('game_over', result)
-    if (!wasFinished) finishGameRecord(room, status, winner)
+    if (!wasFinished) finishGameRecord(io, room, status, winner)
   })
 
   // A player conceding outright, independent of the board position — the
@@ -120,7 +120,7 @@ function registerGameHandlers(io, socket, roomManager) {
     const result = room.recordMatchResult(GAME_STATUS.RESIGN, winner)
     console.log(`[game] ${room.roomId} ${player.color} resigned — ${winner} wins`)
     io.to(room.roomId).emit('game_over', result)
-    finishGameRecord(room, GAME_STATUS.RESIGN, winner)
+    finishGameRecord(io, room, GAME_STATUS.RESIGN, winner)
   })
 
   // One player proposing a draw. Same active-match/seated-player guards as
@@ -186,7 +186,7 @@ function registerGameHandlers(io, socket, roomManager) {
       const result = room.recordMatchResult(GAME_STATUS.DRAW, null)
       console.log(`[game] ${room.roomId} draw accepted by ${player.color}`)
       io.to(room.roomId).emit('game_over', result)
-      finishGameRecord(room, GAME_STATUS.DRAW, null)
+      finishGameRecord(io, room, GAME_STATUS.DRAW, null)
     } else {
       room.clearDrawOffer()
       console.log(`[game] ${room.roomId} draw declined by ${player.color}`)
@@ -206,6 +206,7 @@ function registerGameHandlers(io, socket, roomManager) {
     // the broadcast below — otherwise the just-finished match's dbGameId
     // would briefly leak into this brand new match's game_started payload.
     createGameRecord(io, room)
+    attachPlayerRatings(io, room)
     broadcastGameStarted(io, room)
   }
 

@@ -24,6 +24,7 @@ export function Room() {
     timerState,
     messages,
     dbGameId,
+    playerRatings,
     opponentConnected,
     error,
     notice,
@@ -96,12 +97,14 @@ export function Room() {
           onlineGame={{
             yourColor: you.color,
             opponentColor: opponent?.color,
+            opponentUserId: opponent?.userId,
             roomId: room.roomId,
             moveHistory,
             matchResult,
             timerState,
             messages,
             dbGameId,
+            playerRatings,
           }}
         />
       </div>

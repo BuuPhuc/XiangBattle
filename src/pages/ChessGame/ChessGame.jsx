@@ -5,6 +5,7 @@ import { useGame } from '../../features/game/hooks/useGame'
 import { useTimer } from '../../features/game/hooks/useTimer'
 import { useOnlineGame } from '../../features/room/hooks/useOnlineGame'
 import { useChat } from '../../features/chat/hooks/useChat'
+import useAuth from '../../components/hooks/useAuth'
 import { GAME_STATUS, findPieceAt } from '../../features/game/gameLogic.js'
 import { getLegalMovesForPiece } from '../../features/game/utils/moveUtils.js'
 import { formatClockTime } from '../../features/game/utils/timeUtils.js'
@@ -86,12 +87,37 @@ export function ChessGame({ onlineGame }) {
     drawOffer,
     offerDraw,
     respondDraw,
+    ratingUpdate,
   } = useOnlineGame({
     enabled: isOnline,
     onOpponentMove: applyRemoteMove,
     onMoveRejected: undo,
     onGameOver: handleGameOver,
   })
+
+  // This client's own side of the server's Elo/stats update, once it
+  // arrives — null until then (see useOnlineGame's ratingUpdate) or for a
+  // non-persisted (guest) match. Syncs straight into Redux/localStorage via
+  // updateUser (the same path Edit Profile already uses) so Header/Sidebar/
+  // Profile reflect the new rating immediately, without a logout/login or
+  // manual refresh — the effect only fires once per actual update thanks to
+  // the ratingUpdate.gameId dependency.
+  const { user, updateUser } = useAuth()
+  const myRatingUpdate = isOnline && ratingUpdate ? ratingUpdate[onlineGame.yourColor] : null
+  useEffect(() => {
+    if (!myRatingUpdate) return
+    updateUser({
+      rating: myRatingUpdate.rating.after,
+      wins: myRatingUpdate.wins,
+      losses: myRatingUpdate.losses,
+      draws: myRatingUpdate.draws,
+    })
+    // updateUser intentionally excluded — it closes over `user`/`token` and
+    // would otherwise re-fire this effect on every unrelated user-object
+    // change; this must only re-run when a genuinely new rating update
+    // arrives for this match.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myRatingUpdate])
 
   useEffect(() => {
     if (isOnline && lastLocalMove) sendMove(lastLocalMove)
@@ -125,6 +151,37 @@ export function ChessGame({ onlineGame }) {
 
   const redName = onlineGame ? (onlineGame.yourColor === 'red' ? 'Bạn' : 'Đối thủ') : RED_NAME
   const blackName = onlineGame ? (onlineGame.yourColor === 'black' ? 'Bạn' : 'Đối thủ') : BLACK_NAME
+
+  // Real rating for whichever color a PlayerCard represents — never the old
+  // hard-coded 2450/2410. This client's own side always reads straight from
+  // auth state: it's already the authoritative value (and updateUser above
+  // keeps it current the instant a match here ends, so it never goes stale
+  // mid-session). There's no equivalent local source for the opponent, so
+  // that side prefers the server's post-game Elo update once the match
+  // ends (ratingUpdate), falls back to the pre-game snapshot the server
+  // sent when the match started (onlineGame.playerRatings — see
+  // room.js's attachPlayerRatings), and is left `undefined` — PlayerCard's
+  // own loading/fallback display, never a fake number — if neither has
+  // arrived yet, e.g. a guest opponent with no account to look up, or
+  // local/offline play against the built-in placeholder.
+  const ratingForColor = (color) => {
+    if (!isOnline) return color === 'red' ? user?.rating : undefined
+    if (color === onlineGame.yourColor) return user?.rating
+    const opponentUpdate = ratingUpdate ? ratingUpdate[color] : null
+    if (opponentUpdate) return opponentUpdate.rating.after
+    return onlineGame.playerRatings ? onlineGame.playerRatings[color] ?? undefined : undefined
+  }
+
+  // Same idea as ratingForColor, but for the account id PlayerCard links to
+  // (see room.js's toGameStarted). Own side always reads straight from auth
+  // state; the opponent side reads whatever the server resolved for this
+  // match (null for a guest, undefined before it's known — either way
+  // PlayerCard just renders without a link).
+  const userIdForColor = (color) => {
+    if (!isOnline) return undefined
+    if (color === onlineGame.yourColor) return user?.id
+    return onlineGame.opponentUserId ?? undefined
+  }
 
   // Online: the server already told each client whose color it is — a
   // player is only allowed to act on their own turn, and only while
@@ -195,6 +252,8 @@ export function ChessGame({ onlineGame }) {
           onViewReplay={isOnline && onlineGame.dbGameId ? () => navigate(`/replay/${onlineGame.dbGameId}`) : undefined}
           playAgainRequest={isOnline ? playAgainRequest : undefined}
           onRespondPlayAgain={isOnline ? respondPlayAgain : undefined}
+          ratingChange={myRatingUpdate ? myRatingUpdate.rating.change : undefined}
+          ratingAfter={myRatingUpdate ? myRatingUpdate.rating.after : undefined}
         />
       )}
 
@@ -230,7 +289,8 @@ export function ChessGame({ onlineGame }) {
       <div className="w-full xl:w-96 flex flex-col gap-3 order-2">
         <PlayerCard
           name={blackName}
-          elo={2450}
+          elo={ratingForColor('black')}
+          userId={userIdForColor('black')}
           side="black"
           moveTime={formatClockTime(blackTime.moveTime)}
           gameTime={formatClockTime(blackTime.gameTime)}
@@ -245,7 +305,8 @@ export function ChessGame({ onlineGame }) {
         />
         <PlayerCard
           name={redName}
-          elo={2410}
+          elo={ratingForColor('red')}
+          userId={userIdForColor('red')}
           side="red"
           moveTime={formatClockTime(redTime.moveTime)}
           gameTime={formatClockTime(redTime.gameTime)}

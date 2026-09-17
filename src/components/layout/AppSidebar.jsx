@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { icon: 'extension', label: 'Cờ thế' },
   { icon: 'school', label: 'Học viện' },
   { icon: 'history', label: 'Lịch sử ván đấu' },
+  { icon: 'leaderboard', label: 'Bảng xếp hạng', to: '/leaderboard' },
   { icon: 'settings', label: 'Cài đặt' },
 ]
 
@@ -77,13 +78,6 @@ export function AppSidebar() {
       </nav>
 
       <div className="mt-auto space-y-2 pt-4 border-t border-onyx-ink/10">
-        <Link
-          to="/game"
-          className="w-full bg-primary text-on-primary py-3 rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 transition-transform duration-200 hover:scale-[1.02] hover:shadow-[0_4px_12px_rgba(139,94,60,0.15)]"
-        >
-          <Icon name="play_arrow" />
-          Bắt đầu ván mới
-        </Link>
         <a className="flex items-center space-x-3 text-on-surface-variant dark:text-on-surface-variant px-4 py-2 hover:bg-surface-container dark:hover:bg-primary-container/50 transition-all duration-200 font-label-md text-label-md rounded-lg" href="#">
           <Icon name="help" />
           <span>Hỗ trợ</span>

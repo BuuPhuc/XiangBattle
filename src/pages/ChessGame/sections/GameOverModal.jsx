@@ -20,6 +20,8 @@ export function GameOverModal({
   onViewReplay,
   playAgainRequest,
   onRespondPlayAgain,
+  ratingChange,
+  ratingAfter,
 }) {
   const isDraw = status === GAME_STATUS.DRAW
   const winnerName = winner === 'red' ? redName : blackName
@@ -96,6 +98,24 @@ export function GameOverModal({
               </div>
               <span className="font-label-md text-label-md text-on-surface-variant">{loserName}</span>
             </div>
+          </div>
+        )}
+
+        {/* Only rendered once the server's Elo update for this match has
+            actually arrived (see ChessGame.jsx's ratingUpdate) — never
+            computed or guessed on the client, and absent entirely for a
+            non-persisted (guest) match. */}
+        {ratingChange !== undefined && (
+          <div className="mb-6 -mt-2">
+            <p
+              className={`font-headline-sm text-headline-sm font-bold ${
+                ratingChange > 0 ? 'text-secondary' : ratingChange < 0 ? 'text-error' : 'text-on-surface-variant'
+              }`}
+            >
+              {ratingChange > 0 ? '+' : ''}
+              {ratingChange} Rating
+            </p>
+            <p className="font-label-sm text-label-sm text-on-surface-variant">Rating: {ratingAfter}</p>
           </div>
         )}
 
