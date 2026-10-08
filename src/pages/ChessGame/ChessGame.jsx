@@ -252,6 +252,7 @@ export function ChessGame({ onlineGame }) {
           onViewReplay={isOnline && onlineGame.dbGameId ? () => navigate(`/replay/${onlineGame.dbGameId}`) : undefined}
           playAgainRequest={isOnline ? playAgainRequest : undefined}
           onRespondPlayAgain={isOnline ? respondPlayAgain : undefined}
+          playAgainError={isOnline ? moveError : undefined}
           ratingChange={myRatingUpdate ? myRatingUpdate.rating.change : undefined}
           ratingAfter={myRatingUpdate ? myRatingUpdate.rating.after : undefined}
         />

@@ -1,0 +1,1432 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.chatMessage",
+    "label": "Create table \"chatMessage\"",
+    "summary": "Creates table \"chatMessage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "chatMessage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"chatMessage\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"chatMessage\"",
+        "sql": "CREATE TABLE \"public\".\"chatMessage\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"gameId\" int4 NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"message\" text NOT NULL,\n  \"playerId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"chatMessage\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.emailVerificationToken",
+    "label": "Create table \"emailVerificationToken\"",
+    "summary": "Creates table \"emailVerificationToken\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "emailVerificationToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"emailVerificationToken\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emailVerificationToken\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"emailVerificationToken\"",
+        "sql": "CREATE TABLE \"public\".\"emailVerificationToken\" (\n  \"consumedAt\" timestamptz,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"tokenHash\" text NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"emailVerificationToken\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emailVerificationToken\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.friendship",
+    "label": "Create table \"friendship\"",
+    "summary": "Creates table \"friendship\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "friendship"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"friendship\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"friendship\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"friendship\"",
+        "sql": "CREATE TABLE \"public\".\"friendship\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"requestedById\" int4 NOT NULL,\n  \"respondedAt\" timestamptz,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  \"userHighId\" int4 NOT NULL,\n  \"userLowId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"friendship_status_check_f0e5c74c\" CHECK (\"status\" IN ('PENDING', 'ACCEPTED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"friendship\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"friendship\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.game",
+    "label": "Create table \"game\"",
+    "summary": "Creates table \"game\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "game"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"game\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"game\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"game\"",
+        "sql": "CREATE TABLE \"public\".\"game\" (\n  \"blackPlayerId\" int4 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"endReason\" text,\n  \"endedAt\" timestamptz,\n  \"id\" SERIAL NOT NULL,\n  \"increment\" int4 DEFAULT 0 NOT NULL,\n  \"initialTime\" int4 NOT NULL,\n  \"redPlayerId\" int4 NOT NULL,\n  \"result\" text,\n  \"roomCode\" text NOT NULL,\n  \"startedAt\" timestamptz,\n  \"status\" text DEFAULT 'PLAYING' NOT NULL,\n  \"winnerPlayerId\" int4,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"game_endReason_check_3f8443e8\" CHECK (\"endReason\" IN ('CHECKMATE', 'RESIGN', 'TIMEOUT', 'DRAW_AGREEMENT', 'STALEMATE', 'REPETITION', 'CANCELLED', 'DISCONNECT')),\n  CONSTRAINT \"game_result_check_5986095b\" CHECK (\"result\" IN ('RED_WIN', 'BLACK_WIN', 'DRAW')),\n  CONSTRAINT \"game_status_check_a37ae1cd\" CHECK (\"status\" IN ('PLAYING', 'FINISHED', 'CANCELLED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"game\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"game\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.move",
+    "label": "Create table \"move\"",
+    "summary": "Creates table \"move\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "move"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"move\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"move\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"move\"",
+        "sql": "CREATE TABLE \"public\".\"move\" (\n  \"capturedPiece\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"fromPosition\" text NOT NULL,\n  \"gameId\" int4 NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"moveNumber\" int4 NOT NULL,\n  \"notation\" text,\n  \"piece\" text NOT NULL,\n  \"playerId\" int4 NOT NULL,\n  \"toPosition\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"move\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"move\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.user",
+    "label": "Create table \"user\"",
+    "summary": "Creates table \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"user\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"user\"",
+        "sql": "CREATE TABLE \"public\".\"user\" (\n  \"arrowsEnabled\" bool DEFAULT true NOT NULL,\n  \"avatarUrl\" text,\n  \"bio\" text,\n  \"challengePermission\" text DEFAULT 'EVERYONE' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"displayName\" text,\n  \"draws\" int4 DEFAULT 0 NOT NULL,\n  \"email\" text,\n  \"emailVerified\" bool DEFAULT false NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"losses\" int4 DEFAULT 0 NOT NULL,\n  \"passwordHash\" text,\n  \"rating\" int4 DEFAULT 1200 NOT NULL,\n  \"recentGamesVisibility\" text DEFAULT 'PUBLIC' NOT NULL,\n  \"soundEnabled\" bool DEFAULT true NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"username\" text NOT NULL,\n  \"wins\" int4 DEFAULT 0 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"user_challengePermission_check_15bbea43\" CHECK (\"challengePermission\" IN ('EVERYONE', 'FRIENDS', 'NOBODY')),\n  CONSTRAINT \"user_recentGamesVisibility_check_f08bd8b7\" CHECK (\"recentGamesVisibility\" IN ('PUBLIC', 'FRIENDS', 'PRIVATE'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"user\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.emailVerificationToken.emailVerificationToken_tokenHash_key",
+    "label": "Add unique constraint on \"emailVerificationToken\" (tokenHash)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "emailVerificationToken_tokenHash_key",
+        "table": "emailVerificationToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"emailVerificationToken_tokenHash_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "emailVerificationToken_tokenHash_key",
+          "public",
+          "\"public\".\"emailVerificationToken\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"emailVerificationToken_tokenHash_key\"",
+        "sql": "ALTER TABLE \"public\".\"emailVerificationToken\" ADD CONSTRAINT \"emailVerificationToken_tokenHash_key\" UNIQUE (\"tokenHash\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"emailVerificationToken_tokenHash_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "emailVerificationToken_tokenHash_key",
+          "public",
+          "\"public\".\"emailVerificationToken\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.friendship.friendship_userLowId_userHighId_key",
+    "label": "Add unique constraint on \"friendship\" (userLowId, userHighId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "friendship_userLowId_userHighId_key",
+        "table": "friendship"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"friendship_userLowId_userHighId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "friendship_userLowId_userHighId_key",
+          "public",
+          "\"public\".\"friendship\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"friendship_userLowId_userHighId_key\"",
+        "sql": "ALTER TABLE \"public\".\"friendship\" ADD CONSTRAINT \"friendship_userLowId_userHighId_key\" UNIQUE (\"userLowId\", \"userHighId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"friendship_userLowId_userHighId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "friendship_userLowId_userHighId_key",
+          "public",
+          "\"public\".\"friendship\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.game.game_roomCode_key",
+    "label": "Add unique constraint on \"game\" (roomCode)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "game_roomCode_key",
+        "table": "game"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"game_roomCode_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "game_roomCode_key",
+          "public",
+          "\"public\".\"game\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"game_roomCode_key\"",
+        "sql": "ALTER TABLE \"public\".\"game\" ADD CONSTRAINT \"game_roomCode_key\" UNIQUE (\"roomCode\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"game_roomCode_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "game_roomCode_key",
+          "public",
+          "\"public\".\"game\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.user.user_username_key",
+    "label": "Add unique constraint on \"user\" (username)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "user_username_key",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"user_username_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_username_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"user_username_key\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD CONSTRAINT \"user_username_key\" UNIQUE (\"username\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"user_username_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_username_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.user.user_email_key",
+    "label": "Add unique constraint on \"user\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "user_email_key",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"user_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_email_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"user_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD CONSTRAINT \"user_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"user_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_email_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.chatMessage.chatMessage_gameId_createdAt_idx_04c2aae6",
+    "label": "Create index \"chatMessage_gameId_createdAt_idx_04c2aae6\" on \"chatMessage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "chatMessage_gameId_createdAt_idx_04c2aae6",
+        "table": "chatMessage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"chatMessage_gameId_createdAt_idx_04c2aae6\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage_gameId_createdAt_idx_04c2aae6\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"chatMessage_gameId_createdAt_idx_04c2aae6\"",
+        "sql": "CREATE INDEX \"chatMessage_gameId_createdAt_idx_04c2aae6\" ON \"public\".\"chatMessage\" (\"gameId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"chatMessage_gameId_createdAt_idx_04c2aae6\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage_gameId_createdAt_idx_04c2aae6\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.chatMessage.chatMessage_gameId_idx_6cdb47f8",
+    "label": "Create index \"chatMessage_gameId_idx_6cdb47f8\" on \"chatMessage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "chatMessage_gameId_idx_6cdb47f8",
+        "table": "chatMessage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"chatMessage_gameId_idx_6cdb47f8\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage_gameId_idx_6cdb47f8\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"chatMessage_gameId_idx_6cdb47f8\"",
+        "sql": "CREATE INDEX \"chatMessage_gameId_idx_6cdb47f8\" ON \"public\".\"chatMessage\" (\"gameId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"chatMessage_gameId_idx_6cdb47f8\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage_gameId_idx_6cdb47f8\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.chatMessage.chatMessage_playerId_idx_710cf1aa",
+    "label": "Create index \"chatMessage_playerId_idx_710cf1aa\" on \"chatMessage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "chatMessage_playerId_idx_710cf1aa",
+        "table": "chatMessage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"chatMessage_playerId_idx_710cf1aa\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage_playerId_idx_710cf1aa\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"chatMessage_playerId_idx_710cf1aa\"",
+        "sql": "CREATE INDEX \"chatMessage_playerId_idx_710cf1aa\" ON \"public\".\"chatMessage\" (\"playerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"chatMessage_playerId_idx_710cf1aa\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage_playerId_idx_710cf1aa\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.emailVerificationToken.emailVerificationToken_userId_idx_a489d58a",
+    "label": "Create index \"emailVerificationToken_userId_idx_a489d58a\" on \"emailVerificationToken\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "emailVerificationToken_userId_idx_a489d58a",
+        "table": "emailVerificationToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"emailVerificationToken_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emailVerificationToken_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"emailVerificationToken_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"emailVerificationToken_userId_idx_a489d58a\" ON \"public\".\"emailVerificationToken\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"emailVerificationToken_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emailVerificationToken_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.friendship.friendship_requestedById_idx_f9a56c66",
+    "label": "Create index \"friendship_requestedById_idx_f9a56c66\" on \"friendship\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "friendship_requestedById_idx_f9a56c66",
+        "table": "friendship"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"friendship_requestedById_idx_f9a56c66\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"friendship_requestedById_idx_f9a56c66\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"friendship_requestedById_idx_f9a56c66\"",
+        "sql": "CREATE INDEX \"friendship_requestedById_idx_f9a56c66\" ON \"public\".\"friendship\" (\"requestedById\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"friendship_requestedById_idx_f9a56c66\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"friendship_requestedById_idx_f9a56c66\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.friendship.friendship_userHighId_idx_17b05671",
+    "label": "Create index \"friendship_userHighId_idx_17b05671\" on \"friendship\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "friendship_userHighId_idx_17b05671",
+        "table": "friendship"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"friendship_userHighId_idx_17b05671\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"friendship_userHighId_idx_17b05671\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"friendship_userHighId_idx_17b05671\"",
+        "sql": "CREATE INDEX \"friendship_userHighId_idx_17b05671\" ON \"public\".\"friendship\" (\"userHighId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"friendship_userHighId_idx_17b05671\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"friendship_userHighId_idx_17b05671\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.friendship.friendship_userLowId_idx_5401bbde",
+    "label": "Create index \"friendship_userLowId_idx_5401bbde\" on \"friendship\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "friendship_userLowId_idx_5401bbde",
+        "table": "friendship"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"friendship_userLowId_idx_5401bbde\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"friendship_userLowId_idx_5401bbde\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"friendship_userLowId_idx_5401bbde\"",
+        "sql": "CREATE INDEX \"friendship_userLowId_idx_5401bbde\" ON \"public\".\"friendship\" (\"userLowId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"friendship_userLowId_idx_5401bbde\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"friendship_userLowId_idx_5401bbde\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.game.game_blackPlayerId_idx_0d6ca423",
+    "label": "Create index \"game_blackPlayerId_idx_0d6ca423\" on \"game\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "game_blackPlayerId_idx_0d6ca423",
+        "table": "game"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"game_blackPlayerId_idx_0d6ca423\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"game_blackPlayerId_idx_0d6ca423\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"game_blackPlayerId_idx_0d6ca423\"",
+        "sql": "CREATE INDEX \"game_blackPlayerId_idx_0d6ca423\" ON \"public\".\"game\" (\"blackPlayerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"game_blackPlayerId_idx_0d6ca423\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"game_blackPlayerId_idx_0d6ca423\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.game.game_redPlayerId_idx_32ace704",
+    "label": "Create index \"game_redPlayerId_idx_32ace704\" on \"game\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "game_redPlayerId_idx_32ace704",
+        "table": "game"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"game_redPlayerId_idx_32ace704\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"game_redPlayerId_idx_32ace704\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"game_redPlayerId_idx_32ace704\"",
+        "sql": "CREATE INDEX \"game_redPlayerId_idx_32ace704\" ON \"public\".\"game\" (\"redPlayerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"game_redPlayerId_idx_32ace704\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"game_redPlayerId_idx_32ace704\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.game.game_winnerPlayerId_idx_662bf7dd",
+    "label": "Create index \"game_winnerPlayerId_idx_662bf7dd\" on \"game\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "game_winnerPlayerId_idx_662bf7dd",
+        "table": "game"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"game_winnerPlayerId_idx_662bf7dd\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"game_winnerPlayerId_idx_662bf7dd\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"game_winnerPlayerId_idx_662bf7dd\"",
+        "sql": "CREATE INDEX \"game_winnerPlayerId_idx_662bf7dd\" ON \"public\".\"game\" (\"winnerPlayerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"game_winnerPlayerId_idx_662bf7dd\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"game_winnerPlayerId_idx_662bf7dd\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.move.move_gameId_idx_6cdb47f8",
+    "label": "Create index \"move_gameId_idx_6cdb47f8\" on \"move\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "move_gameId_idx_6cdb47f8",
+        "table": "move"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"move_gameId_idx_6cdb47f8\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"move_gameId_idx_6cdb47f8\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"move_gameId_idx_6cdb47f8\"",
+        "sql": "CREATE INDEX \"move_gameId_idx_6cdb47f8\" ON \"public\".\"move\" (\"gameId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"move_gameId_idx_6cdb47f8\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"move_gameId_idx_6cdb47f8\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.move.move_gameId_moveNumber_idx_4e77f2e3",
+    "label": "Create index \"move_gameId_moveNumber_idx_4e77f2e3\" on \"move\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "move_gameId_moveNumber_idx_4e77f2e3",
+        "table": "move"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"move_gameId_moveNumber_idx_4e77f2e3\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"move_gameId_moveNumber_idx_4e77f2e3\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"move_gameId_moveNumber_idx_4e77f2e3\"",
+        "sql": "CREATE INDEX \"move_gameId_moveNumber_idx_4e77f2e3\" ON \"public\".\"move\" (\"gameId\", \"moveNumber\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"move_gameId_moveNumber_idx_4e77f2e3\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"move_gameId_moveNumber_idx_4e77f2e3\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.move.move_playerId_idx_710cf1aa",
+    "label": "Create index \"move_playerId_idx_710cf1aa\" on \"move\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "move_playerId_idx_710cf1aa",
+        "table": "move"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"move_playerId_idx_710cf1aa\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"move_playerId_idx_710cf1aa\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"move_playerId_idx_710cf1aa\"",
+        "sql": "CREATE INDEX \"move_playerId_idx_710cf1aa\" ON \"public\".\"move\" (\"playerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"move_playerId_idx_710cf1aa\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"move_playerId_idx_710cf1aa\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.chatMessage.chatMessage_gameId_fkey",
+    "label": "Add foreign key \"chatMessage_gameId_fkey\" on \"chatMessage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "chatMessage_gameId_fkey",
+        "table": "chatMessage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"chatMessage_gameId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "chatMessage_gameId_fkey",
+          "public",
+          "\"public\".\"chatMessage\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"chatMessage_gameId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"chatMessage\"\nADD CONSTRAINT \"chatMessage_gameId_fkey\"\nFOREIGN KEY (\"gameId\")\nREFERENCES \"public\".\"game\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"chatMessage_gameId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "chatMessage_gameId_fkey",
+          "public",
+          "\"public\".\"chatMessage\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.chatMessage.chatMessage_playerId_fkey",
+    "label": "Add foreign key \"chatMessage_playerId_fkey\" on \"chatMessage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "chatMessage_playerId_fkey",
+        "table": "chatMessage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"chatMessage_playerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "chatMessage_playerId_fkey",
+          "public",
+          "\"public\".\"chatMessage\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"chatMessage_playerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"chatMessage\"\nADD CONSTRAINT \"chatMessage_playerId_fkey\"\nFOREIGN KEY (\"playerId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"chatMessage_playerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "chatMessage_playerId_fkey",
+          "public",
+          "\"public\".\"chatMessage\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.emailVerificationToken.emailVerificationToken_userId_fkey",
+    "label": "Add foreign key \"emailVerificationToken_userId_fkey\" on \"emailVerificationToken\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "emailVerificationToken_userId_fkey",
+        "table": "emailVerificationToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"emailVerificationToken_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "emailVerificationToken_userId_fkey",
+          "public",
+          "\"public\".\"emailVerificationToken\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"emailVerificationToken_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"emailVerificationToken\"\nADD CONSTRAINT \"emailVerificationToken_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"emailVerificationToken_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "emailVerificationToken_userId_fkey",
+          "public",
+          "\"public\".\"emailVerificationToken\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.friendship.friendship_userLowId_fkey",
+    "label": "Add foreign key \"friendship_userLowId_fkey\" on \"friendship\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "friendship_userLowId_fkey",
+        "table": "friendship"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"friendship_userLowId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "friendship_userLowId_fkey",
+          "public",
+          "\"public\".\"friendship\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"friendship_userLowId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"friendship\"\nADD CONSTRAINT \"friendship_userLowId_fkey\"\nFOREIGN KEY (\"userLowId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"friendship_userLowId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "friendship_userLowId_fkey",
+          "public",
+          "\"public\".\"friendship\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.friendship.friendship_userHighId_fkey",
+    "label": "Add foreign key \"friendship_userHighId_fkey\" on \"friendship\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "friendship_userHighId_fkey",
+        "table": "friendship"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"friendship_userHighId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "friendship_userHighId_fkey",
+          "public",
+          "\"public\".\"friendship\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"friendship_userHighId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"friendship\"\nADD CONSTRAINT \"friendship_userHighId_fkey\"\nFOREIGN KEY (\"userHighId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"friendship_userHighId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "friendship_userHighId_fkey",
+          "public",
+          "\"public\".\"friendship\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.friendship.friendship_requestedById_fkey",
+    "label": "Add foreign key \"friendship_requestedById_fkey\" on \"friendship\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "friendship_requestedById_fkey",
+        "table": "friendship"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"friendship_requestedById_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "friendship_requestedById_fkey",
+          "public",
+          "\"public\".\"friendship\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"friendship_requestedById_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"friendship\"\nADD CONSTRAINT \"friendship_requestedById_fkey\"\nFOREIGN KEY (\"requestedById\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"friendship_requestedById_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "friendship_requestedById_fkey",
+          "public",
+          "\"public\".\"friendship\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.game.game_redPlayerId_fkey",
+    "label": "Add foreign key \"game_redPlayerId_fkey\" on \"game\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "game_redPlayerId_fkey",
+        "table": "game"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"game_redPlayerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "game_redPlayerId_fkey",
+          "public",
+          "\"public\".\"game\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"game_redPlayerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"game\"\nADD CONSTRAINT \"game_redPlayerId_fkey\"\nFOREIGN KEY (\"redPlayerId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"game_redPlayerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "game_redPlayerId_fkey",
+          "public",
+          "\"public\".\"game\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.game.game_blackPlayerId_fkey",
+    "label": "Add foreign key \"game_blackPlayerId_fkey\" on \"game\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "game_blackPlayerId_fkey",
+        "table": "game"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"game_blackPlayerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "game_blackPlayerId_fkey",
+          "public",
+          "\"public\".\"game\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"game_blackPlayerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"game\"\nADD CONSTRAINT \"game_blackPlayerId_fkey\"\nFOREIGN KEY (\"blackPlayerId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"game_blackPlayerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "game_blackPlayerId_fkey",
+          "public",
+          "\"public\".\"game\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.game.game_winnerPlayerId_fkey",
+    "label": "Add foreign key \"game_winnerPlayerId_fkey\" on \"game\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "game_winnerPlayerId_fkey",
+        "table": "game"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"game_winnerPlayerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "game_winnerPlayerId_fkey",
+          "public",
+          "\"public\".\"game\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"game_winnerPlayerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"game\"\nADD CONSTRAINT \"game_winnerPlayerId_fkey\"\nFOREIGN KEY (\"winnerPlayerId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"game_winnerPlayerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "game_winnerPlayerId_fkey",
+          "public",
+          "\"public\".\"game\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.move.move_gameId_fkey",
+    "label": "Add foreign key \"move_gameId_fkey\" on \"move\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "move_gameId_fkey",
+        "table": "move"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"move_gameId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "move_gameId_fkey",
+          "public",
+          "\"public\".\"move\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"move_gameId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"move\"\nADD CONSTRAINT \"move_gameId_fkey\"\nFOREIGN KEY (\"gameId\")\nREFERENCES \"public\".\"game\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"move_gameId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "move_gameId_fkey",
+          "public",
+          "\"public\".\"move\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.move.move_playerId_fkey",
+    "label": "Add foreign key \"move_playerId_fkey\" on \"move\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "move_playerId_fkey",
+        "table": "move"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"move_playerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "move_playerId_fkey",
+          "public",
+          "\"public\".\"move\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"move_playerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"move\"\nADD CONSTRAINT \"move_playerId_fkey\"\nFOREIGN KEY (\"playerId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"move_playerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "move_playerId_fkey",
+          "public",
+          "\"public\".\"move\""
+        ]
+      }
+    ]
+  }
+]

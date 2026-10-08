@@ -19,7 +19,12 @@ const ALL_SQUARES = Array.from({ length: 10 }, (_, row) =>
 // state (never a new state), and legalMoves is whatever the caller derived
 // from moveUtils.js's existing getLegalMovesForPiece for the selected piece
 // (never re-implemented here). legalMoves entries are `{ col, row, capture }`.
-export function ChessBoard({ pieces, selectedId, turn, legalMoves = [], onSquareClick }) {
+//
+// `children` is an optional overlay drawn in the board's own coordinate
+// space, above the move markers and below the pieces — how the Academy adds
+// its target/hint markers (see AcademyBoard.jsx) without a second board.
+// The live game and replay pass nothing, so nothing changes for them.
+export function ChessBoard({ pieces, selectedId, turn, legalMoves = [], onSquareClick, children }) {
   return (
     // Bounded by three things at once, whichever is smallest: the parent
     // column's own width, an absolute cap, and — the important one — the
@@ -93,6 +98,8 @@ export function ChessBoard({ pieces, selectedId, turn, legalMoves = [], onSquare
               <MoveMarker key={`${move.col}-${move.row}`} col={move.col} row={move.row} capture={move.capture} />
             ))}
           </div>
+
+          {children}
 
           <div className="piece-layer">
             {pieces.map((piece) => (

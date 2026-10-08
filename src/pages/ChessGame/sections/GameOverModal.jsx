@@ -20,6 +20,7 @@ export function GameOverModal({
   onViewReplay,
   playAgainRequest,
   onRespondPlayAgain,
+  playAgainError,
   ratingChange,
   ratingAfter,
 }) {
@@ -117,6 +118,10 @@ export function GameOverModal({
             </p>
             <p className="font-label-sm text-label-sm text-on-surface-variant">Rating: {ratingAfter}</p>
           </div>
+        )}
+
+        {playAgainError && !playAgainRequest && (
+          <p className="font-label-sm text-label-sm text-error mb-3">{playAgainError}</p>
         )}
 
         {playAgainRequest === 'incoming' ? (

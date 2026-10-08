@@ -449,6 +449,114 @@
     border: 3px solid rgba(186, 26, 26, 0.6);
   }
 
+  /* Học viện — markers the Academy lays over the shared board (see
+     AcademyBoard.jsx, passed to ChessBoard as children). Same coordinate
+     space as .move-marker: left/top percentages of .board-inner. Purely
+     visual, like the move markers — clicks still land on the Square buttons
+     and pieces. */
+  .academy-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .academy-marker {
+    position: absolute;
+    aspect-ratio: 1 / 1;
+    box-sizing: border-box;
+    border-radius: 9999px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  /* The square a challenge asks the player to reach. */
+  .academy-marker-target {
+    width: 9%;
+    border: 3px dashed var(--color-secondary);
+    background: rgba(27, 109, 36, 0.14);
+    animation: academy-marker-pulse 1.6s ease-in-out infinite;
+  }
+  /* Hint rings — sized to hug a piece standing on the square. */
+  .academy-marker-hint {
+    width: 12.5%;
+    border: 3px solid #d99a1c;
+    box-shadow: 0 0 10px 2px rgba(217, 154, 28, 0.55);
+    animation: academy-marker-pulse 1.6s ease-in-out infinite;
+  }
+  /* Where a rejected move was aimed — flashes once and fades. */
+  .academy-marker-wrong {
+    width: 12.5%;
+    border: 3px solid var(--color-error);
+    background: rgba(186, 26, 26, 0.16);
+    animation: academy-marker-wrong 0.9s ease-out forwards;
+  }
+  @keyframes academy-marker-pulse {
+    0%,
+    100% {
+      opacity: 0.6;
+      transform: translate(-50%, -50%) scale(0.94);
+    }
+    50% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.04);
+    }
+  }
+  @keyframes academy-marker-wrong {
+    0% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.15);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  /* The last hint level: the move itself. Drawn above the pieces so the
+     arrowhead stays visible on a capture. */
+  .academy-arrow {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 12;
+    color: #d99a1c;
+    opacity: 0.9;
+  }
+
+  /* A piece drawn outside a board (lesson cards, headers) — the same look
+     as .piece, minus everything that positions it on the grid. */
+  .academy-piece-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    font-family: "Noto Serif SC", serif;
+    font-weight: bold;
+    line-height: 1;
+    color: #ffffff;
+    background-color: var(--color-piece-red);
+    border: 1px solid var(--color-piece-red-dark);
+    box-shadow:
+      inset 0 0 0 2px var(--color-piece-red),
+      inset 0 0 0 4px #ffffff,
+      0 4px 6px rgba(0, 0, 0, 0.25);
+  }
+
+  @keyframes academy-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .academy-fade-in {
+    animation: academy-fade-in 0.25s ease-out;
+  }
+
   .player-clock {
     font-family: "Courier New", Courier, monospace;
     font-size: 2rem;

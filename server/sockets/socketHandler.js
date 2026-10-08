@@ -9,8 +9,11 @@ const {
 } = require('./reconnectHandler')
 const { registerMatchmakingHandlers, removeFromQuickPlayQueue } = require('./matchmakingHandler')
 const { registerChatHandlers } = require('./chatHandler')
+const { registerChallengeHandlers } = require('./challengeHandler')
 const { verifyAccessToken } = require('../utils/token')
-const { createGameRecord, attachPlayerRatings } = require('../services/gameHistoryService')
+const { createGameRecord, attachPlayerRatings, parseUserId } = require('../services/gameHistoryService')
+const rematchInvites = require('../services/rematchInviteService')
+const presenceService = require('../services/presenceService')
 
 // Best-effort identity attach: a client that connected with a valid JWT
 // (see src/socket/socket.js's `auth.token`) gets `socket.user = { id,
@@ -64,7 +67,14 @@ function leaveCurrentRoom(io, socket, roomManager) {
   const wasFinished = Boolean(room.matchResult)
   const result = roomManager.leaveRoom(socket.id)
   socket.leave(roomId)
-  if (player) cancelDisconnectForfeit(player.playerId)
+  if (player) {
+    cancelDisconnectForfeit(player.playerId)
+    // A rematch invite is "come back into my room" — it ends when the
+    // inviter leaves that room. (The invitee leaving does not end it; they
+    // can still answer from the notification.)
+    const userId = parseUserId(player.playerId)
+    if (userId) rematchInvites.removeFromInviter(roomId, userId)
+  }
   if (!result) return
 
   if (result.deleted) {
@@ -106,10 +116,24 @@ function registerSocketHandlers(io) {
     const who = socket.user ? `${socket.user.username} (user ${socket.user.id})` : 'guest'
     console.log(`[socket] client connected: ${socket.id} (${socket.handshake.address}) — ${who}`)
 
+    // Friend-presence tracking (see presenceService.js) piggybacks on the
+    // same auth attach as everything else here — a guest socket (no
+    // socket.user) simply never joins its personal room and is never
+    // counted online, same "additive, never required" stance as auth
+    // itself. Joining `user:<id>` is what lets friend-request acceptance
+    // and presence broadcasts reach every tab/device a user has open.
+    if (socket.user) {
+      socket.join(presenceService.userRoom(socket.user.id))
+      if (presenceService.addSocket(socket.user.id, socket.id)) {
+        presenceService.broadcastPresenceChange(io, socket.user.id, true)
+      }
+    }
+
     registerGameHandlers(io, socket, roomManager)
     registerReconnectHandlers(io, socket, roomManager)
     registerMatchmakingHandlers(io, socket, roomManager)
     registerChatHandlers(io, socket, roomManager)
+    registerChallengeHandlers(io, socket, roomManager)
 
     socket.on('create_room', (payload) => {
       const playerId = payload && payload.playerId
@@ -200,6 +224,14 @@ function registerSocketHandlers(io) {
         handleMidMatchDisconnect(io, roomManager, socket, room)
       } else {
         roomManager.markDisconnected(socket.id)
+      }
+
+      // Mirrors the connect-side bookkeeping above — only flips offline
+      // (and only then tells friends) once this was the user's last open
+      // socket, so closing one of several tabs never falsely reports them
+      // offline.
+      if (socket.user && presenceService.removeSocket(socket.user.id, socket.id)) {
+        presenceService.broadcastPresenceChange(io, socket.user.id, false)
       }
     })
   })

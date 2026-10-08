@@ -16,14 +16,24 @@ export const userService = {
   // PlayerCard links). Server strips this to public-safe fields only.
   getPublicProfile: (userId) => api.get(`/users/${userId}`).then((res) => res.data),
   // A user's FINISHED-match history (Public Profile's "Ván đấu gần đây").
-  // Public today (any authenticated viewer, any user) — see the server's
-  // gameAccessService for where that policy actually lives.
+  // Answers 403 GAME_HISTORY_PRIVATE when that user's own "Ván đấu gần
+  // đây" setting excludes the caller — see the server's gameAccessService
+  // for where that policy actually lives.
   getUserGames: (userId, { page = 1, limit = 10 } = {}) =>
     api.get(`/users/${userId}/games`, { params: { page, limit } }).then((res) => res.data),
   // Leaderboard — players ranked by rating DESC (computed server-side).
   // Also returns the caller's own rank/stats, even off the requested page.
   getLeaderboard: ({ page = 1, limit = 50 } = {}) =>
     api.get('/leaderboard', { params: { page, limit } }).then((res) => res.data),
+  // Username search (Friends page's "Lời mời kết bạn" search box). Server
+  // trims/limits the query and excludes the caller themselves — see
+  // server/controllers/userController.js's searchUsers.
+  searchUsers: (query) => api.get('/users/search', { params: { q: query } }).then((res) => res.data),
+  // Settings page. The server only ever accepts the four settings fields
+  // (soundEnabled, arrowsEnabled, recentGamesVisibility,
+  // challengePermission) — see userController.js's SETTINGS_FIELDS.
+  getSettings: () => api.get('/users/me/settings').then((res) => res.data),
+  updateSettings: (payload) => api.patch('/users/me/settings', payload).then((res) => res.data),
 }
 
 export default userService

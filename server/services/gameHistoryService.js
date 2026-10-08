@@ -1,5 +1,6 @@
 const { db } = require('../prisma/db')
 const { calculateElo } = require('./eloService')
+const { notifyGameResult } = require('./notificationService')
 
 const Game = db.orm.public.Game
 const Move = db.orm.public.Move
@@ -236,6 +237,12 @@ async function finishGameRecord(io, room, status, winnerColor) {
 
     console.log(`[game-db] game #${gameId} finished — ${result} (${endReason})`)
     if (ratingInfo) io.to(room.roomId).emit('rating_updated', ratingInfo)
+    // Only reachable once the transaction above has committed this game as
+    // FINISHED — a second call for the same game returned at the
+    // dbResultSaved guard or threw AlreadyFinishedError instead. Not
+    // awaited: purely a side effect, it never throws (see
+    // notificationService.createNotification) and nothing here depends on it.
+    notifyGameResult({ gameId, redPlayerId, blackPlayerId, result })
     return ratingInfo
   } catch (error) {
     if (error instanceof AlreadyFinishedError) {
@@ -247,4 +254,23 @@ async function finishGameRecord(io, room, status, winnerColor) {
   }
 }
 
-module.exports = { parseUserId, createGameRecord, attachPlayerRatings, saveMoveRecord, finishGameRecord }
+// Who userId played against in FINISHED game `gameId`, or null if that game
+// isn't finished or userId wasn't one of its two players. Used to address a
+// rematch invite once the opponent has already left the room and the Room
+// itself no longer knows who they were (see gameHandler.js).
+async function getFinishedGameOpponent(gameId, userId) {
+  const game = await Game.select('id', 'status', 'redPlayerId', 'blackPlayerId').first({ id: gameId })
+  if (!game || game.status !== 'FINISHED') return null
+  if (game.redPlayerId === userId) return game.blackPlayerId
+  if (game.blackPlayerId === userId) return game.redPlayerId
+  return null
+}
+
+module.exports = {
+  parseUserId,
+  createGameRecord,
+  attachPlayerRatings,
+  saveMoveRecord,
+  finishGameRecord,
+  getFinishedGameOpponent,
+}

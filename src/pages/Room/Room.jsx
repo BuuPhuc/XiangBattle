@@ -39,7 +39,7 @@ export function Room() {
     cancelQuickPlay,
   } = useRoom()
   const [joinCode, setJoinCode] = useState('')
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   // Only fires once per mount, and only when there's no existing session
   // to resume — a saved roomId always means "reconnect to that instead",
@@ -48,10 +48,17 @@ export function Room() {
   useEffect(() => {
     if (autoQuickPlayRef.current) return
     if (searchParams.get('mode') !== 'quick') return
+    // `?mode=quick` is a one-shot instruction from the "CHƠI NGAY" button,
+    // not a property of this page — drop it from the history entry as soon
+    // as it's been read. Otherwise coming *back* to this entry later (the
+    // browser's back arrow after opening a replay from a notification or
+    // from "Xem lại ván đấu", or a refresh once the match is over) would
+    // silently queue the player for a new match again.
+    setSearchParams({}, { replace: true })
     if (getSavedRoomId()) return
     autoQuickPlayRef.current = true
     startQuickPlay()
-  }, [searchParams, startQuickPlay])
+  }, [searchParams, setSearchParams, startQuickPlay])
 
   const handleJoinSubmit = (event) => {
     event.preventDefault()

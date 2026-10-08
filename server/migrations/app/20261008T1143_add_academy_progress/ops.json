@@ -1,0 +1,164 @@
+[
+  {
+    "id": "table.academyProgress",
+    "label": "Create table \"academyProgress\"",
+    "summary": "Creates table \"academyProgress\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "academyProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"academyProgress\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"academyProgress\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"academyProgress\"",
+        "sql": "CREATE TABLE \"public\".\"academyProgress\" (\n  \"challengeId\" text NOT NULL,\n  \"completedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"courseId\" text NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"lessonId\" text NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"academyProgress\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"academyProgress\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.academyProgress.academyProgress_userId_challengeId_key",
+    "label": "Add unique constraint on \"academyProgress\" (userId, challengeId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "academyProgress_userId_challengeId_key",
+        "table": "academyProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"academyProgress_userId_challengeId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "academyProgress_userId_challengeId_key",
+          "public",
+          "\"public\".\"academyProgress\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"academyProgress_userId_challengeId_key\"",
+        "sql": "ALTER TABLE \"public\".\"academyProgress\" ADD CONSTRAINT \"academyProgress_userId_challengeId_key\" UNIQUE (\"userId\", \"challengeId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"academyProgress_userId_challengeId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "academyProgress_userId_challengeId_key",
+          "public",
+          "\"public\".\"academyProgress\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.academyProgress.academyProgress_userId_idx_a489d58a",
+    "label": "Create index \"academyProgress_userId_idx_a489d58a\" on \"academyProgress\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "academyProgress_userId_idx_a489d58a",
+        "table": "academyProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"academyProgress_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"academyProgress_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"academyProgress_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"academyProgress_userId_idx_a489d58a\" ON \"public\".\"academyProgress\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"academyProgress_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"academyProgress_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.academyProgress.academyProgress_userId_fkey",
+    "label": "Add foreign key \"academyProgress_userId_fkey\" on \"academyProgress\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "academyProgress_userId_fkey",
+        "table": "academyProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"academyProgress_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "academyProgress_userId_fkey",
+          "public",
+          "\"public\".\"academyProgress\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"academyProgress_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"academyProgress\"\nADD CONSTRAINT \"academyProgress_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"academyProgress_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "academyProgress_userId_fkey",
+          "public",
+          "\"public\".\"academyProgress\""
+        ]
+      }
+    ]
+  }
+]

@@ -2,7 +2,16 @@ const express = require('express')
 const multer = require('multer')
 const { requireAuth } = require('../middleware/authMiddleware')
 const { uploadAvatar: uploadAvatarMiddleware, MAX_AVATAR_BYTES } = require('../middleware/uploadMiddleware')
-const { getMe, updateMe, uploadAvatar, getPublicProfile, getUserGames } = require('../controllers/userController')
+const {
+  getMe,
+  updateMe,
+  uploadAvatar,
+  getMySettings,
+  updateMySettings,
+  getPublicProfile,
+  getUserGames,
+  searchUsers,
+} = require('../controllers/userController')
 
 const router = express.Router()
 
@@ -31,11 +40,14 @@ function parseAvatarUpload(req, res, next) {
 router.get('/me', requireAuth, getMe)
 router.patch('/me', requireAuth, updateMe)
 router.post('/me/avatar', requireAuth, parseAvatarUpload, uploadAvatar)
+router.get('/me/settings', requireAuth, getMySettings)
+router.patch('/me/settings', requireAuth, updateMySettings)
+router.get('/search', requireAuth, searchUsers)
 
-// Must stay registered after the /me routes above — Express matches route
-// patterns in registration order, so a literal '/me' always wins over this
-// param route for its own path; registered any earlier it would swallow
-// '/me' requests as userId="me" instead.
+// Must stay registered after the /me and /search routes above — Express
+// matches route patterns in registration order, so a literal path always
+// wins over this param route for its own path; registered any earlier it
+// would swallow those requests as userId="me" / userId="search" instead.
 router.get('/:userId', requireAuth, getPublicProfile)
 router.get('/:userId/games', requireAuth, getUserGames)
 

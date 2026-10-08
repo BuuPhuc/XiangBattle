@@ -124,7 +124,12 @@ class Room {
   }
 
   addPlayer(socketId, playerId) {
-    const player = { socketId, playerId, playerNumber: this.players.length + 1, color: null, connected: true }
+    // Takes whichever seat is free rather than assuming seat 2: when the
+    // host (seat 1) has left and someone joins the remaining player — e.g.
+    // an opponent accepting a rematch invite after leaving — "length + 1"
+    // would hand out a second seat 2 and startGame() would make both black.
+    const seatOneTaken = this.players.some((existing) => existing.playerNumber === 1)
+    const player = { socketId, playerId, playerNumber: seatOneTaken ? this.players.length + 1 : 1, color: null, connected: true }
     this.players.push(player)
     return player
   }

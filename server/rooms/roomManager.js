@@ -43,6 +43,13 @@ class RoomManager {
     return roomId ? this.rooms.get(roomId) || null : null
   }
 
+  // Looked up by the stable player identity rather than a socket — finds a
+  // player's room even while they are disconnected from it.
+  getRoomByPlayerId(playerId) {
+    const roomId = this.playerIdToRoom.get(playerId)
+    return roomId ? this.rooms.get(roomId) || null : null
+  }
+
   isSocketInRoom(socketId) {
     return this.socketToRoom.has(socketId)
   }

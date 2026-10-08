@@ -6,6 +6,8 @@ import Avatar from '../../components/ui/Avatar'
 import useAuth from '../../components/hooks/useAuth'
 import userService from '../../services/userService'
 import GameHistorySection from './sections/GameHistorySection'
+import FriendAction from './sections/FriendAction'
+import ChallengeAction from './sections/ChallengeAction'
 
 function StatCard({ label, value }) {
   return (
@@ -123,6 +125,8 @@ export function PublicProfile() {
           <Icon name="event" className="text-[16px]" />
           Tham gia từ {formatDate(profile.createdAt)}
         </p>
+        <FriendAction userId={userId} />
+        <ChallengeAction userId={userId} />
       </div>
 
       <div>

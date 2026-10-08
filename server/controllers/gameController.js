@@ -11,10 +11,10 @@ function toPublicPlayer(user) {
 
 // GET /api/games/:id — returns one finished match plus its full move list
 // (ascending by moveNumber) for the frontend's replay viewer to reconstruct
-// the board from. Any authenticated user may fetch any FINISHED match —
-// see gameAccessService.canViewGameReplay for the (currently PUBLIC)
-// access policy — but an in-progress room's state never comes through this
-// REST endpoint; that stays exclusive to the live Socket.IO flow.
+// the board from. Who may fetch a FINISHED match is decided by
+// gameAccessService.canViewGameReplay (the players' own "Ván đấu gần đây"
+// privacy setting) — and an in-progress room's state never comes through
+// this REST endpoint; that stays exclusive to the live Socket.IO flow.
 async function getGameById(req, res) {
   const gameId = Number(req.params.id)
   if (!Number.isInteger(gameId) || gameId <= 0) {
@@ -37,7 +37,15 @@ async function getGameById(req, res) {
     return res.status(404).json({ success: false, code: 'GAME_NOT_FOUND', message: 'Không tìm thấy trận đấu.' })
   }
 
-  if (!canViewGameReplay(req.auth.userId, game)) {
+  let allowed
+  try {
+    allowed = await canViewGameReplay(req.auth.userId, game)
+  } catch (error) {
+    console.error('[game] failed to check replay access:', error.message)
+    return res.status(503).json({ success: false, code: 'SERVICE_UNAVAILABLE', message: 'Đã có lỗi xảy ra. Vui lòng thử lại sau.' })
+  }
+
+  if (!allowed) {
     if (game.status !== 'FINISHED') {
       return res.status(409).json({ success: false, code: 'GAME_NOT_FINISHED', message: 'Trận đấu chưa kết thúc.' })
     }

@@ -13,6 +13,11 @@ const authRoutes = require('./routes/authRoutes')
 const gameRoutes = require('./routes/gameRoutes')
 const userRoutes = require('./routes/userRoutes')
 const leaderboardRoutes = require('./routes/leaderboardRoutes')
+const friendRoutes = require('./routes/friendRoutes')
+const notificationRoutes = require('./routes/notificationRoutes')
+const challengeRoutes = require('./routes/challengeRoutes')
+const academyRoutes = require('./routes/academyRoutes')
+const notificationService = require('./services/notificationService')
 
 const PORT = process.env.PORT || 3000
 
@@ -42,6 +47,10 @@ app.use('/api/auth', authRoutes)
 app.use('/api/games', gameRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/leaderboard', leaderboardRoutes)
+app.use('/api/friends', friendRoutes)
+app.use('/api/notifications', notificationRoutes)
+app.use('/api/challenges', challengeRoutes)
+app.use('/api/academy', academyRoutes)
 
 const httpServer = http.createServer(app)
 
@@ -50,6 +59,10 @@ const io = new Server(httpServer, {
 })
 
 registerSocketHandlers(io)
+// Notifications are pushed over this same connection (to the per-user room
+// socketHandler.js already joins each authenticated socket to) — see
+// notificationService.js.
+notificationService.attachIo(io)
 
 httpServer.listen(PORT, () => {
   console.log(`XiangBattle backend listening on http://localhost:${PORT}`)

@@ -65,7 +65,7 @@ function GameHistoryCard({ game }) {
 // loading/error/empty states, so a slow or failed history fetch never
 // blocks the profile itself from rendering, and vice versa.
 export function GameHistorySection({ userId }) {
-  const [status, setStatus] = useState('loading') // 'loading' | 'ready' | 'empty' | 'error'
+  const [status, setStatus] = useState('loading') // 'loading' | 'ready' | 'empty' | 'hidden' | 'error'
   const [error, setError] = useState(null)
   const [games, setGames] = useState([])
 
@@ -94,7 +94,9 @@ export function GameHistorySection({ userId }) {
       .catch((err) => {
         if (cancelled) return
         setError((err.response && err.response.data && err.response.data.message) || 'Không thể tải lịch sử đấu.')
-        setStatus('error')
+        // 403: this player's own "Ván đấu gần đây" setting excludes the
+        // viewer — an expected state, not a failure.
+        setStatus(err.response && err.response.status === 403 ? 'hidden' : 'error')
       })
 
     return () => {
@@ -117,6 +119,12 @@ export function GameHistorySection({ userId }) {
         {status === 'error' && (
           <div className="py-10 text-center px-4">
             <p className="font-body-sm text-body-sm text-error">{error}</p>
+          </div>
+        )}
+        {status === 'hidden' && (
+          <div className="py-10 text-center px-4 space-y-2">
+            <Icon name="lock" className="text-4xl text-on-surface-variant/40 block" />
+            <p className="font-body-sm text-body-sm text-on-surface-variant">{error}</p>
           </div>
         )}
         {status === 'empty' && (

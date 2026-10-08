@@ -33,9 +33,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'e0aab3161796f312947ca00ed12162fbd812b8ba163fc0e62645b04c684d9631'>;
+  StorageHashBase<'8f446ab2907a0dcefcfe701a9e20ede3cf5bc71f29875e34a70e1c05a0134cf4'>;
 export type ExecutionHash =
-  ExecutionHashBase<'a499031370d1fd1891ca11072d3f7e11be752b686057f7c6d0900ee0159f4ed0'>;
+  ExecutionHashBase<'bc51ac76f83d2534cc99307e3fa62a73f05f7c27df78361282fb65004d73327e'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -241,6 +241,26 @@ type DefaultLiteralValue<CodecId extends string, Encoded> = CodecId extends keyo
 
 export type FieldOutputTypes = {
   readonly public: {
+    readonly AcademyProgress: {
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly userId: CodecTypes['pg/int4@1']['output'];
+      readonly courseId: CodecTypes['pg/text@1']['output'];
+      readonly lessonId: CodecTypes['pg/text@1']['output'];
+      readonly challengeId: CodecTypes['pg/text@1']['output'];
+      readonly completedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
+    readonly Challenge: {
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly senderId: CodecTypes['pg/int4@1']['output'];
+      readonly receiverId: CodecTypes['pg/int4@1']['output'];
+      readonly userLowId: CodecTypes['pg/int4@1']['output'];
+      readonly userHighId: CodecTypes['pg/int4@1']['output'];
+      readonly status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED';
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly respondedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
     readonly ChatMessage: {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly gameId: CodecTypes['pg/int4@1']['output'];
@@ -255,6 +275,15 @@ export type FieldOutputTypes = {
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly consumedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
+    readonly Friendship: {
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly userLowId: CodecTypes['pg/int4@1']['output'];
+      readonly userHighId: CodecTypes['pg/int4@1']['output'];
+      readonly requestedById: CodecTypes['pg/int4@1']['output'];
+      readonly status: 'PENDING' | 'ACCEPTED';
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly respondedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     };
     readonly Game: {
       readonly id: CodecTypes['pg/int4@1']['output'];
@@ -292,6 +321,20 @@ export type FieldOutputTypes = {
       readonly notation: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
+    readonly Notification: {
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly userId: CodecTypes['pg/int4@1']['output'];
+      readonly type:
+        'FRIEND_REQUEST' | 'FRIEND_ACCEPTED' | 'REMATCH_REQUEST' | 'CHALLENGE' | 'GAME_RESULT';
+      readonly title: CodecTypes['pg/text@1']['output'];
+      readonly message: CodecTypes['pg/text@1']['output'];
+      readonly read: CodecTypes['pg/bool@1']['output'];
+      readonly relatedUserId: CodecTypes['pg/int4@1']['output'] | null;
+      readonly relatedGameId: CodecTypes['pg/int4@1']['output'] | null;
+      readonly relatedRequestId: CodecTypes['pg/int4@1']['output'] | null;
+      readonly dedupeKey: CodecTypes['pg/text@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
     readonly User: {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly username: CodecTypes['pg/text@1']['output'];
@@ -305,6 +348,10 @@ export type FieldOutputTypes = {
       readonly wins: CodecTypes['pg/int4@1']['output'];
       readonly losses: CodecTypes['pg/int4@1']['output'];
       readonly draws: CodecTypes['pg/int4@1']['output'];
+      readonly soundEnabled: CodecTypes['pg/bool@1']['output'];
+      readonly arrowsEnabled: CodecTypes['pg/bool@1']['output'];
+      readonly recentGamesVisibility: 'PUBLIC' | 'FRIENDS' | 'PRIVATE';
+      readonly challengePermission: 'EVERYONE' | 'FRIENDS' | 'NOBODY';
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
@@ -312,6 +359,26 @@ export type FieldOutputTypes = {
 };
 export type FieldInputTypes = {
   readonly public: {
+    readonly AcademyProgress: {
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly userId: CodecTypes['pg/int4@1']['input'];
+      readonly courseId: CodecTypes['pg/text@1']['input'];
+      readonly lessonId: CodecTypes['pg/text@1']['input'];
+      readonly challengeId: CodecTypes['pg/text@1']['input'];
+      readonly completedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly Challenge: {
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly senderId: CodecTypes['pg/int4@1']['input'];
+      readonly receiverId: CodecTypes['pg/int4@1']['input'];
+      readonly userLowId: CodecTypes['pg/int4@1']['input'];
+      readonly userHighId: CodecTypes['pg/int4@1']['input'];
+      readonly status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED';
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly respondedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
     readonly ChatMessage: {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly gameId: CodecTypes['pg/int4@1']['input'];
@@ -326,6 +393,15 @@ export type FieldInputTypes = {
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly consumedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly Friendship: {
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly userLowId: CodecTypes['pg/int4@1']['input'];
+      readonly userHighId: CodecTypes['pg/int4@1']['input'];
+      readonly requestedById: CodecTypes['pg/int4@1']['input'];
+      readonly status: 'PENDING' | 'ACCEPTED';
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly respondedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
     };
     readonly Game: {
       readonly id: CodecTypes['pg/int4@1']['input'];
@@ -361,6 +437,20 @@ export type FieldInputTypes = {
       readonly piece: CodecTypes['pg/text@1']['input'];
       readonly capturedPiece: CodecTypes['pg/text@1']['input'] | null;
       readonly notation: CodecTypes['pg/text@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly Notification: {
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly userId: CodecTypes['pg/int4@1']['input'];
+      readonly type:
+        'FRIEND_REQUEST' | 'FRIEND_ACCEPTED' | 'REMATCH_REQUEST' | 'CHALLENGE' | 'GAME_RESULT';
+      readonly title: CodecTypes['pg/text@1']['input'];
+      readonly message: CodecTypes['pg/text@1']['input'];
+      readonly read: CodecTypes['pg/bool@1']['input'];
+      readonly relatedUserId: CodecTypes['pg/int4@1']['input'] | null;
+      readonly relatedGameId: CodecTypes['pg/int4@1']['input'] | null;
+      readonly relatedRequestId: CodecTypes['pg/int4@1']['input'] | null;
+      readonly dedupeKey: CodecTypes['pg/text@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
     readonly User: {
@@ -376,6 +466,10 @@ export type FieldInputTypes = {
       readonly wins: CodecTypes['pg/int4@1']['input'];
       readonly losses: CodecTypes['pg/int4@1']['input'];
       readonly draws: CodecTypes['pg/int4@1']['input'];
+      readonly soundEnabled: CodecTypes['pg/bool@1']['input'];
+      readonly arrowsEnabled: CodecTypes['pg/bool@1']['input'];
+      readonly recentGamesVisibility: 'PUBLIC' | 'FRIENDS' | 'PRIVATE';
+      readonly challengePermission: 'EVERYONE' | 'FRIENDS' | 'NOBODY';
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
@@ -383,6 +477,26 @@ export type FieldInputTypes = {
 };
 export type StorageColumnTypes = {
   readonly public: {
+    readonly academyProgress: {
+      readonly challengeId: CodecTypes['pg/text@1']['output'];
+      readonly completedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly courseId: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly lessonId: CodecTypes['pg/text@1']['output'];
+      readonly userId: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly challenge: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly receiverId: CodecTypes['pg/int4@1']['output'];
+      readonly respondedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly senderId: CodecTypes['pg/int4@1']['output'];
+      readonly status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED';
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly userHighId: CodecTypes['pg/int4@1']['output'];
+      readonly userLowId: CodecTypes['pg/int4@1']['output'];
+    };
     readonly chatMessage: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly gameId: CodecTypes['pg/int4@1']['output'];
@@ -397,6 +511,15 @@ export type StorageColumnTypes = {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly tokenHash: CodecTypes['pg/text@1']['output'];
       readonly userId: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly friendship: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly requestedById: CodecTypes['pg/int4@1']['output'];
+      readonly respondedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly status: 'PENDING' | 'ACCEPTED';
+      readonly userHighId: CodecTypes['pg/int4@1']['output'];
+      readonly userLowId: CodecTypes['pg/int4@1']['output'];
     };
     readonly game: {
       readonly blackPlayerId: CodecTypes['pg/int4@1']['output'];
@@ -434,9 +557,25 @@ export type StorageColumnTypes = {
       readonly playerId: CodecTypes['pg/int4@1']['output'];
       readonly toPosition: CodecTypes['pg/text@1']['output'];
     };
+    readonly notification: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly dedupeKey: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly message: CodecTypes['pg/text@1']['output'];
+      readonly read: CodecTypes['pg/bool@1']['output'];
+      readonly relatedGameId: CodecTypes['pg/int4@1']['output'] | null;
+      readonly relatedRequestId: CodecTypes['pg/int4@1']['output'] | null;
+      readonly relatedUserId: CodecTypes['pg/int4@1']['output'] | null;
+      readonly title: CodecTypes['pg/text@1']['output'];
+      readonly type:
+        'FRIEND_REQUEST' | 'FRIEND_ACCEPTED' | 'REMATCH_REQUEST' | 'CHALLENGE' | 'GAME_RESULT';
+      readonly userId: CodecTypes['pg/int4@1']['output'];
+    };
     readonly user: {
+      readonly arrowsEnabled: CodecTypes['pg/bool@1']['output'];
       readonly avatarUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly bio: CodecTypes['pg/text@1']['output'] | null;
+      readonly challengePermission: 'EVERYONE' | 'FRIENDS' | 'NOBODY';
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly displayName: CodecTypes['pg/text@1']['output'] | null;
       readonly draws: CodecTypes['pg/int4@1']['output'];
@@ -446,6 +585,8 @@ export type StorageColumnTypes = {
       readonly losses: CodecTypes['pg/int4@1']['output'];
       readonly passwordHash: CodecTypes['pg/text@1']['output'] | null;
       readonly rating: CodecTypes['pg/int4@1']['output'];
+      readonly recentGamesVisibility: 'PUBLIC' | 'FRIENDS' | 'PRIVATE';
+      readonly soundEnabled: CodecTypes['pg/bool@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly username: CodecTypes['pg/text@1']['output'];
       readonly wins: CodecTypes['pg/int4@1']['output'];
@@ -454,6 +595,26 @@ export type StorageColumnTypes = {
 };
 export type StorageColumnInputTypes = {
   readonly public: {
+    readonly academyProgress: {
+      readonly challengeId: CodecTypes['pg/text@1']['input'];
+      readonly completedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly courseId: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly lessonId: CodecTypes['pg/text@1']['input'];
+      readonly userId: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly challenge: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly receiverId: CodecTypes['pg/int4@1']['input'];
+      readonly respondedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly senderId: CodecTypes['pg/int4@1']['input'];
+      readonly status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED';
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly userHighId: CodecTypes['pg/int4@1']['input'];
+      readonly userLowId: CodecTypes['pg/int4@1']['input'];
+    };
     readonly chatMessage: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly gameId: CodecTypes['pg/int4@1']['input'];
@@ -468,6 +629,15 @@ export type StorageColumnInputTypes = {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly tokenHash: CodecTypes['pg/text@1']['input'];
       readonly userId: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly friendship: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly requestedById: CodecTypes['pg/int4@1']['input'];
+      readonly respondedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly status: 'PENDING' | 'ACCEPTED';
+      readonly userHighId: CodecTypes['pg/int4@1']['input'];
+      readonly userLowId: CodecTypes['pg/int4@1']['input'];
     };
     readonly game: {
       readonly blackPlayerId: CodecTypes['pg/int4@1']['input'];
@@ -505,9 +675,25 @@ export type StorageColumnInputTypes = {
       readonly playerId: CodecTypes['pg/int4@1']['input'];
       readonly toPosition: CodecTypes['pg/text@1']['input'];
     };
+    readonly notification: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly dedupeKey: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly message: CodecTypes['pg/text@1']['input'];
+      readonly read: CodecTypes['pg/bool@1']['input'];
+      readonly relatedGameId: CodecTypes['pg/int4@1']['input'] | null;
+      readonly relatedRequestId: CodecTypes['pg/int4@1']['input'] | null;
+      readonly relatedUserId: CodecTypes['pg/int4@1']['input'] | null;
+      readonly title: CodecTypes['pg/text@1']['input'];
+      readonly type:
+        'FRIEND_REQUEST' | 'FRIEND_ACCEPTED' | 'REMATCH_REQUEST' | 'CHALLENGE' | 'GAME_RESULT';
+      readonly userId: CodecTypes['pg/int4@1']['input'];
+    };
     readonly user: {
+      readonly arrowsEnabled: CodecTypes['pg/bool@1']['input'];
       readonly avatarUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly bio: CodecTypes['pg/text@1']['input'] | null;
+      readonly challengePermission: 'EVERYONE' | 'FRIENDS' | 'NOBODY';
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly displayName: CodecTypes['pg/text@1']['input'] | null;
       readonly draws: CodecTypes['pg/int4@1']['input'];
@@ -517,6 +703,8 @@ export type StorageColumnInputTypes = {
       readonly losses: CodecTypes['pg/int4@1']['input'];
       readonly passwordHash: CodecTypes['pg/text@1']['input'] | null;
       readonly rating: CodecTypes['pg/int4@1']['input'];
+      readonly recentGamesVisibility: 'PUBLIC' | 'FRIENDS' | 'PRIVATE';
+      readonly soundEnabled: CodecTypes['pg/bool@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly username: CodecTypes['pg/text@1']['input'];
       readonly wins: CodecTypes['pg/int4@1']['input'];
@@ -541,6 +729,193 @@ type ContractBase = Omit<
         readonly kind: 'postgres-schema';
         readonly entries: {
           readonly table: {
+            readonly academyProgress: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly userId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly courseId: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly lessonId: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly challengeId: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly completedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['userId', 'challengeId'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'academyProgress_userId_idx_a489d58a';
+                  readonly prefix: 'academyProgress_userId_idx';
+                  readonly columns: readonly ['userId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'academyProgress';
+                    readonly columns: readonly ['userId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly challenge: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly senderId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly receiverId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly userLowId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly userHighId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly status: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'PENDING'>;
+                  };
+                };
+                readonly expiresAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                };
+                readonly respondedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'challenge_pending_pair_0a23c4e2';
+                  readonly prefix: 'challenge_pending_pair';
+                  readonly columns: readonly ['userLowId', 'userHighId'];
+                  readonly where: "(status = 'PENDING')";
+                  readonly unique: true;
+                },
+                {
+                  readonly name: 'challenge_senderId_status_idx_4d7d6199';
+                  readonly prefix: 'challenge_senderId_status_idx';
+                  readonly columns: readonly ['senderId', 'status'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'challenge_receiverId_status_idx_1f8f1a2b';
+                  readonly prefix: 'challenge_receiverId_status_idx';
+                  readonly columns: readonly ['receiverId', 'status'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'challenge_senderId_idx_4689c490';
+                  readonly prefix: 'challenge_senderId_idx';
+                  readonly columns: readonly ['senderId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'challenge_receiverId_idx_fe124f44';
+                  readonly prefix: 'challenge_receiverId_idx';
+                  readonly columns: readonly ['receiverId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'challenge';
+                    readonly columns: readonly ['senderId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'challenge';
+                    readonly columns: readonly ['receiverId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly chatMessage: {
               columns: {
                 readonly id: {
@@ -677,6 +1052,114 @@ type ContractBase = Omit<
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'emailVerificationToken';
                     readonly columns: readonly ['userId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly friendship: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly userLowId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly userHighId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly requestedById: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly status: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'PENDING'>;
+                  };
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly respondedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['userLowId', 'userHighId'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'friendship_userHighId_idx_17b05671';
+                  readonly prefix: 'friendship_userHighId_idx';
+                  readonly columns: readonly ['userHighId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'friendship_requestedById_idx_f9a56c66';
+                  readonly prefix: 'friendship_requestedById_idx';
+                  readonly columns: readonly ['requestedById'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'friendship_userLowId_idx_5401bbde';
+                  readonly prefix: 'friendship_userLowId_idx';
+                  readonly columns: readonly ['userLowId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'friendship';
+                    readonly columns: readonly ['userLowId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'friendship';
+                    readonly columns: readonly ['userHighId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'friendship';
+                    readonly columns: readonly ['requestedById'];
                   };
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
@@ -935,6 +1418,128 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly notification: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly userId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly type: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly title: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly message: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly read: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly relatedUserId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly relatedGameId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly relatedRequestId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly dedupeKey: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['dedupeKey'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'notification_userId_createdAt_idx_f726f04a';
+                  readonly prefix: 'notification_userId_createdAt_idx';
+                  readonly columns: readonly ['userId', 'createdAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'notification_userId_read_idx_76f3f2b6';
+                  readonly prefix: 'notification_userId_read_idx';
+                  readonly columns: readonly ['userId', 'read'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'notification_relatedUserId_idx_0e06ef1e';
+                  readonly prefix: 'notification_relatedUserId_idx';
+                  readonly columns: readonly ['relatedUserId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'notification_userId_idx_a489d58a';
+                  readonly prefix: 'notification_userId_idx';
+                  readonly columns: readonly ['userId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'notification';
+                    readonly columns: readonly ['userId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'notification';
+                    readonly columns: readonly ['relatedUserId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly user: {
               columns: {
                 readonly id: {
@@ -1021,6 +1626,42 @@ type ContractBase = Omit<
                     readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
                   };
                 };
+                readonly soundEnabled: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
+                readonly arrowsEnabled: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
+                readonly recentGamesVisibility: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'PUBLIC'>;
+                  };
+                };
+                readonly challengePermission: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'EVERYONE'>;
+                  };
+                };
                 readonly createdAt: {
                   readonly nativeType: 'timestamptz';
                   readonly codecId: 'pg/timestamptz-string@1';
@@ -1043,6 +1684,14 @@ type ContractBase = Omit<
             };
           };
           readonly valueSet: {
+            readonly ChallengePermission: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['EVERYONE', 'FRIENDS', 'NOBODY'];
+            };
+            readonly ChallengeStatus: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED', 'EXPIRED'];
+            };
             readonly EndReason: {
               readonly kind: 'valueSet';
               readonly values: readonly [
@@ -1056,6 +1705,10 @@ type ContractBase = Omit<
                 'DISCONNECT',
               ];
             };
+            readonly FriendshipStatus: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['PENDING', 'ACCEPTED'];
+            };
             readonly GameResult: {
               readonly kind: 'valueSet';
               readonly values: readonly ['RED_WIN', 'BLACK_WIN', 'DRAW'];
@@ -1063,6 +1716,20 @@ type ContractBase = Omit<
             readonly GameStatus: {
               readonly kind: 'valueSet';
               readonly values: readonly ['PLAYING', 'FINISHED', 'CANCELLED'];
+            };
+            readonly NotificationType: {
+              readonly kind: 'valueSet';
+              readonly values: readonly [
+                'FRIEND_REQUEST',
+                'FRIEND_ACCEPTED',
+                'REMATCH_REQUEST',
+                'CHALLENGE',
+                'GAME_RESULT',
+              ];
+            };
+            readonly RecentGamesVisibility: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['PUBLIC', 'FRIENDS', 'PRIVATE'];
             };
           };
         };
@@ -1086,11 +1753,167 @@ type ContractBase = Omit<
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'ChatMessage';
     };
+    readonly friendship: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'Friendship';
+    };
+    readonly notification: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'Notification';
+    };
+    readonly challenge: { readonly namespace: 'public' & NamespaceId; readonly model: 'Challenge' };
+    readonly academyProgress: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'AcademyProgress';
+    };
   };
   readonly domain: {
     readonly namespaces: {
       readonly public: {
         readonly models: {
+          readonly AcademyProgress: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly courseId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly lessonId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly challengeId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly completedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly user: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['userId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'academyProgress';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly userId: { readonly column: 'userId' };
+                readonly courseId: { readonly column: 'courseId' };
+                readonly lessonId: { readonly column: 'lessonId' };
+                readonly challengeId: { readonly column: 'challengeId' };
+                readonly completedAt: { readonly column: 'completedAt' };
+              };
+            };
+          };
+          readonly Challenge: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly senderId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly receiverId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly userLowId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly userHighId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly status: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly expiresAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly respondedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly receiver: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['receiverId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly sender: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['senderId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'challenge';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly senderId: { readonly column: 'senderId' };
+                readonly receiverId: { readonly column: 'receiverId' };
+                readonly userLowId: { readonly column: 'userLowId' };
+                readonly userHighId: { readonly column: 'userHighId' };
+                readonly status: { readonly column: 'status' };
+                readonly expiresAt: { readonly column: 'expiresAt' };
+                readonly respondedAt: { readonly column: 'respondedAt' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
           readonly ChatMessage: {
             readonly fields: {
               readonly id: {
@@ -1203,6 +2026,83 @@ type ContractBase = Omit<
                 readonly expiresAt: { readonly column: 'expiresAt' };
                 readonly consumedAt: { readonly column: 'consumedAt' };
                 readonly createdAt: { readonly column: 'createdAt' };
+              };
+            };
+          };
+          readonly Friendship: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly userLowId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly userHighId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly requestedById: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly status: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly respondedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly requestedBy: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['requestedById'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly userHigh: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['userHighId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly userLow: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['userLowId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'friendship';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly userLowId: { readonly column: 'userLowId' };
+                readonly userHighId: { readonly column: 'userHighId' };
+                readonly requestedById: { readonly column: 'requestedById' };
+                readonly status: { readonly column: 'status' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly respondedAt: { readonly column: 'respondedAt' };
               };
             };
           };
@@ -1416,6 +2316,92 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly Notification: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly type: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly title: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly message: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly read: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly relatedUserId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly relatedGameId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly relatedRequestId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly dedupeKey: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly relatedUser: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['relatedUserId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly user: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['userId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'notification';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly userId: { readonly column: 'userId' };
+                readonly type: { readonly column: 'type' };
+                readonly title: { readonly column: 'title' };
+                readonly message: { readonly column: 'message' };
+                readonly read: { readonly column: 'read' };
+                readonly relatedUserId: { readonly column: 'relatedUserId' };
+                readonly relatedGameId: { readonly column: 'relatedGameId' };
+                readonly relatedRequestId: { readonly column: 'relatedRequestId' };
+                readonly dedupeKey: { readonly column: 'dedupeKey' };
+                readonly createdAt: { readonly column: 'createdAt' };
+              };
+            };
+          };
           readonly User: {
             readonly fields: {
               readonly id: {
@@ -1466,6 +2452,22 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
+              readonly soundEnabled: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly arrowsEnabled: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly recentGamesVisibility: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly challengePermission: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly createdAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -1482,12 +2484,45 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly academyProgress: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'AcademyProgress';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['userId'];
+                };
+              };
               readonly blackGames: {
                 readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Game' };
                 readonly cardinality: '1:N';
                 readonly on: {
                   readonly localFields: readonly ['id'];
                   readonly targetFields: readonly ['blackPlayerId'];
+                };
+              };
+              readonly challengesReceived: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Challenge';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['receiverId'];
+                };
+              };
+              readonly challengesSent: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Challenge';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['senderId'];
                 };
               };
               readonly chatMessages: {
@@ -1501,12 +2536,67 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['playerId'];
                 };
               };
+              readonly friendshipsAsHigh: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Friendship';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['userHighId'];
+                };
+              };
+              readonly friendshipsAsLow: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Friendship';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['userLowId'];
+                };
+              };
+              readonly friendshipsRequested: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Friendship';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['requestedById'];
+                };
+              };
               readonly moves: {
                 readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Move' };
                 readonly cardinality: '1:N';
                 readonly on: {
                   readonly localFields: readonly ['id'];
                   readonly targetFields: readonly ['playerId'];
+                };
+              };
+              readonly notifications: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Notification';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['userId'];
+                };
+              };
+              readonly notificationsAbout: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Notification';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['relatedUserId'];
                 };
               };
               readonly redGames: {
@@ -1553,6 +2643,10 @@ type ContractBase = Omit<
                 readonly wins: { readonly column: 'wins' };
                 readonly losses: { readonly column: 'losses' };
                 readonly draws: { readonly column: 'draws' };
+                readonly soundEnabled: { readonly column: 'soundEnabled' };
+                readonly arrowsEnabled: { readonly column: 'arrowsEnabled' };
+                readonly recentGamesVisibility: { readonly column: 'recentGamesVisibility' };
+                readonly challengePermission: { readonly column: 'challengePermission' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
@@ -1560,6 +2654,49 @@ type ContractBase = Omit<
           };
         };
         readonly enum: {
+          readonly ChallengeStatus: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'PENDING'; readonly value: 'PENDING' },
+              { readonly name: 'ACCEPTED'; readonly value: 'ACCEPTED' },
+              { readonly name: 'REJECTED'; readonly value: 'REJECTED' },
+              { readonly name: 'CANCELLED'; readonly value: 'CANCELLED' },
+              { readonly name: 'EXPIRED'; readonly value: 'EXPIRED' },
+            ];
+          };
+          readonly NotificationType: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'FRIEND_REQUEST'; readonly value: 'FRIEND_REQUEST' },
+              { readonly name: 'FRIEND_ACCEPTED'; readonly value: 'FRIEND_ACCEPTED' },
+              { readonly name: 'REMATCH_REQUEST'; readonly value: 'REMATCH_REQUEST' },
+              { readonly name: 'CHALLENGE'; readonly value: 'CHALLENGE' },
+              { readonly name: 'GAME_RESULT'; readonly value: 'GAME_RESULT' },
+            ];
+          };
+          readonly FriendshipStatus: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'PENDING'; readonly value: 'PENDING' },
+              { readonly name: 'ACCEPTED'; readonly value: 'ACCEPTED' },
+            ];
+          };
+          readonly RecentGamesVisibility: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'PUBLIC'; readonly value: 'PUBLIC' },
+              { readonly name: 'FRIENDS'; readonly value: 'FRIENDS' },
+              { readonly name: 'PRIVATE'; readonly value: 'PRIVATE' },
+            ];
+          };
+          readonly ChallengePermission: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'EVERYONE'; readonly value: 'EVERYONE' },
+              { readonly name: 'FRIENDS'; readonly value: 'FRIENDS' },
+              { readonly name: 'NOBODY'; readonly value: 'NOBODY' },
+            ];
+          };
           readonly GameStatus: {
             readonly codecId: 'pg/text@1';
             readonly members: readonly [
@@ -1616,6 +2753,15 @@ type ContractBase = Omit<
     readonly executionHash: ExecutionHash;
     readonly mutations: {
       readonly defaults: readonly [
+        {
+          readonly ref: {
+            readonly namespace: 'public';
+            readonly table: 'challenge';
+            readonly column: 'updatedAt';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+        },
         {
           readonly ref: {
             readonly namespace: 'public';

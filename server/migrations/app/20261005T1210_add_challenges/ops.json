@@ -1,0 +1,320 @@
+[
+  {
+    "id": "table.challenge",
+    "label": "Create table \"challenge\"",
+    "summary": "Creates table \"challenge\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "challenge"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"challenge\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"challenge\"",
+        "sql": "CREATE TABLE \"public\".\"challenge\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"receiverId\" int4 NOT NULL,\n  \"respondedAt\" timestamptz,\n  \"senderId\" int4 NOT NULL,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userHighId\" int4 NOT NULL,\n  \"userLowId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"challenge_status_check_3832c7d4\" CHECK (\"status\" IN ('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED', 'EXPIRED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"challenge\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.challenge.challenge_pending_pair_0a23c4e2",
+    "label": "Create index \"challenge_pending_pair_0a23c4e2\" on \"challenge\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "challenge_pending_pair_0a23c4e2",
+        "table": "challenge"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"challenge_pending_pair_0a23c4e2\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_pending_pair_0a23c4e2\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"challenge_pending_pair_0a23c4e2\"",
+        "sql": "CREATE UNIQUE INDEX \"challenge_pending_pair_0a23c4e2\" ON \"public\".\"challenge\" (\"userLowId\", \"userHighId\") WHERE ((status = 'PENDING'))",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"challenge_pending_pair_0a23c4e2\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_pending_pair_0a23c4e2\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.challenge.challenge_receiverId_idx_fe124f44",
+    "label": "Create index \"challenge_receiverId_idx_fe124f44\" on \"challenge\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "challenge_receiverId_idx_fe124f44",
+        "table": "challenge"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"challenge_receiverId_idx_fe124f44\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_receiverId_idx_fe124f44\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"challenge_receiverId_idx_fe124f44\"",
+        "sql": "CREATE INDEX \"challenge_receiverId_idx_fe124f44\" ON \"public\".\"challenge\" (\"receiverId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"challenge_receiverId_idx_fe124f44\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_receiverId_idx_fe124f44\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.challenge.challenge_receiverId_status_idx_1f8f1a2b",
+    "label": "Create index \"challenge_receiverId_status_idx_1f8f1a2b\" on \"challenge\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "challenge_receiverId_status_idx_1f8f1a2b",
+        "table": "challenge"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"challenge_receiverId_status_idx_1f8f1a2b\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_receiverId_status_idx_1f8f1a2b\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"challenge_receiverId_status_idx_1f8f1a2b\"",
+        "sql": "CREATE INDEX \"challenge_receiverId_status_idx_1f8f1a2b\" ON \"public\".\"challenge\" (\"receiverId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"challenge_receiverId_status_idx_1f8f1a2b\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_receiverId_status_idx_1f8f1a2b\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.challenge.challenge_senderId_idx_4689c490",
+    "label": "Create index \"challenge_senderId_idx_4689c490\" on \"challenge\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "challenge_senderId_idx_4689c490",
+        "table": "challenge"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"challenge_senderId_idx_4689c490\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_senderId_idx_4689c490\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"challenge_senderId_idx_4689c490\"",
+        "sql": "CREATE INDEX \"challenge_senderId_idx_4689c490\" ON \"public\".\"challenge\" (\"senderId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"challenge_senderId_idx_4689c490\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_senderId_idx_4689c490\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.challenge.challenge_senderId_status_idx_4d7d6199",
+    "label": "Create index \"challenge_senderId_status_idx_4d7d6199\" on \"challenge\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "challenge_senderId_status_idx_4d7d6199",
+        "table": "challenge"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"challenge_senderId_status_idx_4d7d6199\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_senderId_status_idx_4d7d6199\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"challenge_senderId_status_idx_4d7d6199\"",
+        "sql": "CREATE INDEX \"challenge_senderId_status_idx_4d7d6199\" ON \"public\".\"challenge\" (\"senderId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"challenge_senderId_status_idx_4d7d6199\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_senderId_status_idx_4d7d6199\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.challenge.challenge_senderId_fkey",
+    "label": "Add foreign key \"challenge_senderId_fkey\" on \"challenge\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "challenge_senderId_fkey",
+        "table": "challenge"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"challenge_senderId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenge_senderId_fkey",
+          "public",
+          "\"public\".\"challenge\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"challenge_senderId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"challenge\"\nADD CONSTRAINT \"challenge_senderId_fkey\"\nFOREIGN KEY (\"senderId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"challenge_senderId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenge_senderId_fkey",
+          "public",
+          "\"public\".\"challenge\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.challenge.challenge_receiverId_fkey",
+    "label": "Add foreign key \"challenge_receiverId_fkey\" on \"challenge\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "challenge_receiverId_fkey",
+        "table": "challenge"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"challenge_receiverId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenge_receiverId_fkey",
+          "public",
+          "\"public\".\"challenge\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"challenge_receiverId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"challenge\"\nADD CONSTRAINT \"challenge_receiverId_fkey\"\nFOREIGN KEY (\"receiverId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"challenge_receiverId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenge_receiverId_fkey",
+          "public",
+          "\"public\".\"challenge\""
+        ]
+      }
+    ]
+  }
+]

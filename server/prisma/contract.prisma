@@ -15,12 +15,32 @@ model User {
   losses       Int       @default(0)
   draws        Int       @default(0)
 
+  // Settings page preferences. soundEnabled/arrowsEnabled are stored-only
+  // placeholders (no audio/arrow feature reads them yet); the other two are
+  // enforced server-side — see gameAccessService.js and challengeService.js.
+  soundEnabled          Boolean @default(true)
+  arrowsEnabled         Boolean @default(true)
+  recentGamesVisibility RecentGamesVisibility @default(PUBLIC)
+  challengePermission   ChallengePermission   @default(EVERYONE)
+
   redGames     Game[]    @relation("RedPlayer")
   blackGames   Game[]    @relation("BlackPlayer")
   wonGames     Game[]    @relation("Winner")
   moves        Move[]
   chatMessages ChatMessage[]
   verificationTokens EmailVerificationToken[]
+
+  friendshipsAsLow     Friendship[] @relation("FriendshipUserLow")
+  friendshipsAsHigh    Friendship[] @relation("FriendshipUserHigh")
+  friendshipsRequested Friendship[] @relation("FriendshipRequestedBy")
+
+  notifications        Notification[] @relation("NotificationRecipient")
+  notificationsAbout   Notification[] @relation("NotificationRelatedUser")
+
+  challengesSent       Challenge[] @relation("ChallengeSender")
+  challengesReceived   Challenge[] @relation("ChallengeReceiver")
+
+  academyProgress      AcademyProgress[]
 
   createdAt    TimestamptzString @default(now())
   updatedAt    temporal.updatedAtString()
@@ -106,6 +126,174 @@ model ChatMessage {
   player      User      @relation(fields: [playerId], references: [id])
 
   @@index([gameId, createdAt])
+}
+
+// One row per unfriended-or-friended *pair* of users, never per direction —
+// userLowId/userHighId are always the pair's two ids normalized smaller-
+// first (see friendService.js's normalizePair), so "A sent B a request" and
+// "B sent A a request" can never produce two rows: the second attempt hits
+// the same (userLowId, userHighId) unique pair and is caught as a duplicate
+// / handled as a mutual accept instead of inserted. `requestedById` keeps
+// the direction (who to credit as the sender / whose accept-or-reject
+// ownership applies) without needing a second row. PENDING -> ACCEPTED on
+// accept; reject/cancel/unfriend delete the row outright (see
+// friendService.js) so a fresh request can always be sent again later —
+// there is no REJECTED status to linger and block that.
+model Friendship {
+  id            Int       @id @default(autoincrement())
+
+  userLowId     Int
+  userHighId    Int
+  requestedById Int
+
+  status        FriendshipStatus @default(PENDING)
+
+  createdAt     TimestamptzString @default(now())
+  respondedAt   TimestamptzString?
+
+  userLow       User      @relation("FriendshipUserLow", fields: [userLowId], references: [id])
+  userHigh      User      @relation("FriendshipUserHigh", fields: [userHighId], references: [id])
+  requestedBy   User      @relation("FriendshipRequestedBy", fields: [requestedById], references: [id])
+
+  @@unique([userLowId, userHighId])
+  @@index([userHighId])
+  @@index([requestedById])
+}
+
+// One row per thing a user should be told about. A notification is only
+// ever a *pointer* at whatever it is about (a friend request, a rematch
+// request, a finished game) — never the source of truth for whether an
+// action on it is still valid; that is always re-checked against the
+// underlying resource on the server at the moment the action runs (see
+// notificationService.js). relatedRequestId is deliberately a plain Int,
+// not a foreign key: for FRIEND_REQUEST it holds the Friendship row id, and
+// that row is deleted on reject/cancel/unfriend while the notification
+// stays behind as history.
+//
+// dedupeKey is what makes creation idempotent: every producer derives it
+// from the action itself (e.g. "friend_request:<friendshipId>",
+// "game_result:<gameId>:<userId>"), so a double click, a retried request or
+// a duplicated socket event can only ever hit the unique constraint, never
+// insert a second row.
+model Notification {
+  id               Int       @id @default(autoincrement())
+
+  userId           Int
+  type             NotificationType
+  title            String
+  message          String
+  read             Boolean   @default(false)
+
+  relatedUserId    Int?
+  relatedGameId    Int?
+  relatedRequestId Int?
+
+  dedupeKey        String    @unique
+
+  createdAt        TimestamptzString @default(now())
+
+  user             User      @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  relatedUser      User?     @relation("NotificationRelatedUser", fields: [relatedUserId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([userId, read])
+  @@index([relatedUserId])
+}
+
+// One row per "sender invites receiver to a brand new match" (Friends page /
+// Public Profile > Thách đấu) — unrelated to a rematch, which is "come back
+// into the room we just played in" and lives in memory with that room (see
+// rematchInviteService.js). The row is the source of truth for whether the
+// invite can still be answered: every transition out of PENDING is a single
+// conditional UPDATE (see challengeService.js), so accept / reject / cancel /
+// expire can never both win, and no game is ever created for a row that did
+// not go PENDING -> ACCEPTED. Rows are kept after they are resolved, as
+// history for the CHALLENGE notification that points at them
+// (Notification.relatedRequestId).
+//
+// userLowId/userHighId are the pair's two ids normalized smaller-first, same
+// trick as Friendship: the partial unique index below then allows at most
+// one PENDING challenge per *pair*, in either direction, enforced by the
+// database rather than by a read-then-insert.
+model Challenge {
+  id          Int       @id @default(autoincrement())
+
+  senderId    Int
+  receiverId  Int
+  userLowId   Int
+  userHighId  Int
+
+  status      ChallengeStatus @default(PENDING)
+
+  expiresAt   TimestamptzString
+  respondedAt TimestamptzString?
+  createdAt   TimestamptzString @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  sender      User      @relation("ChallengeSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User      @relation("ChallengeReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([userLowId, userHighId], unique: true, where: "(status = 'PENDING')", name: "challenge_pending_pair")
+  @@index([senderId, status])
+  @@index([receiverId, status])
+}
+
+// One row per Academy challenge a user has solved — the whole of what is
+// stored for Học viện. The catalog itself (courses, lessons, challenges and
+// their solutions) is static data that ships with the code
+// (src/features/academy), so courseId/lessonId/challengeId are that catalog's
+// own string ids rather than foreign keys; academyService.js checks them
+// against the catalog before a row is ever written. The unique pair is what
+// makes "complete" idempotent: solving a challenge again can only hit the
+// constraint, never add a second row.
+model AcademyProgress {
+  id          Int       @id @default(autoincrement())
+
+  userId      Int
+  courseId    String
+  lessonId    String
+  challengeId String
+
+  completedAt TimestamptzString @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId])
+}
+
+enum ChallengeStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+// CHALLENGE points at a Challenge row through relatedRequestId (see
+// notificationService.js's notifyChallenge).
+enum NotificationType {
+  FRIEND_REQUEST
+  FRIEND_ACCEPTED
+  REMATCH_REQUEST
+  CHALLENGE
+  GAME_RESULT
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+}
+
+enum RecentGamesVisibility {
+  PUBLIC
+  FRIENDS
+  PRIVATE
+}
+
+enum ChallengePermission {
+  EVERYONE
+  FRIENDS
+  NOBODY
 }
 
 enum GameStatus {

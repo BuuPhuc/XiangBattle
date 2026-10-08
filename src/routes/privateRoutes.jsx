@@ -6,6 +6,9 @@ import Profile from '../pages/Profile/Profile'
 import EditProfile from '../pages/Profile/EditProfile'
 import PublicProfile from '../pages/Profile/PublicProfile'
 import Leaderboard from '../pages/Leaderboard/Leaderboard'
+import Friends from '../pages/Friends/Friends'
+import ClubComingSoon from '../pages/Social/ClubComingSoon'
+import Settings from '../pages/Settings/Settings'
 
 function RequireAuth() {
   const { isAuthenticated } = useAuth()
@@ -22,6 +25,9 @@ export const privateRoutes = [
       { path: '/profile/edit', element: <EditProfile /> },
       { path: '/profile/:userId', element: <PublicProfile /> },
       { path: '/leaderboard', element: <Leaderboard /> },
+      { path: '/friends', element: <Friends /> },
+      { path: '/clubs', element: <ClubComingSoon /> },
+      { path: '/settings', element: <Settings /> },
     ],
   },
 ]

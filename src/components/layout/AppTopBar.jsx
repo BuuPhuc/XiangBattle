@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import Icon from '../ui/Icon'
 import Avatar from '../ui/Avatar'
+import NotificationBell from '../notifications/NotificationBell'
 import useAuth from '../hooks/useAuth'
 
 export function AppTopBar() {
@@ -15,9 +16,7 @@ export function AppTopBar() {
         Xiangqi Master
       </span>
       <div className="flex items-center gap-4">
-        <button aria-label="Thông báo" className="text-on-surface-variant/70 hover:text-primary transition-colors duration-300 active:scale-95">
-          <Icon name="notifications" />
-        </button>
+        <NotificationBell placement="topbar" />
         {isAuthenticated ? (
           <Link
             to="/profile"

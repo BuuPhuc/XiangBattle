@@ -1,5 +1,7 @@
+import { useCallback, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Button from '../ui/Button'
+import LogoutConfirmModal from '../ui/LogoutConfirmModal'
 import useAuth from '../hooks/useAuth'
 
 const NAV_LINKS = [
@@ -13,7 +15,11 @@ export function Navbar() {
   const { isAuthenticated, user, logout } = useAuth()
   const navigate = useNavigate()
 
-  const handleLogout = () => {
+  const [confirmingLogout, setConfirmingLogout] = useState(false)
+  const cancelLogout = useCallback(() => setConfirmingLogout(false), [])
+
+  const handleConfirmLogout = () => {
+    setConfirmingLogout(false)
     logout()
     navigate('/')
   }
@@ -49,7 +55,7 @@ export function Navbar() {
               <span className="hidden md:inline font-label-md text-label-md text-on-surface-variant">
                 {user?.username}
               </span>
-              <Button variant="outline-sm" size="sm" className="hidden md:inline-flex" onClick={handleLogout}>
+              <Button variant="outline-sm" size="sm" className="hidden md:inline-flex" onClick={() => setConfirmingLogout(true)}>
                 Đăng xuất
               </Button>
             </>
@@ -63,6 +69,8 @@ export function Navbar() {
           </Button>
         </div>
       </div>
+
+      {confirmingLogout && <LogoutConfirmModal onConfirm={handleConfirmLogout} onCancel={cancelLogout} />}
     </nav>
   )
 }

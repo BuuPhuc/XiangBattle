@@ -1,5 +1,15 @@
 const { ROOM_STATUS, GAME_STATUS } = require('../rooms/room')
-const { createGameRecord, attachPlayerRatings, saveMoveRecord, finishGameRecord } = require('../services/gameHistoryService')
+const {
+  parseUserId,
+  createGameRecord,
+  attachPlayerRatings,
+  saveMoveRecord,
+  finishGameRecord,
+  getFinishedGameOpponent,
+} = require('../services/gameHistoryService')
+const rematchInvites = require('../services/rematchInviteService')
+const { checkChallengeAllowed } = require('../services/challengeService')
+const { notifyRematchRequest } = require('../services/notificationService')
 
 function moveError(code, message) {
   return { code, message }
@@ -199,6 +209,9 @@ function registerGameHandlers(io, socket, roomManager) {
   // seats/colors as before, board/history/timer/result all reset exactly
   // like a brand new game_started.
   function startRematch(room) {
+    // Whatever invite led here is now answered (read before startGame /
+    // createGameRecord below replace dbGameId with the new match's).
+    if (room.dbGameId) rematchInvites.remove(room.dbGameId)
     room.clearPlayAgainRequest()
     room.startGame()
     console.log(`[game] ${room.roomId} rematch started`)
@@ -216,14 +229,24 @@ function registerGameHandlers(io, socket, roomManager) {
   // already asked (both players clicked "Chơi lại" independently), this
   // call is treated as accepting that existing request outright, since the
   // outcome — both wanting a rematch — is identical either way.
-  socket.on('request_play_again', () => {
+  socket.on('request_play_again', async () => {
     const room = roomManager.getRoomBySocket(socket.id)
     if (!room) {
       socket.emit('room_error', { code: 'NOT_IN_ROOM', message: 'Bạn không ở trong phòng nào.' })
       return
     }
     if (!room.matchResult) {
-      socket.emit('room_error', { code: 'GAME_STILL_PLAYING', message: 'Trận đấu hiện tại chưa kết thúc.' })
+      // No result on the room has two very different causes. With both
+      // seats still filled, a match really is in progress. With the other
+      // seat empty, the opponent left after the match ended (removePlayer
+      // wipes matchResult along with them) — the match this player is
+      // still looking at is finished, and "play again" becomes an invite
+      // for the opponent to come back.
+      if (room.isFull()) {
+        socket.emit('room_error', { code: 'GAME_STILL_PLAYING', message: 'Trận đấu hiện tại chưa kết thúc.' })
+        return
+      }
+      await inviteDepartedOpponent(room)
       return
     }
     const player = room.getPlayer(socket.id)
@@ -249,10 +272,201 @@ function registerGameHandlers(io, socket, roomManager) {
       return
     }
 
+    // A fresh rematch request is an invite aimed at the opponent, so their
+    // "Ai có thể thách đấu tôi" setting decides whether it may be sent at
+    // all (the mutual-request path above is exempt — there the opponent
+    // asked first). The requester is identified by the socket's verified
+    // JWT (socket.user), never by the client-supplied playerId; a guest
+    // requester is simply nobody's friend.
+    const opponent = room.getOpponent(socket.id)
+    let permission
+    try {
+      permission = await checkChallengeAllowed(socket.user ? socket.user.id : null, parseUserId(opponent && opponent.playerId))
+    } catch (error) {
+      console.error(`[game] ${room.roomId} failed to check challenge permission:`, error.message)
+      socket.emit('room_error', { code: 'SERVICE_UNAVAILABLE', message: 'Đã có lỗi xảy ra. Vui lòng thử lại sau.' })
+      return
+    }
+    if (!permission.allowed) {
+      console.log(`[game] ${room.roomId} rematch request by ${player.color} blocked by opponent's challenge setting`)
+      socket.emit('room_error', { code: permission.code, message: permission.message })
+      return
+    }
+
+    // The checks above ran before an `await` — re-validate what could have
+    // changed meanwhile (a new match started, the opponent asked or left).
+    if (roomManager.getRoomBySocket(socket.id) !== room || !room.matchResult) return
+    if (!room.isFull() || !room.players.every((p) => p.connected)) {
+      socket.emit('room_error', { code: 'OPPONENT_UNAVAILABLE', message: 'Đối thủ hiện không có mặt để chơi lại.' })
+      return
+    }
+    if (room.playAgainRequestBy === player.color) {
+      socket.emit('play_again_request_sent')
+      return
+    }
+    if (room.playAgainRequestBy) {
+      console.log(`[game] ${room.roomId} rematch requested by both players — starting`)
+      startRematch(room)
+      return
+    }
+
     room.requestPlayAgain(player.color)
     console.log(`[game] ${room.roomId} ${player.color} requested a rematch`)
     socket.emit('play_again_request_sent')
     socket.to(room.roomId).emit('play_again_requested', { fromColor: player.color })
+
+    // The prompt above is one way to answer; the notification is the other
+    // (the opponent may dismiss the prompt, or leave the match screen, and
+    // still answer from their notification list — see
+    // respond_rematch_invite). Limited to a persisted match between two
+    // accounts: that is the only case with both a recipient to store it for
+    // and a game id to address the invite by.
+    const opponentUserId = parseUserId(opponent && opponent.playerId)
+    if (socket.user && opponentUserId && room.dbGameId) {
+      registerInvite(room, socket.user.id, opponentUserId)
+    }
+  })
+
+  // Records the invite and notifies the invitee. Only ever reached once per
+  // actual invite — both callers have already returned early for a repeat
+  // click (room.playAgainRequestBy / an existing registry entry), so the
+  // timestamp in the notification's dedupe key distinguishes a genuinely
+  // new invite (e.g. asking again after a decline) without letting a
+  // duplicated event through.
+  function registerInvite(room, fromUserId, toUserId) {
+    const gameId = room.dbGameId
+    rematchInvites.set({ gameId, roomId: room.roomId, fromUserId, toUserId })
+    notifyRematchRequest(gameId, fromUserId, toUserId, Date.now())
+  }
+
+  // "Chơi lại" pressed by a player whose opponent has already left the
+  // finished match. The Room no longer knows who that opponent was, so they
+  // are looked up from the persisted Game; the invite then waits in the
+  // registry until they answer it from their notification.
+  async function inviteDepartedOpponent(room) {
+    const unavailable = () =>
+      socket.emit('room_error', { code: 'OPPONENT_UNAVAILABLE', message: 'Đối thủ đã rời trận, không thể mời chơi lại.' })
+
+    const gameId = room.dbGameId
+    // Needs a finished, persisted match between two accounts — a guest
+    // opponent has no account to notify.
+    if (!socket.user || !gameId || !room.dbResultSaved || room.status !== ROOM_STATUS.WAITING) return unavailable()
+
+    const existing = rematchInvites.get(gameId)
+    if (existing && existing.fromUserId === socket.user.id && existing.roomId === room.roomId) {
+      socket.emit('play_again_request_sent')
+      return
+    }
+
+    let opponentUserId
+    let permission
+    try {
+      opponentUserId = await getFinishedGameOpponent(gameId, socket.user.id)
+      if (!opponentUserId) return unavailable()
+      permission = await checkChallengeAllowed(socket.user.id, opponentUserId)
+    } catch (error) {
+      console.error(`[game] ${room.roomId} failed to prepare rematch invite:`, error.message)
+      socket.emit('room_error', { code: 'SERVICE_UNAVAILABLE', message: 'Đã có lỗi xảy ra. Vui lòng thử lại sau.' })
+      return
+    }
+    if (!permission.allowed) {
+      socket.emit('room_error', { code: permission.code, message: permission.message })
+      return
+    }
+
+    // Re-validate after the awaits above: still this room, still waiting
+    // alone on that same finished game, and no invite registered meanwhile.
+    if (roomManager.getRoomBySocket(socket.id) !== room || room.dbGameId !== gameId) return
+    if (room.isFull() || room.status !== ROOM_STATUS.WAITING) return unavailable()
+    if (rematchInvites.get(gameId)) {
+      socket.emit('play_again_request_sent')
+      return
+    }
+
+    console.log(`[game] ${room.roomId} user ${socket.user.id} invited departed opponent ${opponentUserId} to a rematch`)
+    registerInvite(room, socket.user.id, opponentUserId)
+    socket.emit('play_again_request_sent')
+  }
+
+  // The invitee answering a rematch invite from its notification rather
+  // than from the in-room prompt — works whether they are still seated in
+  // the room or have left it. `gameId` only names which invite; everything
+  // that decides whether it can still be answered is read here, now, from
+  // the registry and the Room: the invite exists and is addressed to this
+  // socket's verified user, the room still exists and is still about that
+  // same finished game (a new match there replaces dbGameId), and the
+  // inviter is still in it. Anything else is "no longer valid" — no room is
+  // joined and no game is created.
+  socket.on('respond_rematch_invite', (payload, ack) => {
+    const reply = typeof ack === 'function' ? ack : () => {}
+    const gameId = Number(payload && payload.gameId)
+    const accept = Boolean(payload && payload.accept)
+    const expired = () => {
+      reply({ ok: false, code: 'REMATCH_INVITE_EXPIRED', message: 'Lời mời chơi lại này không còn hiệu lực.' })
+    }
+
+    const invite = socket.user ? rematchInvites.get(gameId) : null
+    if (!invite || invite.toUserId !== socket.user.id) return expired()
+
+    const room = roomManager.getRoom(invite.roomId)
+    const inviter = room ? room.getPlayerByPlayerId(`u:${invite.fromUserId}`) : null
+    if (!room || !inviter || !inviter.connected || room.dbGameId !== gameId) {
+      rematchInvites.remove(gameId)
+      return expired()
+    }
+
+    // Still seated in that room: this is the existing in-room handshake,
+    // just answered from a different button.
+    if (roomManager.getRoomBySocket(socket.id) === room) {
+      const me = room.getPlayer(socket.id)
+      if (!room.matchResult || !room.playAgainRequestBy || !me || room.playAgainRequestBy === me.color) {
+        rematchInvites.remove(gameId)
+        return expired()
+      }
+      if (accept) {
+        console.log(`[game] ${room.roomId} rematch accepted by ${me.color} (from notification)`)
+        startRematch(room)
+      } else {
+        rematchInvites.remove(gameId)
+        room.clearPlayAgainRequest()
+        console.log(`[game] ${room.roomId} rematch declined by ${me.color} (from notification)`)
+        io.to(room.roomId).emit('play_again_declined')
+      }
+      return reply({ ok: true, roomId: room.roomId })
+    }
+
+    // Not in that room any more (either side left after the match): the
+    // inviter must be waiting there alone for the invite to mean anything.
+    if (room.status !== ROOM_STATUS.WAITING || room.isFull()) {
+      rematchInvites.remove(gameId)
+      return expired()
+    }
+
+    if (!accept) {
+      rematchInvites.remove(gameId)
+      console.log(`[game] ${room.roomId} rematch invite declined by user ${socket.user.id}`)
+      io.to(room.roomId).emit('play_again_declined')
+      return reply({ ok: true })
+    }
+
+    // Accepting is taking the free seat back — the same joinRoom every
+    // other entry into a room uses, so "already in another room" and the
+    // seat/color assignment behave exactly as they do for join_room.
+    let result
+    try {
+      result = roomManager.joinRoom(room.roomId, socket.id, `u:${socket.user.id}`)
+    } catch (error) {
+      return reply({ ok: false, code: error.code || 'JOIN_FAILED', message: error.message })
+    }
+    rematchInvites.remove(gameId)
+    socket.join(room.roomId)
+    console.log(`[game] ${room.roomId} rematch invite accepted by user ${socket.user.id} — rejoined`)
+    if (result.justStarted) {
+      createGameRecord(io, room)
+      attachPlayerRatings(io, room)
+    }
+    broadcastGameStarted(io, room)
+    return reply({ ok: true, roomId: room.roomId })
   })
 
   // The other player's answer to a pending rematch request — never the
@@ -278,6 +492,7 @@ function registerGameHandlers(io, socket, roomManager) {
       console.log(`[game] ${room.roomId} rematch accepted by ${player.color}`)
       startRematch(room)
     } else {
+      if (room.dbGameId) rematchInvites.remove(room.dbGameId)
       room.clearPlayAgainRequest()
       console.log(`[game] ${room.roomId} rematch declined by ${player.color}`)
       io.to(room.roomId).emit('play_again_declined')

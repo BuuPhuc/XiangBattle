@@ -13,6 +13,44 @@ const { createGameRecord, attachPlayerRatings } = require('../services/gameHisto
 // roomManager to hang this state.
 const waitingQueue = new Map()
 
+// Puts two players who are not in any room into a brand new one and starts
+// their match — the one path for "the server paired these two" (Quick Play
+// below, an accepted challenge in challengeHandler.js). It is nothing but
+// the manual flow's own roomManager.createRoom + joinRoom, so seats, colors
+// (`host` takes seat 1, i.e. red), the game record, reconnect and everything
+// after are exactly what a hand-made room gets. `host`/`guest` are
+// { socketId, playerId }. Throws roomManager's own error (e.g.
+// ALREADY_IN_ROOM) if either cannot be seated, leaving no room behind.
+function startPairedMatch(io, roomManager, host, guest) {
+  const created = roomManager.createRoom(host.socketId, host.playerId)
+  let room
+  try {
+    room = roomManager.joinRoom(created.roomId, guest.socketId, guest.playerId).room
+  } catch (error) {
+    roomManager.deleteRoom(created.roomId)
+    throw error
+  }
+
+  ;[host, guest].forEach((seat) => {
+    const seatSocket = io.sockets.sockets.get(seat.socketId)
+    if (seatSocket) seatSocket.join(room.roomId)
+  })
+
+  // roomManager.joinRoom always fills the last seat here, so this call
+  // always "just started" the match — same persistence entry point as a
+  // manual join_room (see socketHandler.js).
+  createGameRecord(io, room)
+  attachPlayerRatings(io, room)
+
+  // Same per-recipient shape as game_started/game_state (you/opponent
+  // differ per socket) — the frontend treats this identically to a
+  // manual join_room that immediately filled the last seat.
+  room.players.forEach((player) => {
+    io.to(player.socketId).emit('match_found', { ...room.toGameStarted(player.socketId), dbGameId: room.dbGameId || null })
+  })
+  return room
+}
+
 function registerMatchmakingHandlers(io, socket, roomManager) {
   socket.on('quick_play', (payload) => {
     const playerId = payload && payload.playerId
@@ -61,8 +99,7 @@ function registerMatchmakingHandlers(io, socket, roomManager) {
 
     let room
     try {
-      const created = roomManager.createRoom(opponentEntry.socketId, opponentEntry.playerId)
-      room = roomManager.joinRoom(created.roomId, socket.id, playerId).room
+      room = startPairedMatch(io, roomManager, opponentEntry, { socketId: socket.id, playerId })
     } catch (error) {
       // Narrow race (e.g. one identity got into a room some other way
       // between being dequeued and matched) — don't strand the caller,
@@ -73,24 +110,7 @@ function registerMatchmakingHandlers(io, socket, roomManager) {
       return
     }
 
-    const opponentSocket = io.sockets.sockets.get(opponentEntry.socketId)
-    opponentSocket.join(room.roomId)
-    socket.join(room.roomId)
-
     console.log(`[matchmaking] matched ${opponentEntry.playerId} vs ${playerId} into room ${room.roomId}`)
-
-    // roomManager.joinRoom always fills the last seat here, so this call
-    // always "just started" the match — same persistence entry point as a
-    // manual join_room (see socketHandler.js).
-    createGameRecord(io, room)
-    attachPlayerRatings(io, room)
-
-    // Same per-recipient shape as game_started/game_state (you/opponent
-    // differ per socket) — the frontend treats this identically to a
-    // manual join_room that immediately filled the last seat.
-    room.players.forEach((player) => {
-      io.to(player.socketId).emit('match_found', { ...room.toGameStarted(player.socketId), dbGameId: room.dbGameId || null })
-    })
   })
 
   socket.on('cancel_quick_play', (payload) => {
@@ -115,4 +135,4 @@ function removeFromQuickPlayQueue(socketId) {
   }
 }
 
-module.exports = { registerMatchmakingHandlers, removeFromQuickPlayQueue }
+module.exports = { registerMatchmakingHandlers, removeFromQuickPlayQueue, startPairedMatch }
