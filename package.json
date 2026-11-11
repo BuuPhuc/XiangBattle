@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test --test-concurrency=1 \"tests/rules/**/*.test.js\" \"tests/ai/**/*.test.js\"",
+    "test:e2e": "node --test --test-concurrency=1 \"tests/e2e/**/*.test.js\"",
+    "test:server": "npm --prefix server test",
+    "test:all": "npm test && npm run test:server && npm run test:e2e"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.12.0",
@@ -34,6 +38,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
     "globals": "^17.7.0",
+    "playwright-core": "^1.56.1",
     "vite": "^8.2.0"
   }
 }

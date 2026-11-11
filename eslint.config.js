@@ -19,6 +19,13 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  // tests/ run under Node (node:test), not in the browser.
+  {
+    files: ['tests/**/*.js'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
+    },
+  },
   // server/ is a separate CommonJS Node project (own package.json) — plain
   // require()/module.exports, no React/JSX, so it gets Node globals and
   // just the base recommended rules instead of the frontend config above.
