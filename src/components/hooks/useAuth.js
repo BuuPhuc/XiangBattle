@@ -24,7 +24,7 @@ function extractErrorResponse(error, fallbackMessage) {
 
 export function useAuth() {
   const dispatch = useDispatch()
-  const { user, token, isAuthenticated, status, error } = useSelector((state) => state.auth)
+  const { user, token, isAuthenticated, status, error, restoring } = useSelector((state) => state.auth)
 
   const login = useCallback(
     async (credentials) => {
@@ -110,7 +110,14 @@ export function useAuth() {
     }
   }, [dispatch])
 
-  return { user, token, isAuthenticated, status, error, login, register, updateUser, logout, restoreSession }
+  // True while a saved session is still being confirmed on page load (the
+  // window between the first render and restoreSession() finishing). Lets
+  // pages show "loading" instead of treating the user as signed out —
+  // e.g. not bouncing a reload of /profile to the home page. If the saved
+  // session turns out invalid, restoreSession logs out and this turns false.
+  const isRestoring = restoring && !isAuthenticated
+
+  return { user, token, isAuthenticated, isRestoring, status, error, login, register, updateUser, logout, restoreSession }
 }
 
 export default useAuth

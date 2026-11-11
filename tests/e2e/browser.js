@@ -59,6 +59,67 @@ export async function step(app, t, fn) {
   }
 }
 
+export const json = (body, status = 200) => ({ status, contentType: 'application/json', body: JSON.stringify(body) })
+
+export const TEST_USER = { id: 7, username: 'tester', displayName: null, rating: 1234, wins: 12, losses: 8, draws: 3, emailVerified: true }
+
+// A fresh, isolated browser context whose backend is entirely faked: the
+// socket is blocked and every /api call is answered here (unlisted ones get
+// a 404), so no server, database or real account is involved and a running
+// backend can't influence the test. Returns null (test skipped) without
+// Chrome.
+//   signedIn — seed the saved session a real login leaves in localStorage
+//   authMe   — answer to the session check on page load (/auth/me)
+//   games    — answer to GET /users/:id/games; calls are logged in gameCalls
+export async function openMockedPage(app, t, { signedIn = true, user = TEST_USER, authMe, games } = {}) {
+  if (app.skipReason) {
+    t.skip(app.skipReason)
+    return null
+  }
+  const context = await app.browser.newContext({ viewport: { width: 1400, height: 1000 } })
+  t.after(() => context.close())
+  const page = await context.newPage()
+  const errors = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  const gameCalls = []
+
+  await page.route(/socket\.io/, (route) => route.abort())
+  await page.route(/\/api\//, (route) => route.fulfill(json({ success: false, code: 'NOT_MOCKED' }, 404)))
+  await page.route(/\/api\/(auth|users)\/me(\?|$)/, async (route) =>
+    route.fulfill(authMe ? await authMe(route.request()) : json({ success: true, user }))
+  )
+  await page.route(/\/api\/users\/\d+\/games/, async (route) => {
+    const url = new URL(route.request().url())
+    gameCalls.push({ userId: url.pathname.split('/').at(-2), limit: url.searchParams.get('limit') })
+    await route.fulfill(games ? await games(route.request(), gameCalls.length) : json({ success: true, games: [] }))
+  })
+  await page.route(/\/api\/games\/\d+/, (route) => {
+    const id = Number(new URL(route.request().url()).pathname.split('/').at(-1))
+    return route.fulfill(
+      json({
+        success: true,
+        game: {
+          id,
+          redPlayer: { id: user.id, username: user.username, displayName: null },
+          blackPlayer: { id: 100, username: 'opponent_a', displayName: null },
+          winner: { id: user.id, username: user.username, displayName: null },
+          result: 'RED_WIN',
+          endReason: 'CHECKMATE',
+          moves: [],
+        },
+      })
+    )
+  })
+
+  if (signedIn) {
+    await page.addInitScript((u) => {
+      localStorage.setItem('accessToken', 'fake-token-for-tests')
+      localStorage.setItem('xiangbattle_user', JSON.stringify(u))
+    }, user)
+  }
+  return { page, gameCalls, errors }
+}
+
 // Clicks the board intersection (col, row) in REAL board coordinates — the
 // same thing a click on the piece or the empty point there does.
 export function clickSquare(page, col, row) {

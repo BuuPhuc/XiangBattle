@@ -1,4 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { loadAuthSession } from '../../features/auth/authStorage'
+
+function hasSavedSession() {
+  try {
+    return loadAuthSession() !== null
+  } catch {
+    return false
+  }
+}
 
 const initialState = {
   user: null,
@@ -6,6 +15,12 @@ const initialState = {
   isAuthenticated: false,
   status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
+  // True from app start while a session saved by an earlier visit is being
+  // confirmed (useAuth's restoreSession); cleared once it either restores
+  // (setCredentials) or turns out invalid (logout). Lives in the store —
+  // not re-read from localStorage on render — so components re-render
+  // when it changes.
+  restoring: hasSavedSession(),
 }
 
 const authSlice = createSlice({
@@ -18,6 +33,7 @@ const authSlice = createSlice({
       state.isAuthenticated = true
       state.status = 'succeeded'
       state.error = null
+      state.restoring = false
     },
     // Patches the current user object in place (e.g. after a profile edit)
     // without touching token/isAuthenticated — unlike setCredentials, which
@@ -32,6 +48,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false
       state.status = 'idle'
       state.error = null
+      state.restoring = false
     },
     setStatus: (state, action) => {
       state.status = action.payload

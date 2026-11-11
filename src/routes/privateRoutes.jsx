@@ -10,9 +10,20 @@ import Friends from '../pages/Friends/Friends'
 import ClubComingSoon from '../pages/Social/ClubComingSoon'
 import Settings from '../pages/Settings/Settings'
 
+// Waits for a saved session to be confirmed before deciding: reloading a
+// private page while signed in used to redirect to "/" because the session
+// hadn't been restored yet on the first render.
 function RequireAuth() {
-  const { isAuthenticated } = useAuth()
-  return isAuthenticated ? <Outlet /> : <Navigate to="/" replace />
+  const { isAuthenticated, isRestoring } = useAuth()
+  if (isAuthenticated) return <Outlet />
+  if (isRestoring) {
+    return (
+      <div className="py-24 text-center" aria-label="Đang tải">
+        <span className="w-3 h-3 rounded-full bg-secondary animate-pulse inline-block" />
+      </div>
+    )
+  }
+  return <Navigate to="/" replace />
 }
 
 export const privateRoutes = [
