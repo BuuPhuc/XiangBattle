@@ -1,4 +1,4 @@
-const { ROOM_STATUS, GAME_STATUS } = require('../rooms/room')
+const { ROOM_STATUS, GAME_STATUS, COLORS, setTurnTimeoutHandler } = require('../rooms/room')
 const {
   parseUserId,
   createGameRecord,
@@ -28,16 +28,44 @@ function broadcastGameStarted(io, room) {
   })
 }
 
+// Records a server-decided result, tells both players, and persists it
+// (Elo included). Idempotent on the in-memory side via recordMatchResult;
+// the DB write only happens for the first result.
+function concludeMatch(io, room, status, winner) {
+  const wasFinished = Boolean(room.matchResult)
+  const result = room.recordMatchResult(status, winner)
+  if (wasFinished) return
+  console.log(`[game] ${room.roomId} over (${status}) — ${winner || 'no one'} wins`)
+  io.to(room.roomId).emit('game_over', result)
+  finishGameRecord(io, room, status, winner)
+}
+
+// Ends the match if the side to move has run out of time. Returns true if
+// it did.
+function concludeIfTimedOut(io, room) {
+  const timeout = room.getExpiredTimeout()
+  if (!timeout) return false
+  concludeMatch(io, room, timeout.status, timeout.loser === COLORS.RED ? COLORS.BLACK : COLORS.RED)
+  return true
+}
+
+// Room's own turn timer calls this when the side to move runs out of
+// time — the clock is enforced server-side even if no client reports it.
+// Registered once at startup (see socketHandler.js).
+function registerTurnTimeoutHandler(io) {
+  setTurnTimeoutHandler((room) => {
+    // The timer fires at the exact deadline; if it somehow runs early
+    // (clock drift), re-arm instead of ending the match prematurely.
+    if (!concludeIfTimedOut(io, room)) room.scheduleTurnDeadline()
+  })
+}
+
 // Registers the realtime move-sync and game-lifecycle events for one
-// socket. The server is only the authority for *turn order and
-// sequencing* here — room membership, whose color the sender is, and
-// whose turn it is. It never re-validates chess legality (that already ran
-// on the mover's client, using the same rule engine local play uses);
-// this just relays the already-computed move to the other player in the
-// room, in order. Game-over itself works the same way: a client that
-// locally derives checkmate/timeout reports it here so the server has an
-// authoritative record (needed so reconnect can tell "finished" from
-// "still playing" — see room.matchResult), it never decides that itself.
+// socket. The server is the referee here: room membership, whose color the
+// sender is and whose turn it is — and also whether the move is legal, what
+// the board looks like after it, and whether it ended the game (see
+// room.playMove / game/xiangqiEngine.js). A client only proposes a from/to
+// square; nothing else it sends is trusted.
 function registerGameHandlers(io, socket, roomManager) {
   socket.on('make_move', (payload) => {
     const room = roomManager.getRoomBySocket(socket.id)
@@ -62,45 +90,48 @@ function registerGameHandlers(io, socket, roomManager) {
       return
     }
 
-    const move = payload && payload.move
-    if (!move || !move.piece || !move.to || !move.piecesAfter) {
-      socket.emit('move_rejected', moveError('INVALID_MOVE_PAYLOAD', 'Dữ liệu nước đi không hợp lệ.'))
+    // A move that arrives after the mover's clock ran out loses on time
+    // instead of being played (the turn timer would end it momentarily
+    // anyway; this just closes the race).
+    if (concludeIfTimedOut(io, room)) {
+      socket.emit('move_rejected', moveError('TIMED_OUT', 'Bạn đã hết thời gian.'))
       return
     }
 
-    const entry = room.recordMove(move)
-    console.log(`[game] ${room.roomId} move #${entry.ply} (${entry.piece.char}) by ${player.color}`)
+    const move = payload && payload.move
+    const played = move ? room.playMove(move.from, move.to) : null
+    if (!played || !played.ok) {
+      const code = played ? played.code : 'INVALID_MOVE_PAYLOAD'
+      const message = played ? played.message : 'Dữ liệu nước đi không hợp lệ.'
+      console.log(`[game] ${room.roomId} rejected move by ${player.color}: ${code}`)
+      socket.emit('move_rejected', moveError(code, message))
+      return
+    }
+
+    const { entry, outcome, winner } = played
+    console.log(`[game] ${room.roomId} move #${entry.ply} (${entry.piece.char} ${entry.notation}) by ${player.color}`)
     saveMoveRecord(room, entry, player)
 
     // The mover already applied this move to their own board optimistically
-    // (same as local play) — only the opponent needs it relayed.
+    // (same rule engine, so the same result) — only the opponent needs it
+    // relayed. Sent before any game_over so the final position shows first.
     socket.to(room.roomId).emit('move_made', { roomId: room.roomId, move: entry, currentTurn: room.currentTurn })
+
+    // Checkmate / stalemate / repetition verdict: decided here, from the
+    // server's own board and position history. concludeMatch records it
+    // once (it ignores any later result for the same match).
+    if (outcome) concludeMatch(io, room, outcome, winner)
   })
 
-  // A client just derived checkmate or a clock timeout locally (the server
-  // never re-derives chess rules) and is reporting the result so it
-  // becomes part of the room's authoritative state — this is what lets a
-  // later reconnect (or the opponent, who may not have derived it yet in
-  // the timeout case) know the match is actually over. Idempotent: the
-  // first report to arrive wins, matching the disconnect-forfeit path.
-  socket.on('report_game_over', (payload) => {
+  // Legacy nudge from clients that see a clock hit zero locally. The
+  // payload (status/winner) is ignored entirely — the server only checks
+  // its own clock, and checkmate/stalemate are already decided in
+  // make_move. The turn timer ends a timed-out match on its own; this just
+  // lets it happen a moment sooner.
+  socket.on('report_game_over', () => {
     const room = roomManager.getRoomBySocket(socket.id)
-    if (!room || room.status !== ROOM_STATUS.PLAYING) return
-    const player = room.getPlayer(socket.id)
-    if (!player) return
-
-    const { status, winner } = payload || {}
-    if (!status || (winner !== 'red' && winner !== 'black')) return
-
-    // Unlike resign/offer_draw below, this handler has no earlier
-    // matchResult guard — a checkmate report can race a resign/forfeit that
-    // already concluded the match, and recordMatchResult's own idempotency
-    // only protects the in-memory result, not the DB write.
-    const wasFinished = Boolean(room.matchResult)
-    const result = room.recordMatchResult(status, winner)
-    console.log(`[game] ${room.roomId} reported over (${status}) — ${result.winner} wins`)
-    io.to(room.roomId).emit('game_over', result)
-    if (!wasFinished) finishGameRecord(io, room, status, winner)
+    if (!room || !room.getPlayer(socket.id)) return
+    concludeIfTimedOut(io, room)
   })
 
   // A player conceding outright, independent of the board position — the
@@ -500,4 +531,4 @@ function registerGameHandlers(io, socket, roomManager) {
   })
 }
 
-module.exports = { registerGameHandlers, broadcastGameStarted }
+module.exports = { registerGameHandlers, registerTurnTimeoutHandler, broadcastGameStarted }

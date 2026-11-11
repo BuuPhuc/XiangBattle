@@ -1,9 +1,10 @@
-import { useCallback, useState } from 'react'
-import { findPieceAt, isOwnPiece, movePiece, otherTurn, GAME_STATUS } from '../gameLogic.js'
+import { useCallback, useMemo, useState } from 'react'
+import { findPieceAt, isOwnPiece, otherTurn, GAME_STATUS } from '../gameLogic.js'
 import { isInCheck } from '../utils/checkUtils.js'
 import { isFullyLegalMove } from '../utils/moveUtils.js'
-import { isCheckmate } from '../utils/checkmateUtils.js'
-import { formatMoveNotation } from '../utils/notationUtils.js'
+import { isCheckmate, isStalemate } from '../utils/checkmateUtils.js'
+import { createMoveEntry } from '../utils/moveEntry.js'
+import { judgeRepetition } from '../utils/repetitionUtils.js'
 import { getPiecesAtIndex, getTurnAtIndex } from '../utils/historyUtils.js'
 
 // `initialMoveHistory`/`initialMatchResult` let a caller seed the hook from
@@ -47,24 +48,49 @@ export function useGame({ initialMoveHistory, initialMatchResult } = {}) {
   // the mate happened correctly reads as playable again. A timeout loss has
   // no such position to browse back to, so it stays true regardless of
   // currentMoveIndex until the next resetGame().
+  // Stalemate (no legal move, not in check) is a loss too in Xiangqi, so it
+  // ends the game the same way and is browsable the same way.
   const isCheckmateNow = isCheckmate(pieces, turn)
-  const isGameOver = isCheckmateNow || timeoutResult !== null
+  const isStalemateNow = !isCheckmateNow && isStalemate(pieces, turn)
+  const noMovesLeft = isCheckmateNow || isStalemateNow
+
+  // Repetition (perpetual check / chase, or draw by repetition) — the same
+  // shared rule the server applies to online games, judged on the line that
+  // led to the displayed position, so like checkmate it un-shows when you
+  // browse back before it. Derived, never stored: it can't fire twice.
+  // (Checkmate/stalemate takes precedence over a repetition verdict.)
+  const repetitionVerdict = useMemo(() => {
+    const positions = [{ pieces: getPiecesAtIndex(moveHistory, -1), side: getTurnAtIndex(moveHistory, -1) }]
+    for (let i = 0; i <= currentMoveIndex; i++) {
+      positions.push({ pieces: moveHistory[i].piecesAfter, side: otherTurn(moveHistory[i].turn) })
+    }
+    return judgeRepetition(positions)
+  }, [moveHistory, currentMoveIndex])
+  const repetition = noMovesLeft ? null : repetitionVerdict
+
+  const isGameOver = noMovesLeft || repetition !== null || timeoutResult !== null
 
   const status = timeoutResult
     ? timeoutResult.reason
     : isCheckmateNow
       ? GAME_STATUS.CHECKMATE
-      : GAME_STATUS.PLAYING
+      : isStalemateNow
+        ? GAME_STATUS.STALEMATE
+        : repetition
+          ? repetition.status
+          : GAME_STATUS.PLAYING
   // A draw (timeoutResult.side === null, from a server-recorded
-  // GAME_STATUS.DRAW) has no losing side to invert — winner stays null,
-  // same as "game still in progress".
+  // GAME_STATUS.DRAW, or a repetition draw) has no winning side — winner
+  // stays null, same as "game still in progress".
   const winner = timeoutResult
     ? timeoutResult.side
       ? otherTurn(timeoutResult.side)
       : null
-    : isCheckmateNow
+    : noMovesLeft
       ? otherTurn(turn)
-      : null
+      : repetition
+        ? repetition.winner
+        : null
 
   const selectSquare = useCallback(
     (col, row) => {
@@ -98,21 +124,7 @@ export function useGame({ initialMoveHistory, initialMatchResult } = {}) {
       // does nothing.
       if (!isFullyLegalMove(selectedPiece, col, row, pieces)) return
 
-      const from = { col: selectedPiece.col, row: selectedPiece.row }
-      const to = { col, row }
-      const captured = target
-      const piecesAfter = movePiece(pieces, selectedPiece.id, col, row)
-
-      const move = {
-        ply: currentMoveIndex + 2,
-        turn,
-        piece: { id: selectedPiece.id, type: selectedPiece.type, side: selectedPiece.side, char: selectedPiece.char },
-        from,
-        to,
-        captured: captured ? { id: captured.id, type: captured.type, side: captured.side, char: captured.char } : null,
-        piecesAfter,
-      }
-      move.notation = formatMoveNotation(move)
+      const move = createMoveEntry(pieces, selectedPiece, col, row, currentMoveIndex + 2)
 
       // Playing a move while looking at an earlier position starts a new line
       // from here: everything after the position being viewed is replaced —

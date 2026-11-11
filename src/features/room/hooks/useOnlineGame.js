@@ -4,13 +4,10 @@ import socket from '../../../socket/socket'
 // Wires the shared socket connection to an in-progress online match: sends
 // this client's own moves/game-over reports/rematch requests to the server
 // and forwards the opponent's moves and the server's game-over verdicts
-// back into the local game state via the callbacks passed in. The server
-// is only the authority for turn order/room membership/sequencing here —
-// move legality (and checkmate detection) is decided entirely by the
-// existing chess logic in useGame, exactly as in local play; this hook
-// never re-implements or second-guesses it, it only relays already-derived
-// results so the room's server-side record (and therefore reconnect) stays
-// accurate.
+// back into the local game state via the callbacks passed in. useGame still
+// checks moves locally for instant feedback, but the server is the referee:
+// it re-validates every move with the same rule engine and alone decides
+// how (and whether) the match ended.
 export function useOnlineGame({ enabled, onOpponentMove, onMoveRejected, onGameOver }) {
   const [error, setError] = useState(null)
   // null | 'outgoing' (this client offered, waiting on the opponent) |
@@ -138,17 +135,20 @@ export function useOnlineGame({ enabled, onOpponentMove, onMoveRejected, onGameO
     }
   }, [enabled, onOpponentMove, onMoveRejected, onGameOver])
 
+  // Only the from/to squares are sent: the server validates the move against
+  // its own board and computes everything else (board after, capture,
+  // notation, game end) itself. If it's rejected, move_rejected rolls the
+  // optimistic local move back.
   const sendMove = useCallback((move) => {
-    socket.emit('make_move', { move })
+    socket.emit('make_move', { move: { from: move.from, to: move.to } })
   }, [])
 
-  // Reports a game-over result this client just derived locally
-  // (checkmate or a clock timeout — never a disconnect forfeit, the server
-  // already knows about that on its own) so the room's authoritative
-  // record reflects it too, which is what lets a later reconnect restore
-  // the correct finished state instead of quietly resuming a "live" game.
-  const reportGameOver = useCallback((status, winner) => {
-    socket.emit('report_game_over', { status, winner })
+  // Nudges the server when this client's clock display hits zero, so the
+  // timeout lands without waiting on the server's own turn timer. Carries
+  // no result: the server decides (checkmate/stalemate in make_move,
+  // timeouts from its own clock) and announces it via game_over.
+  const reportGameOver = useCallback(() => {
+    socket.emit('report_game_over')
   }, [])
 
   // Asks for a rematch. Never starts one unilaterally — the server only

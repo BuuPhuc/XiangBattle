@@ -1,5 +1,6 @@
 const { ROOM_STATUS, GAME_STATUS } = require('../rooms/room')
 const { finishGameRecord } = require('../services/gameHistoryService')
+const { resolvePlayerId } = require('../utils/playerIdentity')
 
 // How long a mid-match disconnect is given to come back before the match is
 // forfeited to the other player. A plain refresh reconnects in well under a
@@ -84,7 +85,9 @@ function completeRejoin(io, socket, room, playerId) {
 function registerReconnectHandlers(io, socket, roomManager) {
   socket.on('rejoin_room', (payload) => {
     const roomId = normalizeRoomId(payload && payload.roomId)
-    const playerId = payload && payload.playerId
+    // Identity comes from the JWT for an account (resolvePlayerId), so a
+    // known room code alone can never be used to take over someone's seat.
+    const playerId = resolvePlayerId(socket, payload && payload.playerId)
 
     if (!roomId || !playerId) {
       socket.emit('rejoin_failed', { code: 'INVALID_REQUEST', message: 'Thiếu thông tin để khôi phục phòng.' })

@@ -184,6 +184,7 @@ class RoomManager {
   deleteRoom(roomId) {
     const room = this.rooms.get(roomId)
     if (!room) return
+    room.clearTurnTimer()
     room.players.forEach((player) => {
       this.socketToRoom.delete(player.socketId)
       this.playerIdToRoom.delete(player.playerId)

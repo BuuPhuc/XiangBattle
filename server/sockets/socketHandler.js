@@ -1,6 +1,6 @@
 const RoomManager = require('../rooms/roomManager')
 const { ROOM_STATUS } = require('../rooms/room')
-const { registerGameHandlers, broadcastGameStarted } = require('./gameHandler')
+const { registerGameHandlers, registerTurnTimeoutHandler, broadcastGameStarted } = require('./gameHandler')
 const {
   registerReconnectHandlers,
   completeRejoin,
@@ -10,6 +10,7 @@ const {
 const { registerMatchmakingHandlers, removeFromQuickPlayQueue } = require('./matchmakingHandler')
 const { registerChatHandlers } = require('./chatHandler')
 const { registerChallengeHandlers } = require('./challengeHandler')
+const { resolvePlayerId } = require('../utils/playerIdentity')
 const { verifyAccessToken } = require('../utils/token')
 const { createGameRecord, attachPlayerRatings, parseUserId } = require('../services/gameHistoryService')
 const rematchInvites = require('../services/rematchInviteService')
@@ -103,12 +104,13 @@ function handleMidMatchDisconnect(io, roomManager, socket, room) {
 
 // Registers the base Socket.IO connection lifecycle plus the Room system's
 // events (create/join/leave/game_started), realtime move sync, and
-// reconnect handling. The server only assigns seats, colors, whose turn it
-// is, and (via reconnect) which socket a player identity currently owns —
-// it never validates moves, that stays entirely in the existing frontend
-// game logic on whichever client is moving.
+// reconnect handling. The server assigns seats and colors, tracks whose
+// turn it is and (via reconnect) which socket a player identity currently
+// owns, and referees the match itself — move legality, checkmate/stalemate
+// and clocks (see gameHandler.js / rooms/room.js).
 function registerSocketHandlers(io) {
   const roomManager = new RoomManager()
+  registerTurnTimeoutHandler(io)
 
   io.use(attachSocketUser)
 
@@ -125,7 +127,7 @@ function registerSocketHandlers(io) {
     if (socket.user) {
       socket.join(presenceService.userRoom(socket.user.id))
       if (presenceService.addSocket(socket.user.id, socket.id)) {
-        presenceService.broadcastPresenceChange(io, socket.user.id, true)
+        presenceService.broadcastPresenceChange(io, socket.user.id)
       }
     }
 
@@ -136,7 +138,7 @@ function registerSocketHandlers(io) {
     registerChallengeHandlers(io, socket, roomManager)
 
     socket.on('create_room', (payload) => {
-      const playerId = payload && payload.playerId
+      const playerId = resolvePlayerId(socket, payload && payload.playerId)
       if (!playerId) {
         socket.emit('room_error', { code: 'INVALID_PLAYER_ID', message: 'Thiếu thông tin định danh người chơi.' })
         return
@@ -157,7 +159,7 @@ function registerSocketHandlers(io) {
 
     socket.on('join_room', (payload) => {
       const roomId = normalizeRoomId(payload && payload.roomId)
-      const playerId = payload && payload.playerId
+      const playerId = resolvePlayerId(socket, payload && payload.playerId)
       if (!roomId) {
         socket.emit('room_error', { code: 'INVALID_ROOM_ID', message: 'Mã phòng không hợp lệ.' })
         return
@@ -231,7 +233,7 @@ function registerSocketHandlers(io) {
       // socket, so closing one of several tabs never falsely reports them
       // offline.
       if (socket.user && presenceService.removeSocket(socket.user.id, socket.id)) {
-        presenceService.broadcastPresenceChange(io, socket.user.id, false)
+        presenceService.broadcastPresenceChange(io, socket.user.id)
       }
     })
   })

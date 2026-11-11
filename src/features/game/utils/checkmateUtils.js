@@ -5,3 +5,9 @@ import { hasAnyLegalMove } from './moveUtils.js'
 export function isCheckmate(pieces, side) {
   return isInCheck(pieces, side) && !hasAnyLegalMove(pieces, side)
 }
+
+// Hết nước đi: the side is NOT in check but has no legal move at all. In
+// Xiangqi (unlike chess) this is a loss for that side, not a draw.
+export function isStalemate(pieces, side) {
+  return !isInCheck(pieces, side) && !hasAnyLegalMove(pieces, side)
+}

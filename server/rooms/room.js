@@ -2,6 +2,7 @@
 // gameHistoryService.js already owns the one definition of "which playerId
 // strings are a real logged-in account".
 const { parseUserId } = require('../services/gameHistoryService')
+const { initialBoard, validateMove, judgeRepetition } = require('../game/xiangqiEngine')
 
 const ROOM_STATUS = {
   WAITING: 'waiting',
@@ -13,15 +14,29 @@ const COLORS = {
   BLACK: 'black',
 }
 
-// Server-produced game-over reasons that aren't a chess outcome the client
-// derived on its own — each mirrors the matching frontend
-// GAME_STATUS.* value in src/features/game/gameLogic.js exactly (the two
-// codebases can't share a module, red/black and 'waiting'/'playing' are
-// duplicated the same way already).
+// Every way a match can end, all decided by the server — each mirrors the
+// matching frontend GAME_STATUS.* value in src/features/game/gameLogic.js
+// exactly.
 const GAME_STATUS = {
+  CHECKMATE: 'checkmate',
+  STALEMATE: 'stalemate',
+  // Repetition verdicts (src/features/game/utils/repetitionUtils.js).
+  PERPETUAL_CHECK: 'perpetual-check',
+  PERPETUAL_CHASE: 'perpetual-chase',
+  REPETITION_DRAW: 'repetition-draw',
+  TIMEOUT_MOVE: 'timeout-move',
+  TIMEOUT_GAME: 'timeout-game',
   OPPONENT_LEFT: 'opponent-left',
   RESIGN: 'resign',
   DRAW: 'draw',
+}
+
+// Called when the side to move runs out of time. Registered once by the
+// socket layer (see sockets/gameHandler.js), since only it has `io` to
+// broadcast the result — Room itself stays transport-agnostic.
+let turnTimeoutHandler = null
+function setTurnTimeoutHandler(handler) {
+  turnTimeoutHandler = handler
 }
 
 const MAX_PLAYERS = 2
@@ -41,9 +56,10 @@ const DEFAULT_TIME_CONTROL = {
 // their assigned color once a game starts), status, whose turn it is, the
 // move history needed to keep both clients' boards in lockstep, and enough
 // clock bookkeeping to answer "how much time does each side have left" on
-// demand. The server never validates a move's chess legality (that stays
-// entirely in the existing frontend game logic, on the moving client) — it
-// only owns turn order/sequencing and, for reconnect, who's still here.
+// demand. The server is the referee: it keeps its own copy of the board,
+// validates every move against it (game/xiangqiEngine.js), detects
+// checkmate/stalemate itself and enforces the clocks with its own timer —
+// nothing about a match's outcome is ever taken from a client.
 class Room {
   constructor(roomId, hostSocketId, hostPlayerId) {
     this.roomId = roomId
@@ -51,13 +67,14 @@ class Room {
     this.createdAt = Date.now()
     this.currentTurn = null // assigned by startGame()
     this.moveHistory = [] // same shape as the frontend's moveHistory entries
+    this.resetBoard() // this.pieces (the server's authoritative board) + this.positions
+    this.turnTimer = null // fires when the side to move runs out of time
     this.timeControl = { ...DEFAULT_TIME_CONTROL }
     this.remainingGameTime = { red: DEFAULT_TIME_CONTROL.gameTimeMs, black: DEFAULT_TIME_CONTROL.gameTimeMs }
     this.turnStartedAt = null // wall-clock ms the current turn began; combined with remainingGameTime this reconstructs each side's live clock without the server ever having to "tick"
-    // Only ever set by the disconnect-forfeit path (see reconnectHandler.js)
-    // — a checkmate doesn't need this, since replaying moveHistory on any
-    // client re-derives it identically via the existing (unchanged) rule
-    // engine. { status, winner, loser } | null
+    // Set once the match ends, by whichever server-side path decided it
+    // (checkmate/stalemate in playMove, clock timeout, resign, draw,
+    // disconnect forfeit). { status, winner, loser } | null
     this.matchResult = null
     // Color of whichever player currently has an outstanding draw offer
     // awaiting the other side's response, or null. Purely a live
@@ -140,9 +157,11 @@ class Room {
     // out its reconnect grace period) always drops the room back to
     // waiting — there's no resume-a-match-with-a-stranger flow, so any
     // in-progress match state is cleared along with them.
+    this.clearTurnTimer()
     this.status = ROOM_STATUS.WAITING
     this.currentTurn = null
     this.moveHistory = []
+    this.resetBoard()
     this.matchResult = null
     this.drawOfferBy = null
     this.playAgainRequestBy = null
@@ -188,11 +207,13 @@ class Room {
     this.status = ROOM_STATUS.PLAYING
     this.currentTurn = COLORS.RED
     this.moveHistory = []
+    this.resetBoard()
     this.matchResult = null
     this.drawOfferBy = null
     this.playAgainRequestBy = null
     this.remainingGameTime = { red: this.timeControl.gameTimeMs, black: this.timeControl.gameTimeMs }
     this.turnStartedAt = Date.now()
+    this.scheduleTurnDeadline()
     // A rematch (play_again reuses this same Room) starts a clean chat too —
     // never let the previous match's messages bleed into the new one.
     this.messages = []
@@ -247,32 +268,77 @@ class Room {
     this.playAgainRequestBy = null
   }
 
-  // Appends a move the mover's own client already fully computed and
-  // validated (piece/from/to/captured/piecesAfter/notation) — the server
-  // doesn't re-derive any of that, it only stamps the authoritative ply
-  // number, turn and timestamp, banks the elapsed time against whoever's
-  // turn is ending, then flips whose turn it is next. Call sites are
-  // expected to have already checked it's this player's turn.
-  recordMove(move) {
+  // Validates and plays a move proposed by the side to move — the client
+  // only says which square to move from/to; the board after, the captured
+  // piece and the notation are all computed here from the server's own
+  // board. Returns { ok: false, code, message } for an illegal move
+  // (nothing changes), or { ok: true, entry, outcome, winner } where
+  // `outcome` is null, or the GAME_STATUS this move ended the game with —
+  // CHECKMATE / STALEMATE (the mover wins), or a repetition verdict
+  // (PERPETUAL_CHECK / PERPETUAL_CHASE: `winner` is the side NOT at fault;
+  // REPETITION_DRAW: `winner` is null). The caller records the result.
+  // Call sites are expected to have already checked it's this player's
+  // turn and their clock hasn't expired.
+  playMove(from, to) {
+    const mover = this.currentTurn
+    const result = validateMove(this.pieces, mover, from, to)
+    if (!result.ok) return result
+
     const now = Date.now()
     const elapsed = this.turnStartedAt ? Math.max(0, now - this.turnStartedAt) : 0
-    this.remainingGameTime[this.currentTurn] = Math.max(0, this.remainingGameTime[this.currentTurn] - elapsed)
+    this.remainingGameTime[mover] = Math.max(0, this.remainingGameTime[mover] - elapsed)
 
-    const entry = {
-      ply: this.moveHistory.length + 1,
-      turn: this.currentTurn,
-      piece: move.piece,
-      from: move.from,
-      to: move.to,
-      captured: move.captured ?? null,
-      piecesAfter: move.piecesAfter,
-      notation: move.notation,
-      timestamp: now,
-    }
+    const entry = { ply: this.moveHistory.length + 1, ...result.move, timestamp: now }
     this.moveHistory.push(entry)
-    this.currentTurn = this.currentTurn === COLORS.RED ? COLORS.BLACK : COLORS.RED
+    this.pieces = entry.piecesAfter
+    this.currentTurn = mover === COLORS.RED ? COLORS.BLACK : COLORS.RED
+    this.positions.push({ pieces: this.pieces, side: this.currentTurn })
     this.turnStartedAt = now
-    return entry
+    this.scheduleTurnDeadline()
+
+    if (result.outcome) return { ok: true, entry, outcome: result.outcome, winner: mover }
+    const repetition = judgeRepetition(this.positions)
+    if (repetition) return { ok: true, entry, outcome: repetition.status, winner: repetition.winner }
+    return { ok: true, entry, outcome: null, winner: null }
+  }
+
+  // Back to the starting position: the board, plus the list of positions
+  // played so far ({ pieces, side to move }) that repetition is judged on.
+  resetBoard() {
+    this.pieces = initialBoard()
+    this.positions = [{ pieces: this.pieces, side: COLORS.RED }]
+  }
+
+  // The clock timeout the side to move has hit as of `now`, or null if
+  // they still have time: { status: TIMEOUT_MOVE | TIMEOUT_GAME, loser }.
+  // A turn ends at whichever limit comes first — the side's remaining game
+  // time or the per-move limit.
+  getExpiredTimeout(now = Date.now()) {
+    if (this.status !== ROOM_STATUS.PLAYING || this.matchResult || !this.turnStartedAt) return null
+    const side = this.currentTurn
+    const elapsed = now - this.turnStartedAt
+    if (elapsed >= this.remainingGameTime[side]) return { status: GAME_STATUS.TIMEOUT_GAME, loser: side }
+    if (elapsed >= this.timeControl.moveTimeMs) return { status: GAME_STATUS.TIMEOUT_MOVE, loser: side }
+    return null
+  }
+
+  // (Re)arms the timer for the current turn's deadline, so a timeout ends
+  // the match even if neither client ever reports it.
+  scheduleTurnDeadline() {
+    this.clearTurnTimer()
+    if (this.status !== ROOM_STATUS.PLAYING || this.matchResult || !this.turnStartedAt) return
+    const side = this.currentTurn
+    const budget = Math.min(this.timeControl.moveTimeMs, this.remainingGameTime[side])
+    const delay = Math.max(0, this.turnStartedAt + budget - Date.now())
+    this.turnTimer = setTimeout(() => {
+      this.turnTimer = null
+      if (turnTimeoutHandler) turnTimeoutHandler(this)
+    }, delay)
+  }
+
+  clearTurnTimer() {
+    if (this.turnTimer) clearTimeout(this.turnTimer)
+    this.turnTimer = null
   }
 
   // First (and only) result ever recorded for a match — idempotent so a
@@ -285,6 +351,7 @@ class Room {
   // included) makes an outstanding offer moot.
   recordMatchResult(status, winner) {
     if (this.matchResult) return this.matchResult
+    this.clearTurnTimer()
     this.drawOfferBy = null
     const loser = winner ? (winner === COLORS.RED ? COLORS.BLACK : COLORS.RED) : null
     this.matchResult = { status, winner, loser }
@@ -371,4 +438,4 @@ class Room {
   }
 }
 
-module.exports = { Room, ROOM_STATUS, COLORS, GAME_STATUS, MAX_PLAYERS, DEFAULT_TIME_CONTROL }
+module.exports = { Room, ROOM_STATUS, COLORS, GAME_STATUS, MAX_PLAYERS, DEFAULT_TIME_CONTROL, setTurnTimeoutHandler }

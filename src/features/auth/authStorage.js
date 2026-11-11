@@ -28,6 +28,21 @@ export function loadAuthSession() {
   }
 }
 
+// Calls `callback(storedUser | null)` whenever ANOTHER tab of this browser
+// logs in, logs out or switches account (the `storage` event never fires
+// in the tab that made the change). All tabs share this storage, so the
+// listening tab's in-memory session is stale from that moment on.
+// Returns an unsubscribe function.
+export function onStoredUserChange(callback) {
+  function handleStorage(event) {
+    // key === null means localStorage.clear() in the other tab.
+    if (event.key !== null && event.key !== USER_KEY && event.key !== TOKEN_KEY) return
+    callback(getStoredUser())
+  }
+  window.addEventListener('storage', handleStorage)
+  return () => window.removeEventListener('storage', handleStorage)
+}
+
 export function getStoredUser() {
   const raw = localStorage.getItem(USER_KEY)
   if (!raw) return null

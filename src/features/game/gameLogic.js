@@ -15,6 +15,14 @@ export const BLACK = 'black'
 export const GAME_STATUS = {
   PLAYING: 'playing',
   CHECKMATE: 'checkmate',
+  // The side to move has no legal move but isn't in check. Unlike chess,
+  // this is a loss in Xiangqi, not a draw.
+  STALEMATE: 'stalemate',
+  // Repetition verdicts (utils/repetitionUtils.js) — decided by the same
+  // shared rule on the server (online) and in useGame (local / vs bot).
+  PERPETUAL_CHECK: 'perpetual-check', // the side giving perpetual check loses
+  PERPETUAL_CHASE: 'perpetual-chase', // the side perpetually chasing loses
+  REPETITION_DRAW: 'repetition-draw', // repetition with no one at fault
   TIMEOUT_MOVE: 'timeout-move',
   TIMEOUT_GAME: 'timeout-game',
   // Reported by the server, not derived locally: the opponent didn't

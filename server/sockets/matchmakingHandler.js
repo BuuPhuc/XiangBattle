@@ -6,6 +6,7 @@
 // draw, game_over) keeps working unmodified.
 //
 const { createGameRecord, attachPlayerRatings } = require('../services/gameHistoryService')
+const { resolvePlayerId } = require('../utils/playerIdentity')
 
 // playerId -> { socketId, playerId }, in the order players started
 // waiting. Module-level (like reconnectHandler's pendingForfeits) since a
@@ -53,7 +54,7 @@ function startPairedMatch(io, roomManager, host, guest) {
 
 function registerMatchmakingHandlers(io, socket, roomManager) {
   socket.on('quick_play', (payload) => {
-    const playerId = payload && payload.playerId
+    const playerId = resolvePlayerId(socket, payload && payload.playerId)
     if (!playerId) {
       socket.emit('room_error', { code: 'INVALID_PLAYER_ID', message: 'Thiếu thông tin định danh người chơi.' })
       return
@@ -114,7 +115,7 @@ function registerMatchmakingHandlers(io, socket, roomManager) {
   })
 
   socket.on('cancel_quick_play', (payload) => {
-    const playerId = payload && payload.playerId
+    const playerId = resolvePlayerId(socket, payload && payload.playerId)
     if (!playerId) return
     if (waitingQueue.delete(playerId)) {
       console.log(`[matchmaking] ${playerId} left the queue`)

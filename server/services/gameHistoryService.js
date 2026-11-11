@@ -12,11 +12,27 @@ const User = db.orm.public.User
 // the chess-outcome reasons, hence the added DISCONNECT value.
 const END_REASON_BY_STATUS = {
   checkmate: 'CHECKMATE',
+  stalemate: 'STALEMATE',
+  'perpetual-check': 'REPETITION',
+  'perpetual-chase': 'REPETITION',
+  'repetition-draw': 'REPETITION',
   'timeout-move': 'TIMEOUT',
   'timeout-game': 'TIMEOUT',
   resign: 'RESIGN',
   draw: 'DRAW_AGREEMENT',
   'opponent-left': 'DISCONNECT',
+}
+
+// How a finished match is stored: { isDraw, result, endReason }. Any result
+// without a winning side is a draw — agreed ('draw') or by repetition
+// ('repetition-draw') — and is rated as a draw (0.5 each).
+function describeResult(status, winnerColor) {
+  const isDraw = winnerColor !== 'red' && winnerColor !== 'black'
+  return {
+    isDraw,
+    result: isDraw ? 'DRAW' : winnerColor === 'red' ? 'RED_WIN' : 'BLACK_WIN',
+    endReason: END_REASON_BY_STATUS[status] || 'CANCELLED',
+  }
 }
 
 // playerId is a client-generated identity (see src/features/room/roomSession.js) —
@@ -113,7 +129,7 @@ async function attachPlayerRatings(io, room) {
 // Persists one already-committed move. A no-op for a room whose match isn't
 // being persisted (guest involved, or the create above failed). moveNumber
 // reuses the same `ply` the in-memory room already stamped on the entry
-// (see room.recordMove), so ordering here always matches moveHistory.
+// (see room.playMove), so ordering here always matches moveHistory.
 async function saveMoveRecord(room, moveEntry, player) {
   if (!room.dbGameId) return
   const playerId = parseUserId(player.playerId)
@@ -172,10 +188,8 @@ async function finishGameRecord(io, room, status, winnerColor) {
   const blackPlayerId = parseUserId(blackPlayer && blackPlayer.playerId)
   if (!redPlayerId || !blackPlayerId) return null
 
-  const isDraw = status === 'draw'
-  const result = isDraw ? 'DRAW' : winnerColor === 'red' ? 'RED_WIN' : 'BLACK_WIN'
+  const { isDraw, result, endReason } = describeResult(status, winnerColor)
   const winnerPlayerId = isDraw ? null : winnerColor === 'red' ? redPlayerId : blackPlayerId
-  const endReason = END_REASON_BY_STATUS[status] || 'CANCELLED'
 
   try {
     const ratingInfo = await db.transaction(async (tx) => {
@@ -267,6 +281,7 @@ async function getFinishedGameOpponent(gameId, userId) {
 }
 
 module.exports = {
+  describeResult,
   parseUserId,
   createGameRecord,
   attachPlayerRatings,

@@ -4,6 +4,7 @@ import store from './store'
 import AppRouter from './routes'
 import socket from './socket/socket'
 import useAuth from './components/hooks/useAuth'
+import { onStoredUserChange } from './features/auth/authStorage'
 
 // Runs inside <Provider> so useAuth (Redux) is available: on mount, restore
 // a saved login session (if any) and arm the socket with its token *before*
@@ -34,6 +35,20 @@ function AppContent() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount only
   }, [])
+
+  // Every tab of a browser shares one login (localStorage). If another tab
+  // logs in as someone else or logs out, this tab would otherwise keep
+  // showing — and acting as — a session that no longer exists. Reload so
+  // the page, Redux and the socket all pick up the session actually stored.
+  useEffect(
+    () =>
+      onStoredUserChange((storedUser) => {
+        const currentId = store.getState().auth.user?.id ?? null
+        const storedId = storedUser?.id ?? null
+        if (currentId !== storedId) window.location.reload()
+      }),
+    []
+  )
 
   return <AppRouter />
 }

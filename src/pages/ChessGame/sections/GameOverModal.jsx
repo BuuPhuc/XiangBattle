@@ -3,11 +3,17 @@ import { GAME_STATUS } from '../../../features/game/gameLogic.js'
 
 const REASON_HEADING = {
   [GAME_STATUS.CHECKMATE]: 'Chiếu bí!',
+  [GAME_STATUS.STALEMATE]: 'Hết nước đi!',
   [GAME_STATUS.TIMEOUT_MOVE]: 'Hết giờ đi quân!',
   [GAME_STATUS.TIMEOUT_GAME]: 'Hết giờ ván đấu!',
   [GAME_STATUS.OPPONENT_LEFT]: 'Đối thủ đã rời trận!',
   [GAME_STATUS.DRAW]: 'Hòa cờ!',
+  [GAME_STATUS.PERPETUAL_CHECK]: 'Chiếu dai — xử thua!',
+  [GAME_STATUS.PERPETUAL_CHASE]: 'Đuổi dai — xử thua!',
+  [GAME_STATUS.REPETITION_DRAW]: 'Hòa do lặp nước!',
 }
+
+const DRAW_STATUSES = new Set([GAME_STATUS.DRAW, GAME_STATUS.REPETITION_DRAW])
 
 export function GameOverModal({
   winner,
@@ -24,7 +30,7 @@ export function GameOverModal({
   ratingChange,
   ratingAfter,
 }) {
-  const isDraw = status === GAME_STATUS.DRAW
+  const isDraw = DRAW_STATUSES.has(status)
   const winnerName = winner === 'red' ? redName : blackName
   const loserName = winner === 'red' ? blackName : redName
   const winnerBg = winner === 'red' ? 'bg-piece-red' : 'bg-piece-black'
