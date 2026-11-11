@@ -293,6 +293,7 @@ const getUserGames = withErrorHandling(async (req, res) => {
       gameId: game.id,
       opponent: toPublicOpponent(opponent),
       result, // 'WIN' | 'LOSS' | 'DRAW', from this user's (userId's) perspective
+      color: isRed ? 'red' : 'black', // the side this user (userId) played
       winner: toPublicPlayer(game.winner),
       endReason: game.endReason,
       moveCount: game.moves,
