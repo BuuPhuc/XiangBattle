@@ -24,7 +24,19 @@ const ALL_SQUARES = Array.from({ length: 10 }, (_, row) =>
 // space, above the move markers and below the pieces — how the Academy adds
 // its target/hint markers (see AcademyBoard.jsx) without a second board.
 // The live game and replay pass nothing, so nothing changes for them.
-export function ChessBoard({ pieces, selectedId, turn, legalMoves = [], onSquareClick, children }) {
+//
+// `flipped` rotates the view 180° so the black side sits at the bottom —
+// every player sees their own pieces nearest them. Only what's drawn moves:
+// pieces, click targets and markers are placed at the rotated position, but
+// onSquareClick always receives the real board coordinates, so the game
+// logic never knows the board was turned. The grid itself is symmetric and
+// the file labels already read 1→9 from each side's own right, so neither
+// changes. (`children` overlays are drawn in unrotated coordinates; nothing
+// passes them together with `flipped`.)
+export function ChessBoard({ pieces, selectedId, turn, legalMoves = [], onSquareClick, flipped = false, children }) {
+  const viewCol = (col) => (flipped ? 8 - col : col)
+  const viewRow = (row) => (flipped ? 9 - row : row)
+
   return (
     // Bounded by three things at once, whichever is smallest: the parent
     // column's own width, an absolute cap, and — the important one — the
@@ -89,13 +101,18 @@ export function ChessBoard({ pieces, selectedId, turn, legalMoves = [], onSquare
 
           <div className="absolute inset-0 pointer-events-none">
             {ALL_SQUARES.map(({ col, row }) => (
-              <Square key={`sq-${col}-${row}`} col={col} row={row} onClick={() => onSquareClick(col, row)} />
+              <Square key={`sq-${col}-${row}`} col={viewCol(col)} row={viewRow(row)} onClick={() => onSquareClick(col, row)} />
             ))}
           </div>
 
           <div className="move-marker-layer">
             {legalMoves.map((move) => (
-              <MoveMarker key={`${move.col}-${move.row}`} col={move.col} row={move.row} capture={move.capture} />
+              <MoveMarker
+                key={`${move.col}-${move.row}`}
+                col={viewCol(move.col)}
+                row={viewRow(move.row)}
+                capture={move.capture}
+              />
             ))}
           </div>
 
@@ -107,8 +124,8 @@ export function ChessBoard({ pieces, selectedId, turn, legalMoves = [], onSquare
                 key={piece.id}
                 side={piece.side}
                 char={piece.char}
-                col={piece.col}
-                row={piece.row}
+                col={viewCol(piece.col)}
+                row={viewRow(piece.row)}
                 selected={selectedId === piece.id}
                 turnActive={piece.type === 'general' && piece.side === turn}
                 onSelect={() => onSquareClick(piece.col, piece.row)}

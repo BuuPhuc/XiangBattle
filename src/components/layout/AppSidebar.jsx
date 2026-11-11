@@ -9,7 +9,7 @@ import useAuth from '../hooks/useAuth'
 const NAV_ITEMS = [
   // { icon: 'home', label: 'Trang chủ', to: '/play' },
   { icon: 'sports_esports', label: 'Chơi cờ', to: '/play' },
-  { icon: 'memory', label: 'Đối đầu AI' },
+  { icon: 'memory', label: 'Đối đầu AI', to: '/ai' },
   { icon: 'extension', label: 'Cờ thế' },
   { icon: 'school', label: 'Học viện', to: '/academy' },
   // { icon: 'history', label: 'Lịch sử ván đấu' },

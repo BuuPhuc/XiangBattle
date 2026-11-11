@@ -4,6 +4,7 @@ import Button from '../../components/ui/Button'
 import ChessBoard from '../../components/game/ChessBoard'
 import GameHistoryPanel from '../ChessGame/sections/GameHistoryPanel'
 import { useReplayGame } from '../../features/replay/hooks/useReplayGame'
+import { useAuth } from '../../components/hooks/useAuth'
 
 const END_REASON_LABEL = {
   CHECKMATE: 'Chiếu bí',
@@ -54,6 +55,8 @@ export function Replay() {
     reload,
   } = useReplayGame(gameId)
 
+  const { user } = useAuth()
+
   const handleExit = () => navigate('/play')
 
   if (status === 'loading') {
@@ -79,6 +82,10 @@ export function Replay() {
     )
   }
 
+  // Replaying your own game as black shows it from your side, same as the
+  // live board did. Anyone else's game (or as red) stays red-at-bottom.
+  const viewerWasBlack = user?.id != null && game.blackPlayer?.id === user.id
+
   return (
     <div className="w-full max-w-container-max mx-auto flex flex-col xl:flex-row gap-gutter justify-center">
       <div className="flex-grow flex flex-col items-center order-1 w-full xl:max-w-[780px]">
@@ -94,7 +101,14 @@ export function Replay() {
         </div>
 
         <div className="w-full pointer-events-none select-none">
-          <ChessBoard pieces={pieces} selectedId={null} turn={turn} legalMoves={[]} onSquareClick={() => {}} />
+          <ChessBoard
+            pieces={pieces}
+            selectedId={null}
+            turn={turn}
+            legalMoves={[]}
+            onSquareClick={() => {}}
+            flipped={viewerWasBlack}
+          />
         </div>
 
         <div className="w-full mt-3 glass-panel border border-gold-shimmer/30 rounded-xl px-4 py-2.5 flex items-center justify-center gap-2">

@@ -15,6 +15,9 @@ import MatchActions from './sections/MatchActions'
 import UndoRedoControls from './sections/UndoRedoControls'
 import MatchStatus from './sections/MatchStatus'
 import GameOverModal from './sections/GameOverModal'
+import AiTurnStatus from './sections/AiTurnStatus'
+import { useAiOpponent } from '../../features/ai/hooks/useAiOpponent'
+import { AI_LEVELS } from '../../features/ai/engine/levels.js'
 
 const RED_NAME = 'Bạn (Đỏ)'
 const BLACK_NAME = 'Đại sư Lý'
@@ -31,7 +34,12 @@ const BLACK_NAME = 'Đại sư Lý'
 // useGame/useTimer/useChat instead of starting fresh. The parent is
 // expected to change this component's `key` whenever it hands down a new
 // restored snapshot, so these seed values are only ever consulted at mount.
-export function ChessGame({ onlineGame }) {
+//
+// `aiGame` ({ playerColor, levelId }) turns the local board into a game
+// against the bot instead: you play `playerColor`, useAiOpponent plays the
+// other side through the same applyRemoteMove path an online opponent's
+// moves take. Nothing about it touches the server — no Elo, no history.
+export function ChessGame({ onlineGame, aiGame }) {
   const navigate = useNavigate()
   const {
     pieces,
@@ -75,6 +83,25 @@ export function ChessGame({ onlineGame }) {
   // same way a local timeout already does — endGameByTimeout never touches
   // moveHistory, so this is safe to call on an already-live game.
   const isOnline = Boolean(onlineGame && onlineGame.yourColor)
+  const isAi = !isOnline && Boolean(aiGame)
+
+  const { thinking: botThinking } = useAiOpponent({
+    enabled: isAi,
+    botColor: isAi && aiGame.playerColor === 'red' ? 'black' : 'red',
+    levelId: aiGame?.levelId,
+    pieces,
+    turn,
+    moveHistory,
+    isGameOver,
+    isViewingHistory,
+    onMove: applyRemoteMove,
+  })
+
+  // Conceding to the bot is purely local: the same game-over path a clock
+  // timeout uses, with you as the losing side.
+  const resignToBot = useCallback(() => {
+    if (aiGame) endGameByTimeout(aiGame.playerColor, GAME_STATUS.RESIGN)
+  }, [aiGame, endGameByTimeout])
   const handleGameOver = useCallback((result) => endGameByTimeout(result.loser, result.status), [endGameByTimeout])
   const {
     sendMove,
@@ -132,25 +159,31 @@ export function ChessGame({ onlineGame }) {
     initialMessages: onlineGame?.messages,
   })
 
-  // The other half of onGameOver above: once *this* client locally derives
-  // a game-over (checkmate, or its own clock timing out), report it to the
-  // server so the room's authoritative record reflects it — that's what
-  // lets reconnect later tell "finished" from "still playing" (a forfeit
-  // is already server-known, so it's excluded to avoid an idle round trip).
-  // Guarded to fire exactly once per game-over instance.
+  // When this client's clock display hits zero, nudge the server so it
+  // checks its own clock right away. Only timeouts need this: the server
+  // decides checkmate/stalemate itself while processing the move, and also
+  // ends a timed-out turn on its own timer — this just makes it land
+  // sooner. Guarded to fire exactly once per game-over instance.
   const reportedGameOverRef = useRef(false)
   useEffect(() => {
     if (!isOnline || !isGameOver) {
       reportedGameOverRef.current = false
       return
     }
-    if (reportedGameOverRef.current || status === GAME_STATUS.OPPONENT_LEFT) return
+    const isTimeout = status === GAME_STATUS.TIMEOUT_MOVE || status === GAME_STATUS.TIMEOUT_GAME
+    if (reportedGameOverRef.current || !isTimeout) return
     reportedGameOverRef.current = true
-    reportGameOver(status, winner)
-  }, [isOnline, isGameOver, status, winner, reportGameOver])
+    reportGameOver()
+  }, [isOnline, isGameOver, status, reportGameOver])
 
-  const redName = onlineGame ? (onlineGame.yourColor === 'red' ? 'Bạn' : 'Đối thủ') : RED_NAME
-  const blackName = onlineGame ? (onlineGame.yourColor === 'black' ? 'Bạn' : 'Đối thủ') : BLACK_NAME
+  const botName = isAi ? `Máy · ${AI_LEVELS[aiGame.levelId]?.label ?? ''}` : null
+  const nameFor = (color) => {
+    if (onlineGame) return onlineGame.yourColor === color ? 'Bạn' : 'Đối thủ'
+    if (isAi) return aiGame.playerColor === color ? 'Bạn' : botName
+    return color === 'red' ? RED_NAME : BLACK_NAME
+  }
+  const redName = nameFor('red')
+  const blackName = nameFor('black')
 
   // Real rating for whichever color a PlayerCard represents — never the old
   // hard-coded 2450/2410. This client's own side always reads straight from
@@ -165,6 +198,9 @@ export function ChessGame({ onlineGame }) {
   // arrived yet, e.g. a guest opponent with no account to look up, or
   // local/offline play against the built-in placeholder.
   const ratingForColor = (color) => {
+    // Vs the bot: show your own (unchanged — bot games are unrated) rating;
+    // the bot has none.
+    if (isAi) return color === aiGame.playerColor ? user?.rating : undefined
     if (!isOnline) return color === 'red' ? user?.rating : undefined
     if (color === onlineGame.yourColor) return user?.rating
     const opponentUpdate = ratingUpdate ? ratingUpdate[color] : null
@@ -178,6 +214,7 @@ export function ChessGame({ onlineGame }) {
   // match (null for a guest, undefined before it's known — either way
   // PlayerCard just renders without a link).
   const userIdForColor = (color) => {
+    if (isAi) return color === aiGame.playerColor ? user?.id : undefined
     if (!isOnline) return undefined
     if (color === onlineGame.yourColor) return user?.id
     return onlineGame.opponentUserId ?? undefined
@@ -190,11 +227,20 @@ export function ChessGame({ onlineGame }) {
   // history away from the server's, so it's blocked here rather than
   // needing to disable those controls separately). Local/offline play is
   // untouched either way.
+  //
+  // Vs the bot: only your own pieces, only on your turn — never while the
+  // bot is thinking. Moving from an earlier position you browsed back to
+  // (your turn there) is allowed: it replaces what followed, i.e. a takeback,
+  // and the bot answers from the new position.
   const handleSquareClick = isOnline
     ? (col, row) => {
         if (!isViewingHistory && turn === onlineGame.yourColor) selectSquare(col, row)
       }
-    : selectSquare
+    : isAi
+      ? (col, row) => {
+          if (!botThinking && turn === aiGame.playerColor) selectSquare(col, row)
+        }
+      : selectSquare
 
   // The modal shows once per game-over (checkmate or timeout); dismissing it
   // just hides the popup (the board stays locked and browsable) without
@@ -238,6 +284,29 @@ export function ChessGame({ onlineGame }) {
       }))
     : []
 
+  // Your own side always sits at the bottom — board and player cards alike —
+  // like every Xiangqi/chess site. Local play keeps red at the bottom.
+  const bottomColor = isOnline ? onlineGame.yourColor : isAi ? aiGame.playerColor : 'red'
+  const topColor = bottomColor === 'red' ? 'black' : 'red'
+
+  // Positional props (`online` dot for the top card, accent bar for the
+  // bottom one) stay with the position, not the color.
+  const renderPlayerCard = (color, positionProps) => {
+    const time = color === 'red' ? redTime : blackTime
+    return (
+      <PlayerCard
+        name={color === 'red' ? redName : blackName}
+        elo={ratingForColor(color)}
+        userId={userIdForColor(color)}
+        side={color}
+        moveTime={formatClockTime(time.moveTime)}
+        gameTime={formatClockTime(time.gameTime)}
+        clockActive={!isGameOver && turn === color}
+        {...positionProps}
+      />
+    )
+  }
+
   return (
     <div className="w-full max-w-container-max mx-auto flex flex-col xl:flex-row gap-gutter justify-center">
       {isGameOver && !modalDismissed && (
@@ -246,7 +315,7 @@ export function ChessGame({ onlineGame }) {
           status={status}
           redName={redName}
           blackName={blackName}
-          youWon={isOnline ? onlineGame.yourColor === winner : undefined}
+          youWon={isOnline ? onlineGame.yourColor === winner : isAi ? aiGame.playerColor === winner : undefined}
           onClose={() => setModalDismissed(true)}
           onPlayAgain={handlePlayAgain}
           onViewReplay={isOnline && onlineGame.dbGameId ? () => navigate(`/replay/${onlineGame.dbGameId}`) : undefined}
@@ -268,13 +337,21 @@ export function ChessGame({ onlineGame }) {
         {!isGameOver && isViewingHistory && (
           <MatchStatus viewedMoveNumber={currentMoveIndex + 1} onReturnToLive={() => goToMove(moveHistory.length - 1)} />
         )}
+        {isAi && !isGameOver && !isViewingHistory && <AiTurnStatus thinking={botThinking} botName={botName} />}
         <div className={`w-full ${isGameOver ? 'opacity-60 pointer-events-none' : ''}`}>
-          <ChessBoard pieces={pieces} selectedId={selectedId} turn={turn} legalMoves={legalMoves} onSquareClick={handleSquareClick} />
+          <ChessBoard
+            pieces={pieces}
+            selectedId={selectedId}
+            turn={turn}
+            legalMoves={legalMoves}
+            onSquareClick={handleSquareClick}
+            flipped={bottomColor === 'black'}
+          />
         </div>
         <div className="w-full mt-3">
           <MatchActions
-            canResign={isOnline && !isGameOver}
-            onResign={isOnline ? resign : undefined}
+            canResign={(isOnline || isAi) && !isGameOver}
+            onResign={isOnline ? resign : isAi ? resignToBot : undefined}
             canOfferDraw={isOnline && !isGameOver}
             drawOfferPending={isOnline && drawOffer === 'outgoing'}
             onOfferDraw={isOnline ? offerDraw : undefined}
@@ -288,32 +365,14 @@ export function ChessGame({ onlineGame }) {
           sandwiching a much bigger history/chat panel that stretches to
           match the board column's height (see GameHistoryPanel.jsx). */}
       <div className="w-full xl:w-96 flex flex-col gap-3 order-2">
-        <PlayerCard
-          name={blackName}
-          elo={ratingForColor('black')}
-          userId={userIdForColor('black')}
-          side="black"
-          moveTime={formatClockTime(blackTime.moveTime)}
-          gameTime={formatClockTime(blackTime.gameTime)}
-          online
-          clockActive={!isGameOver && turn === 'black'}
-        />
+        {renderPlayerCard(topColor, { online: true })}
         <GameHistoryPanel
           moveHistory={moveHistory}
           currentMoveIndex={currentMoveIndex}
           onSelectMove={goToMove}
           chat={isOnline ? { messages: chatMessages, unreadCount, sendMessage: sendChatMessage, markRead: markChatRead } : null}
         />
-        <PlayerCard
-          name={redName}
-          elo={ratingForColor('red')}
-          userId={userIdForColor('red')}
-          side="red"
-          moveTime={formatClockTime(redTime.moveTime)}
-          gameTime={formatClockTime(redTime.gameTime)}
-          clockActive={!isGameOver && turn === 'red'}
-          accentClassName="border-b-4 border-b-error"
-        />
+        {renderPlayerCard(bottomColor, { accentClassName: 'border-b-4 border-b-error' })}
         <UndoRedoControls canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
       </div>
     </div>

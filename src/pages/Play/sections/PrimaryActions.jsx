@@ -8,7 +8,7 @@ const MODES = [
     iconBg: 'bg-secondary-container text-on-secondary-container',
     to: '/room',
   },
-  { icon: 'smart_toy', label: 'Chơi với máy', iconBg: 'bg-tertiary-container text-on-tertiary-container' },
+  { icon: 'smart_toy', label: 'Chơi với máy', iconBg: 'bg-tertiary-container text-on-tertiary-container', to: '/ai' },
 ]
 
 export function PrimaryActions() {
