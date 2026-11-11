@@ -5,6 +5,8 @@ import api from '../config/axios'
 // userService already addresses /users/:userId.
 export const friendService = {
   getFriends: () => api.get('/friends').then((res) => res.data),
+  // Only the friends online right now — the server does the filtering.
+  getOnlineFriends: () => api.get('/friends/online').then((res) => res.data),
   getReceivedRequests: () => api.get('/friends/requests/received').then((res) => res.data),
   getSentRequests: () => api.get('/friends/requests/sent').then((res) => res.data),
   // Relationship between the current user and :userId — drives which

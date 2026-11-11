@@ -64,9 +64,17 @@ function userRoom(userId) {
 // the same try/catch-and-log convention) — a failed presence broadcast
 // should never be allowed to affect the socket connection/disconnect flow
 // it's called from.
-async function broadcastPresenceChange(io, userId, online) {
+//
+// What goes out is the state at the moment of emitting, re-read after the
+// friend lookup — not the transition that triggered the call. Two
+// transitions close together (a refresh: last socket closes, a new one
+// opens) each await their own lookup, and those can resolve in either
+// order; sending the triggering value could leave a friend's list ending on
+// the stale one.
+async function broadcastPresenceChange(io, userId) {
   try {
     const friendIds = await listFriendUserIds(userId)
+    const online = isOnline(userId)
     friendIds.forEach((friendId) => {
       io.to(userRoom(friendId)).emit('friend_presence', { userId, online })
     })

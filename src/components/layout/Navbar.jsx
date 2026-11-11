@@ -5,10 +5,10 @@ import LogoutConfirmModal from '../ui/LogoutConfirmModal'
 import useAuth from '../hooks/useAuth'
 
 const NAV_LINKS = [
-  { label: 'Play', href: '#', active: true },
-  { label: 'Rules', href: '#' },
-  { label: 'Leaderboard', href: '#' },
-  { label: 'Academy', href: '#' },
+  // { label: 'Play', href: '#', active: true },
+  // { label: 'Rules', href: '#' },
+  // { label: 'Leaderboard', href: '#' },
+  // { label: 'Academy', href: '#' },
 ]
 
 export function Navbar() {

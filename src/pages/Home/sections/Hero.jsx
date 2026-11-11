@@ -2,12 +2,7 @@ import { Link } from 'react-router-dom'
 import Button from '../../../components/ui/Button'
 import Icon from '../../../components/ui/Icon'
 import XiangqiBoard from '../../../components/ui/XiangqiBoard'
-
-const AVATARS = [
-  { initials: 'A', bg: '#a0f499', fg: '#1b6d24' },
-  { initials: 'K', bg: '#f4bb93', fg: '#653d1f' },
-  { initials: 'M', bg: '#e4d0a0', fg: '#4b3502' },
-]
+import OnlineFriends from './OnlineFriends'
 
 export function Hero() {
   return (
@@ -20,7 +15,7 @@ export function Hero() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant/50">
             <Icon name="star" filled className="text-gold-shimmer" />
             <span className="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">
-              The Imperial Standard
+              TIÊU CHUẨN HOÀNG GIA
             </span>
           </div>
 
@@ -44,24 +39,7 @@ export function Hero() {
             </Button>
           </div>
 
-          <div className="flex items-center gap-6 pt-8 border-t border-outline-variant/30">
-            <div className="flex -space-x-4">
-              {AVATARS.map(({ initials, bg, fg }) => (
-                <div
-                  key={initials}
-                  className="w-10 h-10 rounded-full border-2 border-surface flex items-center justify-center text-label-sm font-label-sm font-semibold"
-                  style={{ backgroundColor: bg, color: fg }}
-                  aria-hidden="true"
-                >
-                  {initials}
-                </div>
-              ))}
-              <div className="w-10 h-10 rounded-full border-2 border-surface bg-surface-container-high flex items-center justify-center text-label-sm font-label-sm font-medium text-on-surface-variant">
-                +5K
-              </div>
-            </div>
-            <div className="text-label-sm font-label-sm text-on-surface-variant">Kỳ thủ đang online</div>
-          </div>
+          <OnlineFriends />
         </div>
 
         <div className="relative z-10 w-full h-[400px] md:h-[600px] flex justify-center items-center">

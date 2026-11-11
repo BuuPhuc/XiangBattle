@@ -2,6 +2,7 @@ const express = require('express')
 const { requireAuth } = require('../middleware/authMiddleware')
 const {
   getFriends,
+  getOnlineFriends,
   getReceivedRequests,
   getSentRequests,
   getRelationshipStatus,
@@ -20,6 +21,7 @@ const router = express.Router()
 // here it only matters for readability since every param route below uses
 // a different HTTP method or path depth than these GETs.
 router.get('/', requireAuth, getFriends)
+router.get('/online', requireAuth, getOnlineFriends)
 router.get('/requests/received', requireAuth, getReceivedRequests)
 router.get('/requests/sent', requireAuth, getSentRequests)
 router.get('/status/:userId', requireAuth, getRelationshipStatus)

@@ -57,6 +57,30 @@ const getFriends = withErrorHandling(async (req, res) => {
   return res.json({ success: true, friends: friends.map(withOnlineFlag) })
 })
 
+// GET /api/friends/online — only the accepted friends who are online right
+// now, with just what an avatar needs. The filtering happens here, against
+// the caller's own friend list (req.auth.userId, from the verified JWT) —
+// a client never receives anyone's presence but its friends'.
+const getOnlineFriends = withErrorHandling(async (req, res) => {
+  const friends = await friendService.listFriends(req.auth.userId)
+  return res.json({
+    success: true,
+    friends: friends
+      .filter((friend) => presenceService.isOnline(friend.id))
+      .map(({ id, username, displayName, avatarUrl }) => ({ id, username, displayName, avatarUrl })),
+  })
+})
+
+// Tells both sides, on every tab they have open, that the two of them just
+// became or stopped being friends, so anything listing friends (the home
+// page's online friends) re-reads it instead of waiting for a reload. Each
+// side is only told the other's id — the lists themselves always come from
+// the authenticated GETs above.
+function announceFriendshipChange(userIdA, userIdB) {
+  notificationService.emitToUser(userIdA, 'friends:changed', { userId: userIdB })
+  notificationService.emitToUser(userIdB, 'friends:changed', { userId: userIdA })
+}
+
 // GET /api/friends/requests/received — pending requests sent TO me.
 const getReceivedRequests = withErrorHandling(async (req, res) => {
   const requests = await friendService.listReceivedRequests(req.auth.userId)
@@ -99,6 +123,7 @@ const sendFriendRequest = withErrorHandling(async (req, res) => {
   // already asked me, so this call accepted *their* request: they are the
   // one to tell, and my own pending notification about it is now handled.
   if (autoAccepted) {
+    announceFriendshipChange(req.auth.userId, targetUserId)
     await notificationService.notifyFriendAccepted(friendship.id, req.auth.userId, targetUserId)
     await notificationService.markFriendRequestHandled(req.auth.userId, targetUserId)
   } else {
@@ -115,6 +140,7 @@ const acceptFriendRequest = withErrorHandling(async (req, res) => {
   const targetUserId = parseTargetUserId(req, res)
   if (targetUserId === null) return
   const friendship = await friendService.acceptRequest(req.auth.userId, targetUserId)
+  announceFriendshipChange(req.auth.userId, targetUserId)
   await notificationService.notifyFriendAccepted(friendship.id, req.auth.userId, targetUserId)
   await notificationService.markFriendRequestHandled(req.auth.userId, targetUserId)
   return res.json({ success: true, friendship })
@@ -147,11 +173,13 @@ const removeFriend = withErrorHandling(async (req, res) => {
   const targetUserId = parseTargetUserId(req, res)
   if (targetUserId === null) return
   await friendService.removeFriend(req.auth.userId, targetUserId)
+  announceFriendshipChange(req.auth.userId, targetUserId)
   return res.json({ success: true })
 })
 
 module.exports = {
   getFriends,
+  getOnlineFriends,
   getReceivedRequests,
   getSentRequests,
   getRelationshipStatus,
