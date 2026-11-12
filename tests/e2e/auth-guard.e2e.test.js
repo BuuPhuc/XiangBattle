@@ -34,6 +34,8 @@ test('signed in: every private page survives a direct load', async (t) => {
   const ctx = await openMockedPage(app, t)
   if (!ctx) return
   const { page } = ctx
+  // (/settings is no longer private — see the guest test below — but a
+  // signed-in direct load must still land on it.)
   for (const path of ['/friends', '/settings', '/leaderboard', '/replay/42']) {
     await page.goto(`${app.baseUrl}${path}`)
     // Give a would-be redirect time to happen.
@@ -67,6 +69,44 @@ test('signed out: a private page still redirects to "/"', async (t) => {
   const { page } = ctx
   await page.goto(`${app.baseUrl}/profile`)
   await page.waitForURL((url) => url.pathname === '/')
+})
+
+// Every page that is still private, each loaded directly while signed out.
+const PRIVATE_PAGES = ['/dashboard', '/profile', '/profile/edit', '/profile/100', '/friends', '/clubs', '/leaderboard', '/replay/42']
+
+test('signed out: every remaining private page redirects to "/"', async (t) => {
+  const ctx = await openMockedPage(app, t, { signedIn: false })
+  if (!ctx) return
+  const { page } = ctx
+  for (const path of PRIVATE_PAGES) {
+    await page.goto(`${app.baseUrl}${path}`)
+    await page.waitForURL((url) => url.pathname === '/', { timeout: 3000 }).catch(() => {})
+    assert.equal(pathname(page), '/', `${path} did not redirect a guest`)
+  }
+})
+
+test('signed out: /settings is open to guests (sound only) — no redirect', async (t) => {
+  const ctx = await openMockedPage(app, t, { signedIn: false })
+  if (!ctx) return
+  const { page, settingsCalls } = ctx
+  await page.goto(`${app.baseUrl}/settings`)
+  await page.getByRole('switch', { name: 'Âm thanh' }).waitFor()
+  await page.waitForTimeout(800)
+  assert.equal(pathname(page), '/settings')
+  assert.deepEqual(settingsCalls, [])
+})
+
+test('expired session on /settings: falls back to the guest page, no settings API call', async (t) => {
+  const ctx = await openMockedPage(app, t, {
+    authMe: () => json({ success: false, code: 'UNAUTHORIZED', message: 'Token hết hạn' }, 401),
+  })
+  if (!ctx) return
+  const { page, settingsCalls } = ctx
+  await page.goto(`${app.baseUrl}/settings`)
+  await page.getByRole('switch', { name: 'Âm thanh' }).waitFor()
+  assert.equal(await page.getByRole('switch', { name: 'Vẽ mũi tên và đánh dấu' }).count(), 0)
+  assert.equal(pathname(page), '/settings')
+  assert.deepEqual(settingsCalls, [])
 })
 
 test('expired session: redirected to "/" and the saved session is cleared', async (t) => {
