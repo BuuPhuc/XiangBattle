@@ -94,7 +94,7 @@ export function PublicProfile() {
       <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-4">
         <Icon name="person_off" className="text-5xl text-on-surface-variant/50" />
         <p className="font-body-md text-body-md text-on-surface-variant">Không tìm thấy người chơi.</p>
-        <Link to="/dashboard">
+        <Link to="/play">
           <Button variant="outline">Về trang chính</Button>
         </Link>
       </div>
@@ -105,7 +105,7 @@ export function PublicProfile() {
     return (
       <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-4">
         <p className="font-body-md text-body-md text-error">{error}</p>
-        <Link to="/dashboard">
+        <Link to="/play">
           <Button variant="outline">Về trang chính</Button>
         </Link>
       </div>

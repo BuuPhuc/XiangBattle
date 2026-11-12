@@ -1,12 +1,17 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Button from '../../components/ui/Button'
 import useAuth from '../../components/hooks/useAuth'
 import authService from '../../services/authService'
+import { safeReturnPath } from '../../features/auth/returnPath'
 
 export function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  // ?next= — the private page that asked the guest to sign in (see
+  // SignInPrompt); they're sent back there afterwards, else to /play.
+  const [searchParams] = useSearchParams()
+  const returnTo = safeReturnPath(searchParams.get('next'))
   const [form, setForm] = useState({ email: '', password: '' })
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState(null)
@@ -31,7 +36,7 @@ export function Login() {
       setNeedsVerification(result.code === 'EMAIL_NOT_VERIFIED')
       return
     }
-    navigate('/play')
+    navigate(returnTo)
   }
 
   const handleResend = async () => {

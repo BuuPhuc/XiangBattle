@@ -1,17 +1,18 @@
-import { Navigate, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { useAuth } from '../components/hooks/useAuth'
-import Dashboard from '../pages/Dashboard/Dashboard'
+import SignInPrompt from '../components/auth/SignInPrompt'
 import Replay from '../pages/Replay/Replay'
 import Profile from '../pages/Profile/Profile'
 import EditProfile from '../pages/Profile/EditProfile'
 import PublicProfile from '../pages/Profile/PublicProfile'
-import Leaderboard from '../pages/Leaderboard/Leaderboard'
 import Friends from '../pages/Friends/Friends'
-import ClubComingSoon from '../pages/Social/ClubComingSoon'
 
-// Waits for a saved session to be confirmed before deciding: reloading a
-// private page while signed in used to redirect to "/" because the session
-// hadn't been restored yet on the first render.
+// Pages that need an account. Waits for a saved session to be confirmed
+// before deciding (reloading a private page while signed in used to bounce
+// because the session hadn't been restored yet on the first render). A
+// guest — or a saved session that turned out expired — gets a sign-in
+// prompt right there, inside the app shell, instead of being sent to the
+// home page with no explanation; signing in returns them to this page.
 function RequireAuth() {
   const { isAuthenticated, isRestoring } = useAuth()
   if (isAuthenticated) return <Outlet />
@@ -22,21 +23,18 @@ function RequireAuth() {
       </div>
     )
   }
-  return <Navigate to="/" replace />
+  return <SignInPrompt />
 }
 
 export const privateRoutes = [
   {
     element: <RequireAuth />,
     children: [
-      { path: '/dashboard', element: <Dashboard /> },
       { path: '/replay/:gameId', element: <Replay /> },
       { path: '/profile', element: <Profile /> },
       { path: '/profile/edit', element: <EditProfile /> },
       { path: '/profile/:userId', element: <PublicProfile /> },
-      { path: '/leaderboard', element: <Leaderboard /> },
       { path: '/friends', element: <Friends /> },
-      { path: '/clubs', element: <ClubComingSoon /> },
     ],
   },
 ]

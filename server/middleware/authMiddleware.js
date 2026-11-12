@@ -24,4 +24,23 @@ function requireAuth(req, res, next) {
   }
 }
 
-module.exports = { requireAuth }
+// For routes anyone may call (e.g. the leaderboard): a valid Bearer token
+// attaches req.auth exactly like requireAuth does, so the handler can add
+// the caller's own data; no token — or a missing / invalid / expired one —
+// just means "a guest" (req.auth stays unset) instead of a 401. Handlers
+// behind this must work without req.auth and never trust anything else
+// for identity.
+function optionalAuth(req, res, next) {
+  const header = req.headers.authorization || ''
+  const [scheme, token] = header.split(' ')
+  if (scheme === 'Bearer' && token) {
+    try {
+      req.auth = verifyAccessToken(token)
+    } catch {
+      req.auth = undefined
+    }
+  }
+  return next()
+}
+
+module.exports = { requireAuth, optionalAuth }

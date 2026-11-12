@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Icon from '../../components/ui/Icon'
+import { loginPathFor } from '../../features/auth/returnPath'
 import Button from '../../components/ui/Button'
 import useAuth from '../../components/hooks/useAuth'
 import userService from '../../services/userService'
@@ -11,8 +13,11 @@ const PAGE_SIZE = 20
 // "Bảng xếp hạng" — players ranked by their real rating/Elo, read straight
 // from Postgres (sorted and paginated server-side; see
 // leaderboardController.js). Never recomputes or caches rating client-side.
+// Open to guests (they just don't get "Xếp hạng của bạn"); refetched when
+// someone signs in or out here, so that row follows the session.
 export function Leaderboard() {
-  const { user: currentUser } = useAuth()
+  const { user: currentUser, isAuthenticated, isRestoring } = useAuth()
+  const viewerId = currentUser?.id ?? null
   const [page, setPage] = useState(1)
   const [status, setStatus] = useState('loading') // 'loading' | 'ready' | 'empty' | 'error'
   const [error, setError] = useState(null)
@@ -46,7 +51,7 @@ export function Leaderboard() {
     return () => {
       cancelled = true
     }
-  }, [page, reloadToken])
+  }, [page, reloadToken, viewerId])
 
   const topThree = page === 1 ? players.filter((p) => p.rank <= 3) : []
   const rest = page === 1 ? players.filter((p) => p.rank > 3) : players
@@ -63,6 +68,15 @@ export function Leaderboard() {
           Xếp hạng người chơi dựa trên điểm Rating/Elo hiện tại.
         </p>
       </div>
+
+      {!isAuthenticated && !isRestoring && (
+        <p className="font-body-sm text-body-sm text-on-surface-variant" data-testid="leaderboard-guest-hint">
+          <Link to={loginPathFor('/leaderboard')} className="text-primary font-bold hover:underline">
+            Đăng nhập
+          </Link>{' '}
+          để xem hạng của bạn và có điểm Elo khi chơi online.
+        </p>
+      )}
 
       {myRank && !isMyRankOnPage && (
         <div>
