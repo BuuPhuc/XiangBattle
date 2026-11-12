@@ -1,6 +1,18 @@
+import { useRef, useState } from 'react'
 import Piece from './Piece'
 import Square from './Square'
 import MoveMarker from './MoveMarker'
+import BoardDrawings from './BoardDrawings'
+
+const COL_STEP = 100 / 8
+const ROW_STEP = 100 / 9
+
+// Identity of a drawing, in REAL board coordinates — drawing the same thing
+// again finds it by this key and removes it.
+const drawingKey = (from, to) =>
+  to && (to.col !== from.col || to.row !== from.row)
+    ? `arrow:${from.col},${from.row}-${to.col},${to.row}`
+    : `circle:${from.col},${from.row}`
 
 const CROSS_MARK_POINTS = [
   { left: 12.5, top: 22.22 },
@@ -33,9 +45,86 @@ const ALL_SQUARES = Array.from({ length: 10 }, (_, row) =>
 // the file labels already read 1→9 from each side's own right, so neither
 // changes. (`children` overlays are drawn in unrotated coordinates; nothing
 // passes them together with `flipped`.)
-export function ChessBoard({ pieces, selectedId, turn, legalMoves = [], onSquareClick, flipped = false, children }) {
+//
+// `lastMove` ({ from, to } in real coordinates, or null) tints the two
+// squares of the move that led to the position shown — rotated like
+// everything else.
+//
+// `drawingEnabled` (opt-in, off unless a page asks for it — the Academy
+// board never does) lets the player annotate the board for themselves:
+// right-click-drag from one point to another draws an arrow, a right-click
+// on one point circles it, and doing the same again removes it. Drawings
+// are stored in real coordinates (so they stay on the right squares when
+// the board is flipped), live only in this component — never sent anywhere —
+// and are cleared by a left click on the board or when `lastMove` changes
+// (a new move, or stepping through history). Only while it's enabled does
+// the board swallow the browser's right-click menu. Mouse only: touch
+// screens have no right click, so they can't draw yet.
+export function ChessBoard({
+  pieces,
+  selectedId,
+  turn,
+  legalMoves = [],
+  onSquareClick,
+  flipped = false,
+  lastMove = null,
+  drawingEnabled = false,
+  children,
+}) {
   const viewCol = (col) => (flipped ? 8 - col : col)
   const viewRow = (row) => (flipped ? 9 - row : row)
+  const toView = (square) => ({ col: viewCol(square.col), row: viewRow(square.row) })
+
+  const innerRef = useRef(null)
+  const dragStart = useRef(null)
+  const [drawings, setDrawings] = useState([])
+  // Clear drawings whenever the move shown changes — adjusted during render
+  // (React's pattern for "reset state when a prop changes"), not in an effect.
+  const [drawingsForMove, setDrawingsForMove] = useState(lastMove)
+  if (drawingsForMove !== lastMove) {
+    setDrawingsForMove(lastMove)
+    if (drawings.length > 0) setDrawings([])
+  }
+  // Switching drawing off drops what was drawn, so it doesn't reappear later.
+  if (!drawingEnabled && drawings.length > 0) setDrawings([])
+
+  // The board point under the mouse, in REAL coordinates — null when the
+  // pointer is outside the grid (e.g. on the wooden frame).
+  const pointFromEvent = (event) => {
+    const rect = innerRef.current?.getBoundingClientRect()
+    if (!rect || rect.width === 0 || rect.height === 0) return null
+    const col = Math.round(((event.clientX - rect.left) / rect.width) * 8)
+    const row = Math.round(((event.clientY - rect.top) / rect.height) * 9)
+    if (col < 0 || col > 8 || row < 0 || row > 9) return null
+    return { col: viewCol(col), row: viewRow(row) }
+  }
+
+  const drawingHandlers = drawingEnabled
+    ? {
+        onContextMenu: (event) => event.preventDefault(),
+        onMouseDown: (event) => {
+          if (event.button === 2) {
+            dragStart.current = pointFromEvent(event)
+          } else if (event.button === 0 && drawings.length > 0) {
+            setDrawings([])
+          }
+        },
+        onMouseUp: (event) => {
+          if (event.button !== 2) return
+          const from = dragStart.current
+          dragStart.current = null
+          const to = pointFromEvent(event)
+          if (!from || !to) return
+          const key = drawingKey(from, to)
+          const isArrow = key.startsWith('arrow:')
+          setDrawings((current) =>
+            current.some((drawing) => drawing.key === key)
+              ? current.filter((drawing) => drawing.key !== key)
+              : [...current, isArrow ? { key, kind: 'arrow', from, to } : { key, kind: 'circle', at: from }]
+          )
+        },
+      }
+    : {}
 
   return (
     // Bounded by three things at once, whichever is smallest: the parent
@@ -61,7 +150,7 @@ export function ChessBoard({ pieces, selectedId, turn, legalMoves = [], onSquare
       </div>
 
       <div className="xiangqi-board-wrapper">
-        <div className="board-inner">
+        <div className="board-inner" ref={innerRef} {...drawingHandlers}>
           <div className="grid-lines">
             <div className="grid-half">
               {Array.from({ length: 32 }, (_, i) => (
@@ -105,6 +194,22 @@ export function ChessBoard({ pieces, selectedId, turn, legalMoves = [], onSquare
             ))}
           </div>
 
+          {lastMove && (
+            <div className="last-move-layer">
+              {[
+                ['from', lastMove.from],
+                ['to', lastMove.to],
+              ].map(([kind, square]) => (
+                <div
+                  key={kind}
+                  className={`last-move-square last-move-${kind}`}
+                  data-square={`${square.col},${square.row}`}
+                  style={{ left: `${viewCol(square.col) * COL_STEP}%`, top: `${viewRow(square.row) * ROW_STEP}%` }}
+                />
+              ))}
+            </div>
+          )}
+
           <div className="move-marker-layer">
             {legalMoves.map((move) => (
               <MoveMarker
@@ -132,6 +237,8 @@ export function ChessBoard({ pieces, selectedId, turn, legalMoves = [], onSquare
               />
             ))}
           </div>
+
+          {drawingEnabled && <BoardDrawings drawings={drawings} toView={toView} />}
         </div>
       </div>
 

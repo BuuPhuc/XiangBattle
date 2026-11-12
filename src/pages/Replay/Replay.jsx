@@ -5,6 +5,14 @@ import ChessBoard from '../../components/game/ChessBoard'
 import GameHistoryPanel from '../ChessGame/sections/GameHistoryPanel'
 import { useReplayGame } from '../../features/replay/hooks/useReplayGame'
 import { useAuth } from '../../components/hooks/useAuth'
+import { useSelector } from 'react-redux'
+import { selectArrowsEnabled, selectSoundEnabled } from '../../store/slices/settingsSlice'
+import { moveSoundFor } from '../../features/sound/moveSound.js'
+import { playSound } from '../../features/sound/soundPlayer.js'
+
+// End reasons where the last move itself finished the game — stepping onto
+// that move plays the game-end sound instead of the move's own.
+const ENDED_BY_LAST_MOVE = new Set(['CHECKMATE', 'STALEMATE'])
 
 const END_REASON_LABEL = {
   CHECKMATE: 'Chiếu bí',
@@ -56,8 +64,22 @@ export function Replay() {
   } = useReplayGame(gameId)
 
   const { user } = useAuth()
+  const soundEnabled = useSelector(selectSoundEnabled)
+  const arrowsEnabled = useSelector(selectArrowsEnabled)
 
   const handleExit = () => navigate('/play')
+
+  // Only "Nước tiếp theo" plays a sound (stepping one move forward, like
+  // watching it being played). Going back, jumping to the start/end or
+  // clicking a move in the list stays silent.
+  const handleNext = () => {
+    const next = moveHistory[currentMoveIndex + 1]
+    if (next && soundEnabled) {
+      const isFinalMove = currentMoveIndex + 1 === moveHistory.length - 1
+      playSound(moveSoundFor(next, { gameOver: isFinalMove && ENDED_BY_LAST_MOVE.has(game?.endReason) }))
+    }
+    goNext()
+  }
 
   if (status === 'loading') {
     return (
@@ -100,7 +122,9 @@ export function Replay() {
           </div>
         </div>
 
-        <div className="w-full pointer-events-none select-none">
+        {/* board-readonly: nothing on the board responds to a click (as
+            before), but the board itself still takes the drawing gestures. */}
+        <div className="w-full board-readonly select-none">
           <ChessBoard
             pieces={pieces}
             selectedId={null}
@@ -108,6 +132,8 @@ export function Replay() {
             legalMoves={[]}
             onSquareClick={() => {}}
             flipped={viewerWasBlack}
+            lastMove={currentMoveIndex >= 0 ? moveHistory[currentMoveIndex] : null}
+            drawingEnabled={arrowsEnabled}
           />
         </div>
 
@@ -135,7 +161,7 @@ export function Replay() {
           </span>
           <button
             type="button"
-            onClick={goNext}
+            onClick={handleNext}
             disabled={!canGoNext}
             className="p-2 rounded hover:bg-surface-container disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
             aria-label="Nước tiếp theo"

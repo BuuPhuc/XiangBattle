@@ -449,6 +449,65 @@
     border: 3px solid rgba(186, 26, 26, 0.6);
   }
 
+  /* The move that led to the position shown (ChessBoard's `lastMove`): a
+     soft blue rounded SQUARE under the from/to points. Deliberately unlike
+     everything else on the board — the selected piece (gold glow), the
+     side-to-move general (green pulsing ring), legal-move dots (brown) and
+     capture rings (red) are all round and warm-coloured. Below the move
+     markers and pieces in paint order; never catches a click. */
+  .last-move-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .last-move-square {
+    position: absolute;
+    width: 11%;
+    aspect-ratio: 1 / 1;
+    transform: translate(-50%, -50%);
+    border-radius: 22%;
+    pointer-events: none;
+  }
+  .last-move-from {
+    background: rgba(37, 99, 235, 0.14);
+    box-shadow: inset 0 0 0 2px rgba(37, 99, 235, 0.35);
+  }
+  .last-move-to {
+    background: rgba(37, 99, 235, 0.26);
+    box-shadow: inset 0 0 0 2px rgba(37, 99, 235, 0.6);
+  }
+
+  /* The player's own right-click arrows and circles (BoardDrawings.jsx) —
+     above the pieces, see-through, and never catching a click. */
+  .board-drawings {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 20;
+  }
+  .board-arrow line {
+    stroke: rgba(234, 108, 0, 0.78);
+  }
+  .board-arrow polygon {
+    fill: rgba(234, 108, 0, 0.78);
+  }
+  .board-circle {
+    fill: none;
+    stroke: rgba(234, 108, 0, 0.78);
+    stroke-width: 8;
+  }
+
+  /* A board you can look at and draw on, but not play on (replay, a
+     finished game): the pieces and click targets ignore the mouse, so
+     clicks reach .board-inner itself (drawing) and nothing can be moved. */
+  .board-readonly .piece,
+  .board-readonly .board-inner button {
+    pointer-events: none;
+  }
+
   /* Học viện — markers the Academy lays over the shared board (see
      AcademyBoard.jsx, passed to ChessBoard as children). Same coordinate
      space as .move-marker: left/top percentages of .board-inner. Purely

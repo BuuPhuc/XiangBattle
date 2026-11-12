@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import ChessBoard from '../../components/game/ChessBoard'
 import { useGame } from '../../features/game/hooks/useGame'
 import { useTimer } from '../../features/game/hooks/useTimer'
@@ -18,6 +19,8 @@ import GameOverModal from './sections/GameOverModal'
 import AiTurnStatus from './sections/AiTurnStatus'
 import { useAiOpponent } from '../../features/ai/hooks/useAiOpponent'
 import { AI_LEVELS } from '../../features/ai/engine/levels.js'
+import { useGameSounds } from '../../features/sound/useGameSounds'
+import { selectArrowsEnabled } from '../../store/slices/settingsSlice'
 
 const RED_NAME = 'Bạn (Đỏ)'
 const BLACK_NAME = 'Đại sư Lý'
@@ -62,7 +65,13 @@ export function ChessGame({ onlineGame, aiGame }) {
     resetGame,
     lastLocalMove,
     applyRemoteMove,
+    externalResult,
   } = useGame({ initialMoveHistory: onlineGame?.moveHistory, initialMatchResult: onlineGame?.matchResult })
+
+  // Move / capture / check / game-end sounds for every new move, whoever
+  // made it (follows the "Âm thanh" setting) — see useGameSounds.
+  useGameSounds({ moveHistory, isGameOver, externalResult })
+  const arrowsEnabled = useSelector(selectArrowsEnabled)
 
   const handleTimeUp = useCallback((side, reason) => endGameByTimeout(side, reason), [endGameByTimeout])
   const { red: redTime, black: blackTime, resetTimer } = useTimer({
@@ -338,7 +347,9 @@ export function ChessGame({ onlineGame, aiGame }) {
           <MatchStatus viewedMoveNumber={currentMoveIndex + 1} onReturnToLive={() => goToMove(moveHistory.length - 1)} />
         )}
         {isAi && !isGameOver && !isViewingHistory && <AiTurnStatus thinking={botThinking} botName={botName} />}
-        <div className={`w-full ${isGameOver ? 'opacity-60 pointer-events-none' : ''}`}>
+        {/* Once the game is over the pieces stop responding (board-readonly)
+            but the board can still be drawn on while looking back at it. */}
+        <div className={`w-full ${isGameOver ? 'opacity-60 board-readonly' : ''}`}>
           <ChessBoard
             pieces={pieces}
             selectedId={selectedId}
@@ -346,6 +357,8 @@ export function ChessGame({ onlineGame, aiGame }) {
             legalMoves={legalMoves}
             onSquareClick={handleSquareClick}
             flipped={bottomColor === 'black'}
+            lastMove={currentMoveIndex >= 0 ? moveHistory[currentMoveIndex] : null}
+            drawingEnabled={arrowsEnabled}
           />
         </div>
         <div className="w-full mt-3">

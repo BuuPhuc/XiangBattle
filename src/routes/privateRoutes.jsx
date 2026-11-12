@@ -8,7 +8,6 @@ import PublicProfile from '../pages/Profile/PublicProfile'
 import Leaderboard from '../pages/Leaderboard/Leaderboard'
 import Friends from '../pages/Friends/Friends'
 import ClubComingSoon from '../pages/Social/ClubComingSoon'
-import Settings from '../pages/Settings/Settings'
 
 // Waits for a saved session to be confirmed before deciding: reloading a
 // private page while signed in used to redirect to "/" because the session
@@ -38,7 +37,6 @@ export const privateRoutes = [
       { path: '/leaderboard', element: <Leaderboard /> },
       { path: '/friends', element: <Friends /> },
       { path: '/clubs', element: <ClubComingSoon /> },
-      { path: '/settings', element: <Settings /> },
     ],
   },
 ]

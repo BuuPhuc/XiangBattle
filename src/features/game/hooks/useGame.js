@@ -214,6 +214,11 @@ export function useGame({ initialMoveHistory, initialMatchResult } = {}) {
     resetGame,
     lastLocalMove,
     applyRemoteMove,
+    // The result that doesn't come from the board (timeout, resignation,
+    // accepted draw, opponent left, or a server-announced end) — null while
+    // there is none. Read-only; useGameSounds uses it to play the game-end
+    // sound for an ending no move caused.
+    externalResult: timeoutResult,
   }
 }
 

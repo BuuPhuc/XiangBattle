@@ -6,6 +6,7 @@ import Academy from '../pages/Academy/Academy'
 import AcademyCourse from '../pages/Academy/AcademyCourse'
 import AcademyLesson from '../pages/Academy/AcademyLesson'
 import AcademyChallenge from '../pages/Academy/AcademyChallenge'
+import Settings from '../pages/Settings/Settings'
 
 export const appRoutes = [
   { path: '/play', element: <Play /> },
@@ -19,6 +20,9 @@ export const appRoutes = [
   { path: '/academy/course/:courseId', element: <AcademyCourse /> },
   { path: '/academy/course/:courseId/:lessonId', element: <AcademyLesson /> },
   { path: '/academy/course/:courseId/:lessonId/challenge/:number', element: <AcademyChallenge /> },
+  // Cài đặt — guests get the sound switch (kept in their browser); signed-in
+  // users get the full page. The page itself decides which (Settings.jsx).
+  { path: '/settings', element: <Settings /> },
 ]
 
 export default appRoutes
