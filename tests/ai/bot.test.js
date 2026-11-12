@@ -77,7 +77,11 @@ function playGame(redLevel, blackLevel, random, maxPlies = 200) {
     }
     const level = side === 'red' ? redLevel : blackLevel
     const history = positions.slice(0, -1)
-    const { move } = chooseMove(pieces, side, { ...level, timeMs: Math.min(level.timeMs, 400), history, random })
+    // Depth-limited only (each level's own maxDepth), never time-limited: a
+    // time budget made the result depend on how busy the machine was, so
+    // the same seeded game could end differently from run to run. With no
+    // clock involved the games are fully reproducible.
+    const { move } = chooseMove(pieces, side, { ...level, timeMs: Number.POSITIVE_INFINITY, history, random })
     assert.ok(isLegal(pieces, move), `illegal bot move at ply ${ply}: ${JSON.stringify(move)}`)
     pieces = movePiece(pieces, move.pieceId, move.col, move.row)
     side = otherTurn(side)
