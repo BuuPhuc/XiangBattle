@@ -29,7 +29,7 @@ export function Navbar() {
       <div className="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-20">
         <div className="flex items-center gap-4">
           <Link to="/" className="text-headline-md font-headline-md font-bold text-secondary dark:text-secondary-fixed">
-            Xiangqi Master
+            XiangBattle
           </Link>
         </div>
 
@@ -61,11 +61,11 @@ export function Navbar() {
             </>
           ) : (
             <Button as={Link} to="/login" variant="outline-sm" size="sm" className="hidden md:inline-flex">
-              Sign In
+              Đăng nhập
             </Button>
           )}
           <Button as={Link} to="/play" variant="container" size="md">
-            Start Match
+            Chơi ngay
           </Button>
         </div>
       </div>

@@ -159,7 +159,7 @@ export function ChessBoard({
             </div>
             <div className="river-area">
               <span className="river-text">楚 河</span>
-              <span className="river-domain">Xiangqi Master</span>
+              <span className="river-domain">XiangBattle</span>
               <span className="river-text">漢 界</span>
             </div>
             <div className="grid-half">

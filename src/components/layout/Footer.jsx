@@ -1,5 +1,14 @@
-const SUPPORT_LINKS = ['Hướng dẫn luật chơi', 'Câu hỏi thường gặp', 'Support']
-const LEGAL_LINKS = ['Privacy Policy', 'Terms of Service', 'Press Kit']
+import { Link } from 'react-router-dom'
+import { ABOUT_SECTIONS } from '../../pages/About/aboutSections'
+
+// Every link leads to a real page. "Support", "Terms of Service" and "Press
+// Kit" are left out until there is something real to show for them.
+const SUPPORT_LINKS = [
+  { label: 'Giới thiệu', to: '/about' },
+  { label: 'Hướng dẫn luật chơi', to: '/academy' },
+  { label: 'Câu hỏi thường gặp', to: `/about#${ABOUT_SECTIONS.rules}` },
+]
+const LEGAL_LINKS = [{ label: 'Privacy Policy', to: `/about#${ABOUT_SECTIONS.data}` }]
 
 function FooterLinkList({ title, links }) {
   return (
@@ -8,14 +17,14 @@ function FooterLinkList({ title, links }) {
         {title}
       </h4>
       <ul className="space-y-2">
-        {links.map((label) => (
+        {links.map(({ label, to }) => (
           <li key={label}>
-            <a
-              href="#"
+            <Link
+              to={to}
               className="text-surface-variant/70 hover:text-white transition-colors font-label-sm text-label-sm hover:translate-x-1 opacity-80 hover:opacity-100 duration-300 inline-block"
             >
               {label}
-            </a>
+            </Link>
           </li>
         ))}
       </ul>
@@ -32,7 +41,7 @@ export function Footer() {
             <div className="w-10 h-10 rounded-md bg-primary-container flex items-center justify-center text-on-primary-container font-bold">
               象
             </div>
-            <span className="text-headline-sm font-headline-sm text-gold-shimmer">Xiangqi Master</span>
+            <span className="text-headline-sm font-headline-sm text-gold-shimmer">XiangBattle</span>
           </div>
           <p className="text-surface-variant/70 font-body-md text-body-md max-w-sm">
             Nền tảng cờ tướng trực tuyến hàng đầu, mang đến trải nghiệm thi đấu chuyên nghiệp và tĩnh tâm.
@@ -44,7 +53,7 @@ export function Footer() {
 
         <div className="col-span-1 md:col-span-4 mt-8 pt-8 border-t border-wood-dark/20 text-center">
           <p className="text-surface-variant/50 font-label-sm text-label-sm">
-            © 2026 Xiangqi Master. The Imperial Sovereign Standard.
+            © 2026 XiangBattle. The Imperial Sovereign Standard.
           </p>
         </div>
       </div>

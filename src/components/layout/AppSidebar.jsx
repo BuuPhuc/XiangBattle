@@ -95,7 +95,7 @@ export function AppSidebar() {
       <div className="mb-8 px-4">
         <div className="flex items-center gap-3 mb-6">
           <Link to="/" className="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed-dim tracking-tight">
-            Xiangqi Master
+            XiangBattle
           </Link>
         </div>
         {isAuthenticated ? (
