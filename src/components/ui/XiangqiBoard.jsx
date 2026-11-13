@@ -40,9 +40,24 @@ function Piece({ label, col, row, color, ring }) {
   )
 }
 
-export function XiangqiBoard({ className = '' }) {
+// A static picture of a board. Without `pieces` it shows the starting
+// position (the home page); with `pieces` ([{ side, char, col, row }], real
+// coordinates) it draws that position instead — e.g. a Cờ thế thumbnail —
+// turned 180° when `flipped`, so Black sits at the bottom.
+export function XiangqiBoard({ className = '', pieces = null, flipped = false, label = 'Bàn cờ tướng' }) {
+  const view = (col, row) => (flipped ? [8 - col, 9 - row] : [col, row])
+  const drawn = pieces
+    ? pieces.map((p) => {
+        const [col, row] = view(p.col, p.row)
+        return { key: `${p.side}-${p.col}-${p.row}`, label: p.char, col, row, side: p.side }
+      })
+    : [
+        ...BLACK_PIECES.map(([l, col, row]) => ({ key: `b-${col}-${row}`, label: l, col, row, side: 'black' })),
+        ...RED_PIECES.map(([l, col, row]) => ({ key: `r-${col}-${row}`, label: l, col, row, side: 'red' })),
+      ]
+
   return (
-    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className={className} role="img" aria-label="Bàn cờ tướng">
+    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className={className} role="img" aria-label={label}>
       <defs>
         <linearGradient id="wood-bg" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#fff6e8" />
@@ -94,12 +109,10 @@ export function XiangqiBoard({ className = '' }) {
         漢界
       </text>
 
-      {BLACK_PIECES.map(([label, col, row]) => (
-        <Piece key={`b-${col}-${row}`} label={label} col={col} row={row} color="#1a1a1a" ring="#1a1a1a" />
-      ))}
-      {RED_PIECES.map(([label, col, row]) => (
-        <Piece key={`r-${col}-${row}`} label={label} col={col} row={row} color="#96281B" ring="#96281B" />
-      ))}
+      {drawn.map(({ key, label: pieceLabel, col, row, side }) => {
+        const color = side === 'red' ? '#96281B' : '#1a1a1a'
+        return <Piece key={key} label={pieceLabel} col={col} row={row} color={color} ring={color} />
+      })}
     </svg>
   )
 }

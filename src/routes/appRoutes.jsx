@@ -10,6 +10,8 @@ import AcademyChallenge from '../pages/Academy/AcademyChallenge'
 import Settings from '../pages/Settings/Settings'
 import Leaderboard from '../pages/Leaderboard/Leaderboard'
 import ClubComingSoon from '../pages/Social/ClubComingSoon'
+import Puzzles from '../pages/Puzzles/Puzzles'
+import PuzzleSolve from '../pages/Puzzles/PuzzleSolve'
 
 export const appRoutes = [
   { path: '/play', element: <Play /> },
@@ -34,6 +36,10 @@ export const appRoutes = [
   { path: '/leaderboard', element: <Leaderboard /> },
   // Câu lạc bộ — only a "coming soon" page so far, nothing private on it.
   { path: '/clubs', element: <ClubComingSoon /> },
+  // Cờ thế — open to guests; runs entirely in the browser (solver in a Web
+  // Worker, progress in localStorage), never the server or the online game.
+  { path: '/puzzles', element: <Puzzles /> },
+  { path: '/puzzles/:puzzleId', element: <PuzzleSolve /> },
 ]
 
 export default appRoutes
