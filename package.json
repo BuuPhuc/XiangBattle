@@ -11,7 +11,9 @@
     "test": "node --test --test-concurrency=1 \"tests/rules/**/*.test.js\" \"tests/ai/**/*.test.js\"",
     "test:e2e": "node --test --test-concurrency=1 \"tests/e2e/**/*.test.js\"",
     "test:server": "npm --prefix server test",
-    "test:all": "npm test && npm run test:server && npm run test:e2e"
+    "test:all": "npm test && npm run test:server && npm run test:e2e",
+    "puzzles:check": "node scripts/puzzles/puzzle-tool.mjs check",
+    "puzzles:find": "node scripts/puzzles/puzzle-tool.mjs find"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.12.0",
