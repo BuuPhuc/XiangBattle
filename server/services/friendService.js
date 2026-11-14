@@ -46,14 +46,14 @@ function otherUser(row, meId) {
 // no duplicate), or *they* already asked *me* — in which case both people
 // want to be friends, so this accepts their pending request on the spot
 // instead of leaving a second, redundant request to deal with.
-async function resolveAgainstExisting(existing, fromId, toId) {
+async function resolveAgainstExisting(existing, fromId) {
   if (existing.status === 'ACCEPTED') {
     throw friendServiceError('ALREADY_FRIENDS', 'Hai người đã là bạn bè.')
   }
   if (existing.requestedById === fromId) {
     throw friendServiceError('REQUEST_ALREADY_SENT', 'Bạn đã gửi lời mời kết bạn này rồi.')
   }
-  // existing.requestedById === toId: the other person already asked me first.
+  // Otherwise the other person (the request's target) already asked me first.
   const updated = await Friendship.where({ id: existing.id })
     .select('id', 'userLowId', 'userHighId', 'requestedById', 'status', 'createdAt', 'respondedAt')
     .update({ status: 'ACCEPTED', respondedAt: new Date() })
@@ -71,7 +71,7 @@ async function sendRequest(fromId, toId) {
 
   const existing = await getFriendship(fromId, toId)
   if (existing) {
-    return resolveAgainstExisting(existing, fromId, toId)
+    return resolveAgainstExisting(existing, fromId)
   }
 
   const [userLowId, userHighId] = normalizePair(fromId, toId)
@@ -91,7 +91,7 @@ async function sendRequest(fromId, toId) {
     if (!isUniqueViolation(error)) throw error
     const raced = await getFriendship(fromId, toId)
     if (!raced) throw error
-    return resolveAgainstExisting(raced, fromId, toId)
+    return resolveAgainstExisting(raced, fromId)
   }
 }
 

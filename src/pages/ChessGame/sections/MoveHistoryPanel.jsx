@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Icon from '../../../components/ui/Icon'
 import { cn } from '../../../components/utils/cn'
 import { groupMovesIntoRows } from '../../../features/game/utils/historyUtils'
@@ -30,13 +30,17 @@ function MoveCell({ move, index, currentMoveIndex, onSelectMove, placeholder }) 
 export function MoveHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove }) {
   const rows = groupMovesIntoRows(moveHistory)
   const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
-  const [page, setPage] = useState(1)
-
-  // Jump to the newest page whenever the move count changes (a new move was
-  // played, live or branched), so live play always stays in view.
-  useEffect(() => {
+  // Opens on the newest page, and jumps back to it whenever the page count
+  // changes (a move added or removed a page, live or branched), so live play
+  // always stays in view; otherwise the page the user picked stays. Done
+  // while rendering — React's "adjust state when a prop changes" — rather
+  // than in an effect, which would render once more with the old page.
+  const [page, setPage] = useState(totalPages)
+  const [pageCountSeen, setPageCountSeen] = useState(totalPages)
+  if (pageCountSeen !== totalPages) {
+    setPageCountSeen(totalPages)
     setPage(totalPages)
-  }, [totalPages])
+  }
 
   const pageRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const isLastRow = (row) => row.number === rows.length

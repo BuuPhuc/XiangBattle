@@ -4,7 +4,7 @@ import Button from '../ui/Button'
 import { loginPathFor } from '../../features/auth/returnPath'
 
 // Shown in place of a private page to someone who isn't signed in (see
-// privateRoutes.jsx's RequireAuth) — instead of bouncing them to the home
+// RequireAuth.jsx) — instead of bouncing them to the home
 // page with no explanation. The app shell (sidebar) stays; "Đăng nhập"
 // brings them back to this exact page afterwards.
 export function SignInPrompt() {

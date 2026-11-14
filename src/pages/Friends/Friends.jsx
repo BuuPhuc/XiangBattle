@@ -48,19 +48,30 @@ export function Friends() {
   // friends list client-side. This one calls the server (GET
   // /users/search), since it searches every user, not just friends.
   const [userQuery, setUserQuery] = useState('')
-  const [userSearchStatus, setUserSearchStatus] = useState('idle') // 'idle' | 'loading' | 'ready' | 'error'
-  const [userSearchError, setUserSearchError] = useState(null)
-  const [userSearchResults, setUserSearchResults] = useState([])
   const debouncedUserQuery = useDebouncedValue(userQuery, USER_SEARCH_DEBOUNCE_MS)
+  // Exactly the string sent to the server — and the one every result below
+  // is tagged with, so "is this result for the current search?" compares
+  // like with like and can never leave the box stuck on "Đang tìm kiếm...".
+  const searchQuery = debouncedUserQuery.trim()
+  // status: 'idle' | 'loading' | 'ready' | 'error'
+  const [userSearch, setUserSearch] = useState({ query: '', status: 'idle', error: null, results: [] })
+  // A new search (the debounced, trimmed query changed): start it over right
+  // here while rendering — React's "adjust state when a prop changes" —
+  // instead of from inside the effect below, which would render once more
+  // with the previous search's state first.
+  if (userSearch.query !== searchQuery) {
+    setUserSearch({ query: searchQuery, status: searchQuery ? 'loading' : 'idle', error: null, results: [] })
+  }
+  const { status: userSearchStatus, error: userSearchError, results: userSearchResults } = userSearch
 
   // Thách đấu state for every friend row — one fetch and one socket
   // listener for the whole list (see useChallenges), never one per row.
   const challenges = useChallenges()
 
+  // The initial state is already 'loading'; a retry resets it in load()
+  // below, so this effect itself only ever sets state once the lists answer.
   useEffect(() => {
     let cancelled = false
-    setStatus('loading')
-    setError(null)
 
     Promise.all([friendService.getFriends(), friendService.getReceivedRequests(), friendService.getSentRequests()])
       .then(([friendsRes, receivedRes, sentRes]) => {
@@ -96,41 +107,42 @@ export function Friends() {
   // Fires only once the user stops typing for USER_SEARCH_DEBOUNCE_MS (see
   // useDebouncedValue) — never once per keystroke. An empty/whitespace-only
   // query never reaches the server at all.
+  //
+  // A reply only ever lands on the search it was made for: the effect's
+  // cleanup drops it once the query moves on, and it is also matched
+  // against the query it carries, so a late reply for "ab" can never
+  // replace the results for "abc".
   useEffect(() => {
-    const query = debouncedUserQuery.trim()
-    if (!query) {
-      setUserSearchStatus('idle')
-      setUserSearchResults([])
-      return
+    if (!searchQuery) return
+    let cancelled = false
+    const settle = (patch) => {
+      if (cancelled) return
+      setUserSearch((current) => (current.query === searchQuery ? { ...current, ...patch } : current))
     }
 
-    let cancelled = false
-    setUserSearchStatus('loading')
-    setUserSearchError(null)
-
     userService
-      .searchUsers(query)
-      .then((data) => {
-        if (cancelled) return
-        setUserSearchResults(data.users || [])
-        setUserSearchStatus('ready')
-      })
-      .catch((err) => {
-        if (cancelled) return
-        setUserSearchError((err.response && err.response.data && err.response.data.message) || 'Không thể tìm kiếm người chơi.')
-        setUserSearchStatus('error')
-      })
+      .searchUsers(searchQuery)
+      .then((data) => settle({ status: 'ready', results: data.users || [] }))
+      .catch((err) =>
+        settle({
+          status: 'error',
+          error: (err.response && err.response.data && err.response.data.message) || 'Không thể tìm kiếm người chơi.',
+        })
+      )
 
     return () => {
       cancelled = true
     }
-  }, [debouncedUserQuery])
+  }, [searchQuery])
 
   // Keeps a search result row's button in sync whenever the same
   // relationship changes via the Received/Sent/Friends tabs (or vice
   // versa) — a no-op if that user isn't currently in the search results.
   const updateSearchRelationship = useCallback((userId, relationshipStatus) => {
-    setUserSearchResults((current) => current.map((u) => (u.id === userId ? { ...u, relationshipStatus } : u)))
+    setUserSearch((current) => ({
+      ...current,
+      results: current.results.map((u) => (u.id === userId ? { ...u, relationshipStatus } : u)),
+    }))
   }, [])
 
   const setBusy = useCallback((id, isBusy) => {
@@ -226,7 +238,10 @@ export function Friends() {
     return friends.filter((f) => (f.displayName || f.username || '').toLowerCase().includes(q))
   }, [friends, search])
 
+  // "Thử lại": back to the loading state, then re-run the fetch effect.
   const load = () => {
+    setStatus('loading')
+    setError(null)
     setReloadToken((t) => t + 1)
   }
 

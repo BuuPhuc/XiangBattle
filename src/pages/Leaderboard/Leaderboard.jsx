@@ -19,39 +19,54 @@ export function Leaderboard() {
   const { user: currentUser, isAuthenticated, isRestoring } = useAuth()
   const viewerId = currentUser?.id ?? null
   const [page, setPage] = useState(1)
-  const [status, setStatus] = useState('loading') // 'loading' | 'ready' | 'empty' | 'error'
-  const [error, setError] = useState(null)
-  const [players, setPlayers] = useState([])
-  const [myRank, setMyRank] = useState(null)
-  const [pagination, setPagination] = useState(null)
   // Bumped by the "Thử lại" button to re-run the fetch effect below.
   const [reloadToken, setReloadToken] = useState(0)
+  // Which request the page wants right now: the page, the retry count and
+  // who is looking (a user id, or "guest") — any change means a new fetch.
+  const requestKey = `${page}|${reloadToken}|${viewerId ?? 'guest'}`
+
+  // The last reply, tagged with the request it answered. Until the reply
+  // for the current requestKey is in, the page shows "loading" — derived
+  // here rather than set from inside the effect. players/myRank/pagination
+  // keep the last data meanwhile, as before.
+  const [result, setResult] = useState({ key: null, status: 'loading', error: null, players: [], myRank: null, pagination: null })
+  const isCurrent = result.key === requestKey
+  const status = isCurrent ? result.status : 'loading' // 'loading' | 'ready' | 'empty' | 'error'
+  const error = isCurrent ? result.error : null
+  const { players, myRank, pagination } = result
 
   useEffect(() => {
     let cancelled = false
-    setStatus('loading')
-    setError(null)
 
     userService
       .getLeaderboard({ page, limit: PAGE_SIZE })
       .then((data) => {
         if (cancelled) return
         const list = data.players || []
-        setPlayers(list)
-        setMyRank(data.currentUser || null)
-        setPagination(data.pagination || null)
-        setStatus(list.length > 0 ? 'ready' : 'empty')
+        setResult({
+          key: requestKey,
+          status: list.length > 0 ? 'ready' : 'empty',
+          error: null,
+          players: list,
+          myRank: data.currentUser || null,
+          pagination: data.pagination || null,
+        })
       })
       .catch((err) => {
         if (cancelled) return
-        setError((err.response && err.response.data && err.response.data.message) || 'Không thể tải bảng xếp hạng.')
-        setStatus('error')
+        setResult((current) => ({
+          ...current,
+          key: requestKey,
+          status: 'error',
+          error: (err.response && err.response.data && err.response.data.message) || 'Không thể tải bảng xếp hạng.',
+        }))
       })
 
+    // A reply that arrives after the request moved on is dropped.
     return () => {
       cancelled = true
     }
-  }, [page, reloadToken, viewerId])
+  }, [page, requestKey])
 
   const topThree = page === 1 ? players.filter((p) => p.rank <= 3) : []
   const rest = page === 1 ? players.filter((p) => p.rank > 3) : players
