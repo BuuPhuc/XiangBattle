@@ -1416,6 +1416,13 @@
                   "kind": "scalar"
                 }
               },
+              "tokenVersion": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
               "updatedAt": {
                 "nullable": false,
                 "type": {
@@ -1696,6 +1703,9 @@
                 },
                 "soundEnabled": {
                   "column": "soundEnabled"
+                },
+                "tokenVersion": {
+                  "column": "tokenVersion"
                 },
                 "updatedAt": {
                   "column": "updatedAt"
@@ -2957,6 +2967,15 @@
                   "nativeType": "bool",
                   "nullable": false
                 },
+                "tokenVersion": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
                 "updatedAt": {
                   "codecId": "pg/timestamptz-string@1",
                   "nativeType": "timestamptz",
@@ -3077,7 +3096,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "8f446ab2907a0dcefcfe701a9e20ede3cf5bc71f29875e34a70e1c05a0134cf4"
+    "storageHash": "13bd352650c4905369076e67db3df74e5649876988e8e69a80fdb5d6d1ea7469"
   },
   "execution": {
     "executionHash": "bc51ac76f83d2534cc99307e3fa62a73f05f7c27df78361282fb65004d73327e",

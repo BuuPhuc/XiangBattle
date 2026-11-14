@@ -4,6 +4,7 @@ import { setCredentials, updateUser as updateUserAction, logout as logoutAction,
 import authService from '../../services/authService'
 import { saveAuthSession, clearAuthSession, loadAuthSession } from '../../features/auth/authStorage'
 import socket, { setSocketAuthToken } from '../../socket/socket'
+import { endSessionAndLeave, setOwnLogoutAllInFlight } from '../../features/auth/sessionEnd'
 
 // Forces the shared socket to reconnect under its current auth — used right
 // after login/logout so the server's socket.user reflects the new identity
@@ -87,6 +88,23 @@ export function useAuth() {
     dispatch(logoutAction())
   }, [dispatch])
 
+  // "Đăng xuất khỏi tất cả thiết bị": the server revokes every token of
+  // this account (every other device is signed out within a moment, see
+  // App.jsx), then this device signs out too and lands on the login page.
+  // On failure nothing changes here — still signed in — and the caller
+  // shows the returned message.
+  const logoutAll = useCallback(async () => {
+    setOwnLogoutAllInFlight(true)
+    try {
+      await authService.logoutAll()
+    } catch (err) {
+      setOwnLogoutAllInFlight(false)
+      return extractErrorResponse(err, 'Không thể đăng xuất khỏi tất cả thiết bị. Vui lòng thử lại.')
+    }
+    endSessionAndLeave('LOGGED_OUT_ALL')
+    return { success: true }
+  }, [])
+
   // Called once on app start: if a session was saved, re-arm the socket's
   // auth immediately (no need to wait on the network round trip below),
   // then confirm the token is still valid against the server before
@@ -117,7 +135,7 @@ export function useAuth() {
   // session turns out invalid, restoreSession logs out and this turns false.
   const isRestoring = restoring && !isAuthenticated
 
-  return { user, token, isAuthenticated, isRestoring, status, error, login, register, updateUser, logout, restoreSession }
+  return { user, token, isAuthenticated, isRestoring, status, error, login, register, updateUser, logout, logoutAll, restoreSession }
 }
 
 export default useAuth

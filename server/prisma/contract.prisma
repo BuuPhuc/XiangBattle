@@ -10,6 +10,12 @@ model User {
   bio           String?
   emailVerified Boolean   @default(false)
 
+  // Session revocation (see sessionService.js): every JWT carries the value
+  // this had when it was signed (claim `tv`; a token from before this
+  // column existed counts as 0). revokeAllSessions bumps it, so every JWT
+  // issued until then — on every device — is refused from that moment on.
+  tokenVersion  Int       @default(0)
+
   rating       Int       @default(1200)
   wins         Int       @default(0)
   losses       Int       @default(0)

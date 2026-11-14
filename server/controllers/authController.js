@@ -2,6 +2,7 @@ const { db } = require('../prisma/db')
 const { hashPassword, comparePassword } = require('../utils/password')
 const { createVerificationToken, hashVerificationToken, signAccessToken } = require('../utils/token')
 const { sendVerificationEmail } = require('../utils/mailer')
+const { revokeAllSessions } = require('../services/sessionService')
 const { isValidEmail, isValidUsername, isValidPassword, PASSWORD_MIN_LENGTH } = require('../utils/validate')
 
 // This contract has a single namespace, but the installed runtime only
@@ -253,4 +254,16 @@ const me = withErrorHandling(async (req, res) => {
   return res.json({ success: true, user: toPublicUser(user) })
 })
 
-module.exports = { register, login, verifyEmail, resendVerification, me, toPublicUser }
+// "Đăng xuất khỏi tất cả thiết bị". Acts only on the signed-in account —
+// the id comes from the verified JWT (req.auth), never from the body,
+// query or params, so it can't be pointed at anyone else. The caller's own
+// token is revoked too: the client signs itself out on the 200.
+const logoutAll = withErrorHandling(async (req, res) => {
+  const revoked = await revokeAllSessions(req.auth.userId)
+  if (!revoked) {
+    return res.status(401).json({ success: false, code: 'INVALID_TOKEN', message: 'Token không hợp lệ.' })
+  }
+  return res.json({ success: true, message: 'Đã đăng xuất khỏi tất cả thiết bị.' })
+})
+
+module.exports = { register, login, verifyEmail, resendVerification, me, logoutAll, toPublicUser }

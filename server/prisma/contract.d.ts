@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'8f446ab2907a0dcefcfe701a9e20ede3cf5bc71f29875e34a70e1c05a0134cf4'>;
+  StorageHashBase<'13bd352650c4905369076e67db3df74e5649876988e8e69a80fdb5d6d1ea7469'>;
 export type ExecutionHash =
   ExecutionHashBase<'bc51ac76f83d2534cc99307e3fa62a73f05f7c27df78361282fb65004d73327e'>;
 export type ProfileHash =
@@ -344,6 +344,7 @@ export type FieldOutputTypes = {
       readonly avatarUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly bio: CodecTypes['pg/text@1']['output'] | null;
       readonly emailVerified: CodecTypes['pg/bool@1']['output'];
+      readonly tokenVersion: CodecTypes['pg/int4@1']['output'];
       readonly rating: CodecTypes['pg/int4@1']['output'];
       readonly wins: CodecTypes['pg/int4@1']['output'];
       readonly losses: CodecTypes['pg/int4@1']['output'];
@@ -462,6 +463,7 @@ export type FieldInputTypes = {
       readonly avatarUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly bio: CodecTypes['pg/text@1']['input'] | null;
       readonly emailVerified: CodecTypes['pg/bool@1']['input'];
+      readonly tokenVersion: CodecTypes['pg/int4@1']['input'];
       readonly rating: CodecTypes['pg/int4@1']['input'];
       readonly wins: CodecTypes['pg/int4@1']['input'];
       readonly losses: CodecTypes['pg/int4@1']['input'];
@@ -587,6 +589,7 @@ export type StorageColumnTypes = {
       readonly rating: CodecTypes['pg/int4@1']['output'];
       readonly recentGamesVisibility: 'PUBLIC' | 'FRIENDS' | 'PRIVATE';
       readonly soundEnabled: CodecTypes['pg/bool@1']['output'];
+      readonly tokenVersion: CodecTypes['pg/int4@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly username: CodecTypes['pg/text@1']['output'];
       readonly wins: CodecTypes['pg/int4@1']['output'];
@@ -705,6 +708,7 @@ export type StorageColumnInputTypes = {
       readonly rating: CodecTypes['pg/int4@1']['input'];
       readonly recentGamesVisibility: 'PUBLIC' | 'FRIENDS' | 'PRIVATE';
       readonly soundEnabled: CodecTypes['pg/bool@1']['input'];
+      readonly tokenVersion: CodecTypes['pg/int4@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly username: CodecTypes['pg/text@1']['input'];
       readonly wins: CodecTypes['pg/int4@1']['input'];
@@ -1590,6 +1594,15 @@ type ContractBase = Omit<
                     readonly value: DefaultLiteralValue<'pg/bool@1', false>;
                   };
                 };
+                readonly tokenVersion: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
+                  };
+                };
                 readonly rating: {
                   readonly nativeType: 'int4';
                   readonly codecId: 'pg/int4@1';
@@ -2436,6 +2449,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
               };
+              readonly tokenVersion: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
               readonly rating: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
@@ -2639,6 +2656,7 @@ type ContractBase = Omit<
                 readonly avatarUrl: { readonly column: 'avatarUrl' };
                 readonly bio: { readonly column: 'bio' };
                 readonly emailVerified: { readonly column: 'emailVerified' };
+                readonly tokenVersion: { readonly column: 'tokenVersion' };
                 readonly rating: { readonly column: 'rating' };
                 readonly wins: { readonly column: 'wins' };
                 readonly losses: { readonly column: 'losses' };

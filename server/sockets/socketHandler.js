@@ -11,28 +11,35 @@ const { registerMatchmakingHandlers, removeFromQuickPlayQueue } = require('./mat
 const { registerChatHandlers } = require('./chatHandler')
 const { registerChallengeHandlers } = require('./challengeHandler')
 const { resolvePlayerId } = require('../utils/playerIdentity')
-const { verifyAccessToken } = require('../utils/token')
+const { authenticateToken } = require('../services/sessionService')
 const { createGameRecord, attachPlayerRatings, parseUserId } = require('../services/gameHistoryService')
 const rematchInvites = require('../services/rematchInviteService')
 const presenceService = require('../services/presenceService')
 
 // Best-effort identity attach: a client that connected with a valid JWT
 // (see src/socket/socket.js's `auth.token`) gets `socket.user = { id,
-// username }`; anyone else (not logged in, or an expired/invalid token)
-// still connects as a guest with `socket.user = null` — the whole Room /
-// matchmaking system keeps working off the client-supplied playerId either
-// way, so auth is purely additive here, never a requirement to connect.
-function attachSocketUser(socket, next) {
+// username }`; anyone else (not logged in, or an expired/invalid/revoked
+// token) still connects as a guest with `socket.user = null` — the whole
+// Room / matchmaking system keeps working off the client-supplied playerId
+// either way, so auth is purely additive here, never a requirement to
+// connect. The check is the same one HTTP uses (sessionService.js); when it
+// rejects a token, `socket.sessionError` keeps the code so the connection
+// handler can tell the client its session is over. If the check can't reach
+// the database, the socket is a guest too (logged), same as before.
+async function attachSocketUser(socket, next) {
+  socket.user = null
+  socket.sessionError = null
   const token = socket.handshake.auth && socket.handshake.auth.token
-  if (!token) {
-    socket.user = null
-    return next()
-  }
+  if (!token) return next()
   try {
-    const payload = verifyAccessToken(token)
-    socket.user = { id: payload.userId, username: payload.username }
-  } catch {
-    socket.user = null
+    const result = await authenticateToken(token)
+    if (result.code) {
+      socket.sessionError = result.code
+    } else {
+      socket.user = { id: result.payload.userId, username: result.payload.username }
+    }
+  } catch (error) {
+    console.error('[socket] session check failed, connecting as guest:', error.message)
   }
   return next()
 }
@@ -117,6 +124,14 @@ function registerSocketHandlers(io) {
   io.on('connection', (socket) => {
     const who = socket.user ? `${socket.user.username} (user ${socket.user.id})` : 'guest'
     console.log(`[socket] client connected: ${socket.id} (${socket.handshake.address}) — ${who}`)
+
+    // The token this client presented no longer signs anyone in (expired,
+    // invalid or revoked): it is connected as a guest, and told so, so the
+    // app signs itself out instead of showing a session that's gone. Same
+    // event sessionService.revokeAllSessions sends to sockets already open.
+    if (socket.sessionError) {
+      socket.emit('session_ended', { code: socket.sessionError })
+    }
 
     // Friend-presence tracking (see presenceService.js) piggybacks on the
     // same auth attach as everything else here — a guest socket (no

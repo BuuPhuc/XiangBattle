@@ -1,0 +1,44 @@
+[
+  {
+    "id": "column.public.user.tokenVersion",
+    "label": "Add column \"tokenVersion\" to \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "tokenVersion",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"tokenVersion\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "tokenVersion"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"tokenVersion\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD COLUMN \"tokenVersion\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"tokenVersion\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "tokenVersion"
+        ]
+      }
+    ]
+  }
+]

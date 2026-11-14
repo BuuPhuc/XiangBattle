@@ -6,19 +6,30 @@ import Icon from './Icon'
 // MatchActions.jsx. Portaled to <body> because both places that open it
 // (AppSidebar, Navbar) are themselves fixed/backdrop-blurred containers,
 // which would otherwise clip or mis-anchor a `fixed inset-0` overlay.
-export function LogoutConfirmModal({ onConfirm, onCancel }) {
+// Settings' "Đăng xuất khỏi tất cả thiết bị" reuses it with its own wording
+// (message / detail / confirmLabel), a `busy` state while the request is in
+// flight (both buttons disabled, Escape and backdrop ignored) and an `error`.
+export function LogoutConfirmModal({
+  onConfirm,
+  onCancel,
+  message = 'Bạn có chắc chắn muốn đăng xuất?',
+  detail = null,
+  confirmLabel = 'Đăng xuất',
+  busy = false,
+  error = null,
+}) {
   useEffect(() => {
     function handleKeyDown(event) {
-      if (event.key === 'Escape') onCancel()
+      if (event.key === 'Escape' && !busy) onCancel()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onCancel])
+  }, [onCancel, busy])
 
   return createPortal(
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-onyx-ink/60 backdrop-blur-sm"
-      onClick={onCancel}
+      onClick={busy ? undefined : onCancel}
     >
       <div
         role="dialog"
@@ -31,23 +42,31 @@ export function LogoutConfirmModal({ onConfirm, onCancel }) {
           <Icon name="logout" className="text-3xl" />
         </div>
         <p id="logout-confirm-title" className="font-body-md text-body-md text-on-surface">
-          Bạn có chắc chắn muốn đăng xuất?
+          {message}
         </p>
+        {detail && <p className="font-body-sm text-body-sm text-on-surface-variant -mt-3">{detail}</p>}
+        {error && (
+          <p role="alert" className="font-label-md text-label-md text-error -mt-3">
+            {error}
+          </p>
+        )}
         <div className="flex gap-4">
           <button
             type="button"
             onClick={onCancel}
+            disabled={busy}
             autoFocus
-            className="flex-1 py-2.5 px-4 rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md hover:bg-surface-container transition-colors"
+            className="flex-1 py-2.5 px-4 rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md hover:bg-surface-container transition-colors disabled:opacity-50"
           >
             Hủy
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="flex-1 py-2.5 px-4 rounded-lg bg-error text-white font-label-md text-label-md hover:opacity-90 transition-opacity"
+            disabled={busy}
+            className="flex-1 py-2.5 px-4 rounded-lg bg-error text-white font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            Đăng xuất
+            {confirmLabel}
           </button>
         </div>
       </div>

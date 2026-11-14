@@ -24,8 +24,13 @@ function createVerificationToken() {
   return { rawToken, tokenHash, expiresAt }
 }
 
+// `tv` is the account's tokenVersion at signing time — what lets
+// sessionService.revokeAllSessions invalidate every token issued so far.
+// Otherwise still a plain 7-day token counted from login.
 function signAccessToken(user) {
-  return jwt.sign({ userId: user.id, username: user.username }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
+  return jwt.sign({ userId: user.id, username: user.username, tv: user.tokenVersion || 0 }, JWT_SECRET, {
+    expiresIn: JWT_EXPIRES_IN,
+  })
 }
 
 function verifyAccessToken(token) {

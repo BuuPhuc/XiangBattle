@@ -5,6 +5,13 @@ import AppRouter from './routes'
 import socket from './socket/socket'
 import useAuth from './components/hooks/useAuth'
 import { onStoredUserChange } from './features/auth/authStorage'
+import authService from './services/authService'
+import {
+  setSessionEndHandler,
+  reportSessionEnded,
+  endSessionAndLeave,
+  isOwnLogoutAllInFlight,
+} from './features/auth/sessionEnd'
 import useAccountSettingsSync from './features/settings/useAccountSettingsSync'
 
 // Runs inside <Provider> so useAuth (Redux) is available: on mount, restore
@@ -52,6 +59,53 @@ function AppContent() {
       }),
     []
   )
+
+  // The server ended this browser's login (expired, invalid, or revoked by
+  // "Đăng xuất khỏi tất cả thiết bị" on any device) — reported by a refused
+  // API call (config/axios.js) or by the socket (`session_ended`, sent both
+  // to sockets open at the moment of a revoke and to one that connects with
+  // a token that no longer works). Signs out and lands on the login page,
+  // but only for the session actually in use: a session that was never
+  // confirmed is restoreSession's to clear (unchanged start-up behavior,
+  // no redirect), and a refusal of some older token is ignored.
+  useEffect(() => {
+    const unregister = setSessionEndHandler((code, token, source) => {
+      const { auth } = store.getState()
+      if (!auth.isAuthenticated) return
+      if (token && token !== auth.token) return
+      if (source === 'socket' && isOwnLogoutAllInFlight()) return
+      endSessionAndLeave(code)
+    })
+
+    function handleSessionEnded(payload) {
+      reportSessionEnded(payload && payload.code, socket.auth && socket.auth.token, 'socket')
+    }
+    // A revoke disconnects the account's sockets from the server side, which
+    // Socket.IO never retries on its own. session_ended normally arrives
+    // first; should it ever not, ask the API whether the session still
+    // holds — a session-ending 401 signs out through the interceptor —
+    // and otherwise just reconnect.
+    function handleServerDisconnect(reason) {
+      if (reason !== 'io server disconnect') return
+      if (!store.getState().auth.isAuthenticated) {
+        socket.connect()
+        return
+      }
+      authService
+        .getMe()
+        .catch(() => {})
+        .finally(() => {
+          if (store.getState().auth.isAuthenticated) socket.connect()
+        })
+    }
+    socket.on('session_ended', handleSessionEnded)
+    socket.on('disconnect', handleServerDisconnect)
+    return () => {
+      unregister()
+      socket.off('session_ended', handleSessionEnded)
+      socket.off('disconnect', handleServerDisconnect)
+    }
+  }, [])
 
   return <AppRouter />
 }

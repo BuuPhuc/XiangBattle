@@ -4,6 +4,7 @@ import Button from '../../components/ui/Button'
 import useAuth from '../../components/hooks/useAuth'
 import authService from '../../services/authService'
 import { safeReturnPath } from '../../features/auth/returnPath'
+import { SESSION_END_MESSAGES } from '../../features/auth/sessionEnd'
 
 export function Login() {
   const { login } = useAuth()
@@ -12,6 +13,10 @@ export function Login() {
   // SignInPrompt); they're sent back there afterwards, else to /play.
   const [searchParams] = useSearchParams()
   const returnTo = safeReturnPath(searchParams.get('next'))
+  // ?session= — why the previous session ended (expired, revoked, or this
+  // device's own "Đăng xuất khỏi tất cả thiết bị"); see sessionEnd.js.
+  const sessionReason = searchParams.get('session')
+  const sessionNotice = Object.hasOwn(SESSION_END_MESSAGES, sessionReason) ? SESSION_END_MESSAGES[sessionReason] : null
   const [form, setForm] = useState({ email: '', password: '' })
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState(null)
@@ -60,6 +65,15 @@ export function Login() {
       </div>
 
       <form onSubmit={handleSubmit} className="glass-panel border border-gold-shimmer/30 p-8 rounded-xl space-y-5">
+        {sessionNotice && !formError && (
+          <div
+            role="status"
+            className="px-4 py-3 rounded-lg bg-secondary/10 border border-secondary/30 text-secondary font-label-md text-label-md text-center"
+          >
+            {sessionNotice}
+          </div>
+        )}
+
         {formError && (
           <div className="px-4 py-3 rounded-lg bg-error/10 border border-error/30 text-error font-label-md text-label-md text-center space-y-2">
             <p>{formError}</p>

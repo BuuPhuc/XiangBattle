@@ -18,6 +18,7 @@ const notificationRoutes = require('./routes/notificationRoutes')
 const challengeRoutes = require('./routes/challengeRoutes')
 const academyRoutes = require('./routes/academyRoutes')
 const notificationService = require('./services/notificationService')
+const sessionService = require('./services/sessionService')
 
 const PORT = process.env.PORT || 3000
 
@@ -63,6 +64,8 @@ registerSocketHandlers(io)
 // socketHandler.js already joins each authenticated socket to) — see
 // notificationService.js.
 notificationService.attachIo(io)
+// Lets revokeAllSessions disconnect a revoked account's open sockets.
+sessionService.attachIo(io)
 
 httpServer.listen(PORT, () => {
   console.log(`XiangBattle backend listening on http://localhost:${PORT}`)

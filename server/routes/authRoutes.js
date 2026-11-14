@@ -1,6 +1,6 @@
 const express = require('express')
 const rateLimit = require('express-rate-limit')
-const { register, login, verifyEmail, resendVerification, me } = require('../controllers/authController')
+const { register, login, verifyEmail, resendVerification, me, logoutAll } = require('../controllers/authController')
 const { requireAuth } = require('../middleware/authMiddleware')
 
 const router = express.Router()
@@ -21,5 +21,6 @@ router.post('/login', authRateLimit, login)
 router.get('/verify-email', verifyEmail)
 router.post('/resend-verification', authRateLimit, resendVerification)
 router.get('/me', requireAuth, me)
+router.post('/logout-all', requireAuth, logoutAll)
 
 module.exports = router

@@ -10,6 +10,7 @@ import { saveGuestSettings } from '../../features/settings/guestSettingsStorage'
 import SettingRow from './sections/SettingRow'
 import ToggleSwitch from './sections/ToggleSwitch'
 import SettingSelect from './sections/SettingSelect'
+import LogoutAllDevices from './sections/LogoutAllDevices'
 
 const RECENT_GAMES_OPTIONS = [
   { value: 'PUBLIC', label: 'Công cộng' },
@@ -44,6 +45,9 @@ export function Settings() {
       </div>
 
       {isAuthenticated ? <AccountSettings /> : isRestoring ? <LoadingState /> : <GuestSettings />}
+
+      {/* Signed-in only, and independent of whether the preferences loaded. */}
+      {isAuthenticated && <LogoutAllDevices />}
     </div>
   )
 }
