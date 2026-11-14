@@ -176,15 +176,17 @@ test('Gợi ý selects the piece to move', async (t) => {
   const line = solutionLine(buildPuzzlePieces(puzzle), puzzle.toMove, puzzle.moves)
   await page.getByRole('button', { name: /Gợi ý/ }).click()
   await page.getByText(/Gợi ý: hãy đi quân/).waitFor()
-  const selected = await page.locator('.piece.selected').boundingBox()
-  const target = await page
-    .getByRole('button', { name: `Ô cột ${line[0].from[0] + 1} hàng ${line[0].from[1] + 1}`, exact: true })
-    .boundingBox()
-  assert.ok(
-    Math.abs(selected.x + selected.width / 2 - (target.x + target.width / 2)) < 3 &&
-      Math.abs(selected.y + selected.height / 2 - (target.y + target.height / 2)) < 3,
-    'the hinted piece is not the one that has to move'
-  )
+  assert.equal(await page.locator('.piece.selected').count(), 1)
+  // Which point the selected piece stands on, read from where the board
+  // places it (left/top, in % of the board: col × 100/8, row × 100/9; this
+  // red puzzle isn't flipped) — never from its on-screen box: selecting a
+  // piece lifts it 4px with a 0.2s transition, so a pixel comparison passed
+  // or failed depending on how far that animation had got.
+  const placed = await page
+    .locator('.piece.selected')
+    .evaluate((el) => ({ left: parseFloat(el.style.left), top: parseFloat(el.style.top) }))
+  const point = [Math.round(placed.left / (100 / 8)), Math.round(placed.top / (100 / 9))]
+  assert.deepEqual(point, line[0].from, 'the hinted piece is not the one that has to move')
 })
 
 test('Xem lời giải → "Đã xem lời giải" (not solved); solving it afterwards → "Đã giải"', async (t) => {
