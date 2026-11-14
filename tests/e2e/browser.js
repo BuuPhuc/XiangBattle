@@ -69,6 +69,9 @@ export const TEST_USER = { id: 7, username: 'tester', displayName: null, rating:
 // backend can't influence the test. Returns null (test skipped) without
 // Chrome.
 //   signedIn — seed the saved session a real login leaves in localStorage
+//              (re-seeded on every page load, unless seedOnce)
+//   seedOnce — seed it on the tab's first page load only, so a sign-out
+//              that reloads / navigates the page really stays signed out
 //   authMe   — answer to the session check on page load (/auth/me)
 //   games    — answer to GET /users/:id/games; calls are logged in gameCalls
 //   settings — the signed-in user's stored settings, served (and updated by
@@ -79,7 +82,15 @@ export const TEST_USER = { id: 7, username: 'tester', displayName: null, rating:
 export async function openMockedPage(
   app,
   t,
-  { signedIn = true, user = TEST_USER, authMe, games, settings = DEFAULT_TEST_SETTINGS, sounds = false } = {}
+  {
+    signedIn = true,
+    seedOnce = false,
+    user = TEST_USER,
+    authMe,
+    games,
+    settings = DEFAULT_TEST_SETTINGS,
+    sounds = false,
+  } = {}
 ) {
   if (app.skipReason) {
     t.skip(app.skipReason)
@@ -141,10 +152,15 @@ export async function openMockedPage(
   }
 
   if (signedIn) {
-    await page.addInitScript((u) => {
-      localStorage.setItem('accessToken', 'fake-token-for-tests')
-      localStorage.setItem('xiangbattle_user', JSON.stringify(u))
-    }, user)
+    await page.addInitScript(
+      ({ u, once }) => {
+        if (once && sessionStorage.getItem('__testSessionSeeded')) return
+        sessionStorage.setItem('__testSessionSeeded', '1')
+        localStorage.setItem('accessToken', 'fake-token-for-tests')
+        localStorage.setItem('xiangbattle_user', JSON.stringify(u))
+      },
+      { u: user, once: seedOnce }
+    )
   }
   return { page, gameCalls, settingsCalls, errors }
 }

@@ -11,6 +11,7 @@ const { spawn } = require('node:child_process')
 
 const SERVER_DIR = path.resolve(__dirname, '..', '..')
 const REPO_ROOT = path.resolve(SERVER_DIR, '..')
+const FAKE_TOKEN_STORE = path.join(__dirname, 'fakeTokenVersionStore.js')
 
 // socket.io-client lives in the frontend's node_modules (the server package
 // only has the socket.io server).
@@ -30,9 +31,12 @@ function freePort() {
 
 async function startServer() {
   const port = await freePort()
-  const child = spawn(process.execPath, ['server.js'], {
+  // fakeTokenVersionStore.js keeps account token versions in memory, so the
+  // made-up account ids below need no database rows — preloaded here, the
+  // only place it is ever loaded (it refuses to load without this env flag).
+  const child = spawn(process.execPath, ['-r', FAKE_TOKEN_STORE, 'server.js'], {
     cwd: SERVER_DIR,
-    env: { ...process.env, PORT: String(port) },
+    env: { ...process.env, PORT: String(port), XIANGBATTLE_FAKE_TOKEN_STORE: '1' },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
   let output = ''
@@ -63,9 +67,12 @@ async function startServer() {
   }
 }
 
-function connect(url, auth = {}) {
+// `setup(socket)` runs before the handshake — for listeners that must not
+// miss an event the server sends right on connect.
+function connect(url, auth = {}, setup) {
   return new Promise((resolve, reject) => {
     const socket = io(url, { transports: ['websocket'], auth, reconnection: false })
+    if (setup) setup(socket)
     socket.once('connect', () => resolve(socket))
     socket.once('connect_error', reject)
   })
