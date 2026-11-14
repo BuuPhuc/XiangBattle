@@ -4,7 +4,7 @@ import { setCredentials, updateUser as updateUserAction, logout as logoutAction,
 import authService from '../../services/authService'
 import { saveAuthSession, clearAuthSession, loadAuthSession } from '../../features/auth/authStorage'
 import socket, { setSocketAuthToken } from '../../socket/socket'
-import { endSessionAndLeave, setOwnLogoutAllInFlight } from '../../features/auth/sessionEnd'
+import { endSessionAndLeave, setOwnSessionEndInFlight } from '../../features/auth/sessionEnd'
 
 // Forces the shared socket to reconnect under its current auth — used right
 // after login/logout so the server's socket.user reflects the new identity
@@ -94,11 +94,11 @@ export function useAuth() {
   // On failure nothing changes here — still signed in — and the caller
   // shows the returned message.
   const logoutAll = useCallback(async () => {
-    setOwnLogoutAllInFlight(true)
+    setOwnSessionEndInFlight(true)
     try {
       await authService.logoutAll()
     } catch (err) {
-      setOwnLogoutAllInFlight(false)
+      setOwnSessionEndInFlight(false)
       return extractErrorResponse(err, 'Không thể đăng xuất khỏi tất cả thiết bị. Vui lòng thử lại.')
     }
     endSessionAndLeave('LOGGED_OUT_ALL')

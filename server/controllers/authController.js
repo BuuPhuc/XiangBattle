@@ -3,6 +3,7 @@ const { hashPassword, comparePassword } = require('../utils/password')
 const { createVerificationToken, hashVerificationToken, signAccessToken } = require('../utils/token')
 const { sendVerificationEmail } = require('../utils/mailer')
 const { revokeAllSessions } = require('../services/sessionService')
+const passwordResetService = require('../services/passwordResetService')
 const { isValidEmail, isValidUsername, isValidPassword, PASSWORD_MIN_LENGTH } = require('../utils/validate')
 
 // This contract has a single namespace, but the installed runtime only
@@ -266,4 +267,58 @@ const logoutAll = withErrorHandling(async (req, res) => {
   return res.json({ success: true, message: 'Đã đăng xuất khỏi tất cả thiết bị.' })
 })
 
-module.exports = { register, login, verifyEmail, resendVerification, me, logoutAll, toPublicUser }
+// "Quên mật khẩu". Every well-formed email gets the same 200 and the same
+// message, immediately — whether it has an account, is in its cooldown, is
+// unverified, or the email then fails to go out: the work happens after the
+// reply (passwordResetService.startPasswordResetRequest, which never
+// rejects), so neither the answer nor its timing reveals anything.
+const FORGOT_PASSWORD_RESPONSE = {
+  success: true,
+  message: 'Nếu email này có tài khoản, chúng tôi đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư.',
+}
+
+function forgotPassword(req, res) {
+  const { email } = req.body || {}
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ success: false, code: 'INVALID_EMAIL', message: 'Email không hợp lệ.' })
+  }
+  res.json(FORGOT_PASSWORD_RESPONSE)
+  passwordResetService.startPasswordResetRequest(email.trim().toLowerCase())
+}
+
+// "Đặt lại mật khẩu". The token comes in the body only (never a URL), is
+// never echoed back, and a wrong / used / expired one is a 400 with a
+// RESET_TOKEN_* code — deliberately not the TOKEN_EXPIRED / INVALID_TOKEN
+// 401s that make the client end its session.
+const resetPassword = withErrorHandling(async (req, res) => {
+  const { token, password } = req.body || {}
+  if (typeof token !== 'string' || !token || token.length > 200) {
+    return res.status(400).json({ success: false, ...passwordResetService.RESET_ERROR.RESET_TOKEN_INVALID })
+  }
+  if (!isValidPassword(password)) {
+    return res.status(400).json({
+      success: false,
+      code: 'INVALID_PASSWORD',
+      message: `Mật khẩu phải có ít nhất ${PASSWORD_MIN_LENGTH} ký tự.`,
+    })
+  }
+
+  const result = await passwordResetService.resetPassword(token, password)
+  if (result.error) {
+    return res.status(400).json({ success: false, ...passwordResetService.RESET_ERROR[result.error] })
+  }
+  return res.json({ success: true, message: 'Đã đổi mật khẩu, hãy đăng nhập lại.' })
+})
+
+module.exports = {
+  register,
+  login,
+  verifyEmail,
+  resendVerification,
+  me,
+  logoutAll,
+  forgotPassword,
+  resetPassword,
+  FORGOT_PASSWORD_RESPONSE,
+  toPublicUser,
+}

@@ -15,12 +15,14 @@ import socket, { setSocketAuthToken } from '../../socket/socket'
 export const SESSION_END_CODES = ['TOKEN_EXPIRED', 'INVALID_TOKEN', 'TOKEN_REVOKED']
 
 // Shown on the login page the user lands on (?session=<reason>).
-// LOGGED_OUT_ALL is this device's own "Đăng xuất khỏi tất cả thiết bị".
+// LOGGED_OUT_ALL is this device's own "Đăng xuất khỏi tất cả thiết bị";
+// PASSWORD_RESET a password just changed on this device (ResetPassword).
 export const SESSION_END_MESSAGES = {
   TOKEN_EXPIRED: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
   INVALID_TOKEN: 'Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.',
   TOKEN_REVOKED: 'Phiên đăng nhập đã bị thu hồi. Vui lòng đăng nhập lại.',
   LOGGED_OUT_ALL: 'Đã đăng xuất khỏi tất cả thiết bị.',
+  PASSWORD_RESET: 'Đã đổi mật khẩu, hãy đăng nhập lại.',
 }
 
 export function isSessionEndCode(code) {
@@ -53,17 +55,18 @@ export function reportSessionEnded(code, token, source = 'http') {
   if (handler && isSessionEndCode(code)) handler(code, token, source)
 }
 
-// While this device's own logout-all is in flight, its socket is told
-// TOKEN_REVOKED like every other device — that must not beat the request's
-// own reply (which lands on LOGGED_OUT_ALL instead). Only the socket report
-// is held back: an HTTP refusal of the logout-all request itself still ends
-// the session as usual.
-let ownLogoutAllInFlight = false
-export function setOwnLogoutAllInFlight(value) {
-  ownLogoutAllInFlight = value
+// While this device's own session-ending request is in flight (logout-all,
+// or a password reset), its socket is told TOKEN_REVOKED like every other
+// device — that must not beat the request's own reply (which lands on
+// LOGGED_OUT_ALL / PASSWORD_RESET instead). Only the socket report is held
+// back: an HTTP refusal of the request itself still ends the session as
+// usual.
+let ownSessionEndInFlight = false
+export function setOwnSessionEndInFlight(value) {
+  ownSessionEndInFlight = value
 }
-export function isOwnLogoutAllInFlight() {
-  return ownLogoutAllInFlight
+export function isOwnSessionEndInFlight() {
+  return ownSessionEndInFlight
 }
 
 function currentPath() {
@@ -83,12 +86,14 @@ export function sessionEndedPath(reason, returnTo) {
 // do when this one clears the shared storage (onStoredUserChange). `next` is
 // where Login sends the user back once they sign in again — for a match,
 // its page, which then resumes the seat while the grace period still runs.
+// `returnHere: false` leaves `next` out (a page there is no point coming
+// back to, like the password-reset form).
 let leaving = false
-export function endSessionAndLeave(reason) {
+export function endSessionAndLeave(reason, { returnHere = true } = {}) {
   if (leaving) return // several refused requests at once still mean one sign-out
   leaving = true
   clearAuthSession()
   setSocketAuthToken(null)
   socket.disconnect()
-  window.location.assign(sessionEndedPath(reason, currentPath()))
+  window.location.assign(sessionEndedPath(reason, returnHere ? currentPath() : null))
 }

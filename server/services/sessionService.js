@@ -95,19 +95,27 @@ async function authenticateToken(token) {
 async function revokeAllSessions(userId) {
   const next = await store.bumpTokenVersion(userId)
   if (next === null || next === undefined) return false
-
-  if (io) {
-    const room = `user:${userId}` // presenceService.userRoom — every authenticated socket joins it
-    io.to(room).emit('session_ended', { code: 'TOKEN_REVOKED' })
-    io.in(room).disconnectSockets(true)
-  }
+  endOpenSessions(userId)
   console.log(`[auth] all sessions revoked for user ${userId}`)
   return true
+}
+
+// The "tell and disconnect every open socket" half of a revoke, for a caller
+// that has already raised the account's tokenVersion itself — inside its own
+// transaction, together with other changes that must not land without it
+// (a password reset: passwordResetService.js). Only ever call it after that
+// transaction has committed.
+function endOpenSessions(userId) {
+  if (!io) return
+  const room = `user:${userId}` // presenceService.userRoom — every authenticated socket joins it
+  io.to(room).emit('session_ended', { code: 'TOKEN_REVOKED' })
+  io.in(room).disconnectSockets(true)
 }
 
 module.exports = {
   authenticateToken,
   revokeAllSessions,
+  endOpenSessions,
   attachIo,
   setTokenVersionStore,
   SESSION_ERROR,

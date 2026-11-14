@@ -35,6 +35,7 @@ model User {
   moves        Move[]
   chatMessages ChatMessage[]
   verificationTokens EmailVerificationToken[]
+  passwordResetTokens PasswordResetToken[]
 
   friendshipsAsLow     Friendship[] @relation("FriendshipUserLow")
   friendshipsAsHigh    Friendship[] @relation("FriendshipUserHigh")
@@ -53,6 +54,26 @@ model User {
 }
 
 model EmailVerificationToken {
+  id         Int       @id @default(autoincrement())
+
+  userId     Int
+  tokenHash  String    @unique
+
+  expiresAt  TimestamptzString
+  consumedAt TimestamptzString?
+  createdAt  TimestamptzString @default(now())
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// One row per "Quên mật khẩu" link (passwordResetService.js) — its own
+// table, never shared with EmailVerificationToken. Only the SHA-256 of the
+// emailed token is stored; consumedAt is set when the link is used, and also
+// when it is invalidated (a newer request, or a completed reset). Rows are
+// kept as history rather than deleted.
+model PasswordResetToken {
   id         Int       @id @default(autoincrement())
 
   userId     Int

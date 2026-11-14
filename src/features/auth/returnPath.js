@@ -2,7 +2,7 @@
 // /login?next=<that page>, and Login returns there once signed in. Only a
 // path inside this site is accepted — never "//other-site.com" or a full URL
 // (an open redirect) — and never an auth page itself.
-const AUTH_PAGES = ['/login', '/register', '/verify-email']
+const AUTH_PAGES = ['/login', '/register', '/verify-email', '/forgot-password', '/reset-password']
 
 export function safeReturnPath(next, fallback = '/play') {
   if (typeof next !== 'string' || !next.startsWith('/') || next.startsWith('//') || next.includes('\\')) return fallback

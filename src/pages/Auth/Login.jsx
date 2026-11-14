@@ -112,6 +112,11 @@ export function Login() {
             required
             className="w-full px-4 py-2 rounded-lg border border-outline-variant bg-surface-container focus:outline-none focus:border-primary"
           />
+          <div className="text-right">
+            <Link to="/forgot-password" className="font-label-sm text-label-sm text-primary hover:underline">
+              Quên mật khẩu?
+            </Link>
+          </div>
         </div>
 
         <Button type="submit" className="w-full" disabled={submitting}>

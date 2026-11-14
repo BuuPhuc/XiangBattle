@@ -17,11 +17,17 @@ function hashVerificationToken(rawToken) {
   return crypto.createHash('sha256').update(rawToken).digest('hex')
 }
 
-function createVerificationToken() {
+// A single-use emailed token: 32 random bytes (64 hex chars) for the link,
+// its SHA-256 for the database, and when it stops working.
+function createOneTimeToken(expiresInMinutes) {
   const rawToken = crypto.randomBytes(EMAIL_VERIFICATION_TOKEN_BYTES).toString('hex')
   const tokenHash = hashVerificationToken(rawToken)
-  const expiresAt = new Date(Date.now() + EMAIL_VERIFICATION_EXPIRES_MINUTES * 60 * 1000)
+  const expiresAt = new Date(Date.now() + expiresInMinutes * 60 * 1000)
   return { rawToken, tokenHash, expiresAt }
+}
+
+function createVerificationToken() {
+  return createOneTimeToken(EMAIL_VERIFICATION_EXPIRES_MINUTES)
 }
 
 // `tv` is the account's tokenVersion at signing time — what lets
@@ -40,6 +46,7 @@ function verifyAccessToken(token) {
 module.exports = {
   hashVerificationToken,
   createVerificationToken,
+  createOneTimeToken,
   signAccessToken,
   verifyAccessToken,
   EMAIL_VERIFICATION_EXPIRES_MINUTES,

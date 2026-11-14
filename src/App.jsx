@@ -10,7 +10,7 @@ import {
   setSessionEndHandler,
   reportSessionEnded,
   endSessionAndLeave,
-  isOwnLogoutAllInFlight,
+  isOwnSessionEndInFlight,
 } from './features/auth/sessionEnd'
 import useAccountSettingsSync from './features/settings/useAccountSettingsSync'
 
@@ -73,7 +73,7 @@ function AppContent() {
       const { auth } = store.getState()
       if (!auth.isAuthenticated) return
       if (token && token !== auth.token) return
-      if (source === 'socket' && isOwnLogoutAllInFlight()) return
+      if (source === 'socket' && isOwnSessionEndInFlight()) return
       endSessionAndLeave(code)
     })
 
