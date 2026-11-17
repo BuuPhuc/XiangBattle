@@ -64,7 +64,9 @@ test('15 + 5: the mover gets 5 seconds back after every move', () => {
   assert.equal(room.playMove({ col: 1, row: 0 }, { col: 2, row: 2 }).ok, true)
   room.clearTurnTimer()
   assert.ok(room.remainingGameTime.black > 15 * MINUTE + 4900, 'black got its 5 seconds too')
-  assert.equal(room.getTimerSnapshot().red.gameTime, red, 'snapshot shows the incremented clock')
+  // Red is to move again, so its clock is already running (a ms or two).
+  const shown = room.getTimerSnapshot().red.gameTime
+  assert.ok(shown <= red && shown > red - 100, `snapshot shows the incremented clock (${shown} vs ${red})`)
 })
 
 test('no increment on 5 + 0 / 10 + 0', () => {

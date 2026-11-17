@@ -90,19 +90,28 @@ test('play several moves; input is blocked every time it is the bot turn', (t) =
     let played = 0
     for (let i = 0; i < 6; i++) {
       await waitForMyTurn(8000, `before my move ${i + 1}`)
-      const pieces = page.locator('.piece.black')
-      const n = await pieces.count()
+      // Horses, cannons, rooks and pawns first: moving advisors / elephants
+      // opens the palace, and the easy bot (it plays with some randomness)
+      // then sometimes mates within these six moves — which ended this test
+      // early now and then. The rest only when none of those can move (e.g.
+      // in check, where only the general or an advisor can answer it).
+      const preferred = page.locator('.piece.black').filter({ hasText: /^[馬砲車卒]$/ })
+      const others = page.locator('.piece.black').filter({ hasText: /^[將士象]$/ })
       let moved = false
-      for (let k = 0; k < n && !moved; k++) {
-        const piece = pieces.nth((k + i * 3) % n)
-        await piece.click()
-        const markers = page.locator('.move-marker')
-        if ((await markers.count()) > 0) {
-          myMoves.push(`#${i + 1} ${await piece.innerText()}`)
-          const box = await markers.first().boundingBox()
-          await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
-          moved = true
+      for (const pieces of [preferred, others]) {
+        const n = await pieces.count()
+        for (let k = 0; k < n && !moved; k++) {
+          const piece = pieces.nth((k + i * 3) % n)
+          await piece.click()
+          const markers = page.locator('.move-marker')
+          if ((await markers.count()) > 0) {
+            myMoves.push(`#${i + 1} ${await piece.innerText()}`)
+            const box = await markers.first().boundingBox()
+            await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+            moved = true
+          }
         }
+        if (moved) break
       }
       assert.ok(moved, `found no legal move at turn ${i + 1}`)
       played++
