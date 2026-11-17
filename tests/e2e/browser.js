@@ -13,7 +13,10 @@ import { chromium } from 'playwright-core'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
-export async function openApp() {
+// `socketUrl` points the app's socket at a real backend (see
+// online-clock.e2e.test.js); by default it uses its usual one, which the
+// mocked pages below block anyway.
+export async function openApp({ socketUrl } = {}) {
   const app = { skipReason: null, pageErrors: [], apiCalls: [] }
   try {
     app.browser = await chromium.launch(
@@ -23,7 +26,12 @@ export async function openApp() {
     app.skipReason = `Chrome not available (${error.message.split('\n')[0]}) — set CHROME_PATH to run these`
     return app
   }
-  app.server = await createServer({ root: ROOT, logLevel: 'error', server: { port: 5199, strictPort: false } })
+  app.server = await createServer({
+    root: ROOT,
+    logLevel: 'error',
+    server: { port: 5199, strictPort: false },
+    ...(socketUrl ? { define: { 'import.meta.env.VITE_SOCKET_URL': JSON.stringify(socketUrl) } } : {}),
+  })
   await app.server.listen()
   app.baseUrl = app.server.resolvedUrls.local[0].replace(/\/$/, '')
 
