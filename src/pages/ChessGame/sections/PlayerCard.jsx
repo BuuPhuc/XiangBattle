@@ -14,6 +14,9 @@ import userService from '../../../services/userService'
 // placeholder, or before the server has resolved it yet — in every one of
 // those cases this falls back to the old plain (non-link) rendering rather
 // than pointing at a profile that doesn't exist.
+//
+// `moveTime` / `gameTime` (mm:ss strings) are undefined for an untimed game,
+// which shows no clocks.
 export function PlayerCard({ name, elo, side, moveTime, gameTime, clockActive, online, accentClassName = '', userId }) {
   const isRed = side === 'red'
 
@@ -52,30 +55,33 @@ export function PlayerCard({ name, elo, side, moveTime, gameTime, clockActive, o
         accentClassName
       )}
     >
-      <div className="flex items-center gap-3 shrink-0">
-        <div className="text-center leading-tight">
-          <div
-            className={cn(
-              'font-label-lg text-label-lg font-bold tabular-nums font-mono',
-              clockActive ? 'text-primary' : 'text-on-surface'
-            )}
-          >
-            {moveTime}
+      {/* No clocks at all for an untimed game (vs the bot). */}
+      {moveTime !== undefined && (
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="text-center leading-tight">
+            <div
+              className={cn(
+                'font-label-lg text-label-lg font-bold tabular-nums font-mono',
+                clockActive ? 'text-primary' : 'text-on-surface'
+              )}
+            >
+              {moveTime}
+            </div>
+            <div className="font-label-sm text-label-sm text-on-surface-variant/70 whitespace-nowrap">Giờ/nước</div>
           </div>
-          <div className="font-label-sm text-label-sm text-on-surface-variant/70 whitespace-nowrap">Giờ/nước</div>
-        </div>
-        <div className="text-center leading-tight">
-          <div
-            className={cn(
-              'font-label-lg text-label-lg font-bold tabular-nums font-mono',
-              clockActive ? 'text-primary' : 'text-on-surface'
-            )}
-          >
-            {gameTime}
+          <div className="text-center leading-tight">
+            <div
+              className={cn(
+                'font-label-lg text-label-lg font-bold tabular-nums font-mono',
+                clockActive ? 'text-primary' : 'text-on-surface'
+              )}
+            >
+              {gameTime}
+            </div>
+            <div className="font-label-sm text-label-sm text-on-surface-variant/70 whitespace-nowrap">Ván đấu</div>
           </div>
-          <div className="font-label-sm text-label-sm text-on-surface-variant/70 whitespace-nowrap">Ván đấu</div>
         </div>
-      </div>
+      )}
 
       <div className="flex-1 min-w-0">
         {userId ? (

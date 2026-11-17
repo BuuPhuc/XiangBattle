@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux'
 import { selectArrowsEnabled, selectSoundEnabled } from '../../store/slices/settingsSlice'
 import { moveSoundFor } from '../../features/sound/moveSound.js'
 import { playSound } from '../../features/sound/soundPlayer.js'
+import { formatSavedTimeControl } from '../../features/game/timeControls.js'
 
 // End reasons where the last move itself finished the game — stepping onto
 // that move plays the game-end sound instead of the move's own.
@@ -118,6 +119,9 @@ export function Replay() {
             <span>{playerLabel(game.blackPlayer)}</span>
           </div>
           <div className="font-label-sm text-label-sm text-on-surface-variant text-right">
+            {formatSavedTimeControl(game.initialTime, game.increment) && (
+              <span className="tabular-nums">Ván {formatSavedTimeControl(game.initialTime, game.increment)} · </span>
+            )}
             {RESULT_LABEL[game.result] || game.result} · {END_REASON_LABEL[game.endReason] || game.endReason}
           </div>
         </div>

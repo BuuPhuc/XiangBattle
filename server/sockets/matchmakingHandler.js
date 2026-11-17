@@ -7,9 +7,11 @@
 //
 const { createGameRecord, attachPlayerRatings } = require('../services/gameHistoryService')
 const { resolvePlayerId } = require('../utils/playerIdentity')
+const { getTimeControl } = require('../../src/features/game/timeControls.js')
 
-// playerId -> { socketId, playerId }, in the order players started
-// waiting. Module-level (like reconnectHandler's pendingForfeits) since a
+// playerId -> { socketId, playerId, timeControlId }, in the order players
+// started waiting. Only players who picked the same time control are ever
+// paired, so each time control is in effect its own queue. Module-level (like reconnectHandler's pendingForfeits) since a
 // player waiting to be matched isn't in any Room yet — there's nowhere on
 // roomManager to hang this state.
 const waitingQueue = new Map()
@@ -20,10 +22,11 @@ const waitingQueue = new Map()
 // the manual flow's own roomManager.createRoom + joinRoom, so seats, colors
 // (`host` takes seat 1, i.e. red), the game record, reconnect and everything
 // after are exactly what a hand-made room gets. `host`/`guest` are
-// { socketId, playerId }. Throws roomManager's own error (e.g.
+// { socketId, playerId }. `timeControlId` picks the clock (unknown or
+// missing: the default). Throws roomManager's own error (e.g.
 // ALREADY_IN_ROOM) if either cannot be seated, leaving no room behind.
-function startPairedMatch(io, roomManager, host, guest) {
-  const created = roomManager.createRoom(host.socketId, host.playerId)
+function startPairedMatch(io, roomManager, host, guest, timeControlId) {
+  const created = roomManager.createRoom(host.socketId, host.playerId, timeControlId)
   let room
   try {
     room = roomManager.joinRoom(created.roomId, guest.socketId, guest.playerId).room
@@ -63,6 +66,9 @@ function registerMatchmakingHandlers(io, socket, roomManager) {
       socket.emit('room_error', { code: 'ALREADY_IN_ROOM', message: 'Bạn đang ở trong một phòng khác.' })
       return
     }
+    // Never trusted as-is: anything that isn't one of the presets becomes
+    // the default time control.
+    const timeControlId = getTimeControl(payload && payload.timeControl).id
 
     const existing = waitingQueue.get(playerId)
     if (existing) {
@@ -70,7 +76,8 @@ function registerMatchmakingHandlers(io, socket, roomManager) {
       // reopened tab re-sending it) — never let them occupy two slots,
       // just make sure match_found would reach this current socket.
       existing.socketId = socket.id
-      socket.emit('quick_play_queued')
+      existing.timeControlId = timeControlId
+      socket.emit('quick_play_queued', { timeControl: timeControlId })
       return
     }
 
@@ -82,17 +89,20 @@ function registerMatchmakingHandlers(io, socket, roomManager) {
     // above, so it can never end up matched against itself.
     let opponentEntry = null
     for (const entry of waitingQueue.values()) {
-      if (io.sockets.sockets.has(entry.socketId)) {
+      if (!io.sockets.sockets.has(entry.socketId)) {
+        waitingQueue.delete(entry.playerId)
+        continue
+      }
+      if (entry.timeControlId === timeControlId) {
         opponentEntry = entry
         break
       }
-      waitingQueue.delete(entry.playerId)
     }
 
     if (!opponentEntry) {
-      waitingQueue.set(playerId, { socketId: socket.id, playerId })
-      socket.emit('quick_play_queued')
-      console.log(`[matchmaking] ${playerId} joined the queue`)
+      waitingQueue.set(playerId, { socketId: socket.id, playerId, timeControlId })
+      socket.emit('quick_play_queued', { timeControl: timeControlId })
+      console.log(`[matchmaking] ${playerId} joined the ${timeControlId} queue`)
       return
     }
 
@@ -100,18 +110,18 @@ function registerMatchmakingHandlers(io, socket, roomManager) {
 
     let room
     try {
-      room = startPairedMatch(io, roomManager, opponentEntry, { socketId: socket.id, playerId })
+      room = startPairedMatch(io, roomManager, opponentEntry, { socketId: socket.id, playerId }, timeControlId)
     } catch (error) {
       // Narrow race (e.g. one identity got into a room some other way
       // between being dequeued and matched) — don't strand the caller,
       // queue them instead of failing silently.
       console.log(`[matchmaking] match attempt failed (${error.message}), re-queueing ${playerId}`)
-      waitingQueue.set(playerId, { socketId: socket.id, playerId })
-      socket.emit('quick_play_queued')
+      waitingQueue.set(playerId, { socketId: socket.id, playerId, timeControlId })
+      socket.emit('quick_play_queued', { timeControl: timeControlId })
       return
     }
 
-    console.log(`[matchmaking] matched ${opponentEntry.playerId} vs ${playerId} into room ${room.roomId}`)
+    console.log(`[matchmaking] matched ${opponentEntry.playerId} vs ${playerId} (${timeControlId}) into room ${room.roomId}`)
   })
 
   socket.on('cancel_quick_play', (payload) => {

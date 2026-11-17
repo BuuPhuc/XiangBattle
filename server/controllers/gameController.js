@@ -62,6 +62,8 @@ async function getGameById(req, res) {
       winner: toPublicPlayer(game.winner),
       result: game.result,
       endReason: game.endReason,
+      initialTime: game.initialTime, // seconds each side started with
+      increment: game.increment, // seconds added per move
       startedAt: game.startedAt,
       endedAt: game.endedAt,
       moves: (game.moves || []).map((move) => ({

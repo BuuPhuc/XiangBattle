@@ -161,14 +161,15 @@ function registerSocketHandlers(io) {
 
       let room
       try {
-        room = roomManager.createRoom(socket.id, playerId)
+        // Unknown / missing time control: the default one (see Room).
+        room = roomManager.createRoom(socket.id, playerId, payload && payload.timeControl)
       } catch (error) {
         socket.emit('room_error', { code: error.code || 'CREATE_FAILED', message: error.message })
         return
       }
 
       socket.join(room.roomId)
-      console.log(`[room] ${room.roomId} created by ${socket.id}`)
+      console.log(`[room] ${room.roomId} (${room.timeControl.id}) created by ${socket.id}`)
       socket.emit('room_created', { ...room.toPublic(), you: { playerNumber: 1, color: null } })
     })
 

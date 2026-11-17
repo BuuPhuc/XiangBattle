@@ -1,11 +1,8 @@
-// Pure helpers for the clock's time control and its mm:ss display. Kept
-// separate from useTimer.js (owns the ticking state) so a future "5+1",
-// "15+5" etc. preset just becomes a different TIME_CONTROL object passed
-// into useTimer, with no logic to touch.
-export const DEFAULT_TIME_CONTROL = {
-  moveTimeMs: 2 * 60 * 1000,
-  gameTimeMs: 10 * 60 * 1000,
-}
+// Pure helpers for the clock's mm:ss display. The time controls themselves
+// (5 + 0, 10 + 0, 15 + 5, 20 + 5) live in ../timeControls.js.
+import { getTimeControl, DEFAULT_TIME_CONTROL_ID } from '../timeControls.js'
+
+export const DEFAULT_TIME_CONTROL = getTimeControl(DEFAULT_TIME_CONTROL_ID)
 
 // Ceils to the next whole second so the display starts at e.g. 02:00 the
 // instant a turn begins (0ms elapsed) and only steps down once a full

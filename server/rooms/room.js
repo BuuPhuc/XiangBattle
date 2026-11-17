@@ -3,6 +3,9 @@
 // strings are a real logged-in account".
 const { parseUserId } = require('../services/gameHistoryService')
 const { initialBoard, validateMove, judgeRepetition } = require('../game/xiangqiEngine')
+// The presets the picker offers — one shared list (see the file) so the
+// server and the client clocks can never disagree about a time control.
+const { getTimeControl, DEFAULT_TIME_CONTROL_ID } = require('../../src/features/game/timeControls.js')
 
 const ROOM_STATUS = {
   WAITING: 'waiting',
@@ -47,10 +50,7 @@ const MAX_PLAYERS = 2
 // would ever reach.
 const MAX_MESSAGES = 200
 
-const DEFAULT_TIME_CONTROL = {
-  moveTimeMs: 2 * 60 * 1000,
-  gameTimeMs: 10 * 60 * 1000,
-}
+const DEFAULT_TIME_CONTROL = getTimeControl(DEFAULT_TIME_CONTROL_ID)
 
 // A Room is membership + minimal match bookkeeping — roomId, players (with
 // their assigned color once a game starts), status, whose turn it is, the
@@ -61,7 +61,10 @@ const DEFAULT_TIME_CONTROL = {
 // checkmate/stalemate itself and enforces the clocks with its own timer —
 // nothing about a match's outcome is ever taken from a client.
 class Room {
-  constructor(roomId, hostSocketId, hostPlayerId) {
+  // `timeControlId` is one of timeControls.js's ids ('5+0', '10+0', …);
+  // anything else — missing, or made up by a client — falls back to the
+  // default. Fixed for the room's life, so a rematch keeps it.
+  constructor(roomId, hostSocketId, hostPlayerId, timeControlId = DEFAULT_TIME_CONTROL_ID) {
     this.roomId = roomId
     this.status = ROOM_STATUS.WAITING
     this.createdAt = Date.now()
@@ -69,8 +72,8 @@ class Room {
     this.moveHistory = [] // same shape as the frontend's moveHistory entries
     this.resetBoard() // this.pieces (the server's authoritative board) + this.positions
     this.turnTimer = null // fires when the side to move runs out of time
-    this.timeControl = { ...DEFAULT_TIME_CONTROL }
-    this.remainingGameTime = { red: DEFAULT_TIME_CONTROL.gameTimeMs, black: DEFAULT_TIME_CONTROL.gameTimeMs }
+    this.timeControl = { ...getTimeControl(timeControlId) } // { id, gameTimeMs, moveTimeMs, incrementMs }
+    this.remainingGameTime = { red: this.timeControl.gameTimeMs, black: this.timeControl.gameTimeMs }
     this.turnStartedAt = null // wall-clock ms the current turn began; combined with remainingGameTime this reconstructs each side's live clock without the server ever having to "tick"
     // Set once the match ends, by whichever server-side path decided it
     // (checkmate/stalemate in playMove, clock timeout, resign, draw,
@@ -286,7 +289,9 @@ class Room {
 
     const now = Date.now()
     const elapsed = this.turnStartedAt ? Math.max(0, now - this.turnStartedAt) : 0
-    this.remainingGameTime[mover] = Math.max(0, this.remainingGameTime[mover] - elapsed)
+    // The increment (e.g. the "+5" of 15 + 5) is earned by completing the
+    // move, so it's added after the time spent on it is taken off.
+    this.remainingGameTime[mover] = Math.max(0, this.remainingGameTime[mover] - elapsed) + (this.timeControl.incrementMs || 0)
 
     const entry = { ply: this.moveHistory.length + 1, ...result.move, timestamp: now }
     this.moveHistory.push(entry)
@@ -392,6 +397,7 @@ class Room {
     return {
       roomId: this.roomId,
       status: this.status,
+      timeControl: { ...this.timeControl },
       players: this.players.map((player) => ({
         playerNumber: player.playerNumber,
         color: player.color,

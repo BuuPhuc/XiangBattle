@@ -9,7 +9,10 @@ import { useChat } from '../../features/chat/hooks/useChat'
 import useAuth from '../../components/hooks/useAuth'
 import { GAME_STATUS, findPieceAt } from '../../features/game/gameLogic.js'
 import { getLegalMovesForPiece } from '../../features/game/utils/moveUtils.js'
-import { formatClockTime } from '../../features/game/utils/timeUtils.js'
+import { formatClockTime, DEFAULT_TIME_CONTROL } from '../../features/game/utils/timeUtils.js'
+import { getTurnAtIndex } from '../../features/game/utils/historyUtils.js'
+import { formatTimeControlShort } from '../../features/game/timeControls.js'
+import Icon from '../../components/ui/Icon'
 import PlayerCard from './sections/PlayerCard'
 import GameHistoryPanel from './sections/GameHistoryPanel'
 import MatchActions from './sections/MatchActions'
@@ -28,7 +31,7 @@ const BLACK_NAME = 'Đại sư Lý'
 // `onlineGame` is undefined for the local/offline board (default — both
 // sides playable from one screen, opponent is the built-in placeholder
 // name). When provided as { yourColor, roomId, moveHistory, matchResult,
-// timerState, messages }, this same component becomes the online match
+// timerState, messages, timeControl }, this same component becomes the online match
 // view: only your own color's pieces are selectable on your turn, the cards
 // read "Bạn" / "Đối thủ", every locally-committed move is relayed to the
 // opponent through the server (useOnlineGame) while the opponent's moves
@@ -41,7 +44,8 @@ const BLACK_NAME = 'Đại sư Lý'
 // `aiGame` ({ playerColor, levelId }) turns the local board into a game
 // against the bot instead: you play `playerColor`, useAiOpponent plays the
 // other side through the same applyRemoteMove path an online opponent's
-// moves take. Nothing about it touches the server — no Elo, no history.
+// moves take. Nothing about it touches the server — no Elo, no history,
+// and no clock (untimed).
 export function ChessGame({ onlineGame, aiGame }) {
   const navigate = useNavigate()
   const {
@@ -73,11 +77,29 @@ export function ChessGame({ onlineGame, aiGame }) {
   useGameSounds({ moveHistory, isGameOver, externalResult })
   const arrowsEnabled = useSelector(selectArrowsEnabled)
 
+  const isOnline = Boolean(onlineGame && onlineGame.yourColor)
+  const isAi = !isOnline && Boolean(aiGame)
+
+  // Online: the room's time control (picked when it was created — see
+  // TimeControlPicker); vs the bot: no clock at all; local: the default.
+  const timeControl = isAi ? null : isOnline ? (onlineGame.timeControl ?? DEFAULT_TIME_CONTROL) : DEFAULT_TIME_CONTROL
+  // Online, the clock follows the live game, not whichever earlier move is
+  // being looked at in Move History — browsing back must not hand the clock
+  // (or an increment) to the other side. Locally, going back is a real
+  // takeback, so the clock follows the displayed position as before.
+  const clockTurn = isOnline ? getTurnAtIndex(moveHistory, moveHistory.length - 1) : turn
+
   const handleTimeUp = useCallback((side, reason) => endGameByTimeout(side, reason), [endGameByTimeout])
-  const { red: redTime, black: blackTime, resetTimer } = useTimer({
-    turn,
+  const {
+    red: redTime,
+    black: blackTime,
+    untimed,
+    resetTimer,
+  } = useTimer({
+    turn: clockTurn,
     isGameOver,
     onTimeUp: handleTimeUp,
+    timeControl,
     initialTimes: onlineGame?.timerState,
   })
 
@@ -91,8 +113,6 @@ export function ChessGame({ onlineGame, aiGame }) {
   // disconnect forfeit, or the opponent's clock running out) the exact
   // same way a local timeout already does — endGameByTimeout never touches
   // moveHistory, so this is safe to call on an already-live game.
-  const isOnline = Boolean(onlineGame && onlineGame.yourColor)
-  const isAi = !isOnline && Boolean(aiGame)
 
   const { thinking: botThinking } = useAiOpponent({
     enabled: isAi,
@@ -308,9 +328,9 @@ export function ChessGame({ onlineGame, aiGame }) {
         elo={ratingForColor(color)}
         userId={userIdForColor(color)}
         side={color}
-        moveTime={formatClockTime(time.moveTime)}
-        gameTime={formatClockTime(time.gameTime)}
-        clockActive={!isGameOver && turn === color}
+        moveTime={untimed ? undefined : formatClockTime(time.moveTime)}
+        gameTime={untimed ? undefined : formatClockTime(time.gameTime)}
+        clockActive={!isGameOver && clockTurn === color}
         {...positionProps}
       />
     )
@@ -378,6 +398,18 @@ export function ChessGame({ onlineGame, aiGame }) {
           sandwiching a much bigger history/chat panel that stretches to
           match the board column's height (see GameHistoryPanel.jsx). */}
       <div className="w-full xl:w-96 flex flex-col gap-3 order-2">
+        {isOnline && (
+          <div
+            className="flex items-center justify-center gap-1.5 font-label-md text-label-md text-on-surface-variant"
+            data-testid="match-time-control"
+          >
+            <Icon name="timer" className="text-[18px] text-primary" />
+            <span>
+              Ván <strong className="text-primary tabular-nums">{formatTimeControlShort(timeControl)}</strong> · tối đa{' '}
+              {Math.round(timeControl.moveTimeMs / 60000)} phút/nước
+            </span>
+          </div>
+        )}
         {renderPlayerCard(topColor, { online: true })}
         <GameHistoryPanel
           moveHistory={moveHistory}

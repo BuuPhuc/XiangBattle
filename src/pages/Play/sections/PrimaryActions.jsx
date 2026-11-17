@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Icon from '../../../components/ui/Icon'
+import TimeControlPicker from '../../../components/game/TimeControlPicker'
 
 const MODES = [
   {
@@ -14,6 +15,8 @@ const MODES = [
 export function PrimaryActions() {
   return (
     <div className="flex flex-col items-center gap-8">
+      {/* The clock "CHƠI NGAY" (and "Tạo phòng" on /room) will use. */}
+      <TimeControlPicker className="max-w-md -mb-4" />
       <Link
         to="/room?mode=quick"
         className="bg-white/40 backdrop-blur-xl w-full max-w-md py-12 rounded-xl flex flex-col items-center justify-center gap-4 group relative overflow-hidden border-2 border-transparent hover:border-gold-shimmer/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_4px_12px_rgba(139,94,60,0.15)]"

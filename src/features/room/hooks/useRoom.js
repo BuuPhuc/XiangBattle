@@ -10,7 +10,7 @@ import { getPlayerId, getSavedRoomId, saveRoomId, clearSavedRoomId } from '../ro
 // One listener registration for the whole hook lifetime (cleaned up on
 // unmount) — nothing here opens its own socket connection.
 export function useRoom() {
-  const [room, setRoom] = useState(null) // { roomId, status, players } | null
+  const [room, setRoom] = useState(null) // { roomId, status, timeControl, players } | null
   const [you, setYou] = useState(null) // { playerNumber, color } | null — color is null until game_started
   const [opponent, setOpponent] = useState(null) // { playerNumber, color, connected } | null — only known once playing
   const [currentTurn, setCurrentTurn] = useState(null) // 'red' | 'black' | null
@@ -40,6 +40,7 @@ export function useRoom() {
   const [pending, setPending] = useState(false)
   const [rejoining, setRejoining] = useState(false) // true while an auto-rejoin attempt is in flight
   const [searching, setSearching] = useState(false) // true while queued for Quick Play, waiting for an opponent
+  const [queuedTimeControlId, setQueuedTimeControlId] = useState(null) // the time control that queue is for, as the server confirmed it
 
   // Bumped on every event that hands down a full, authoritative game
   // snapshot (game_started, a successful reconnect, or a server-declared
@@ -107,7 +108,7 @@ export function useRoom() {
       setDbGameId(payload.dbGameId ?? null)
       setPlayerRatings(ratingsFromPlayers(payload.players))
       setOpponentConnected(payload.opponent ? payload.opponent.connected !== false : true)
-      setRoom({ roomId: payload.roomId, status: payload.status, players: payload.players })
+      setRoom({ roomId: payload.roomId, status: payload.status, timeControl: payload.timeControl, players: payload.players })
       setRestoreVersion((v) => v + 1)
       wasPlayingRef.current = payload.status === 'playing'
     }
@@ -125,7 +126,7 @@ export function useRoom() {
       setMessages([])
       setDbGameId(null)
       setPlayerRatings(null)
-      setRoom({ roomId: payload.roomId, status: payload.status, players: payload.players })
+      setRoom({ roomId: payload.roomId, status: payload.status, timeControl: payload.timeControl, players: payload.players })
       saveRoomId(payload.roomId)
       wasPlayingRef.current = false
     }
@@ -135,7 +136,7 @@ export function useRoom() {
       setError(null)
       setNotice(null)
       setYou(payload.you)
-      setRoom({ roomId: payload.roomId, status: payload.status, players: payload.players })
+      setRoom({ roomId: payload.roomId, status: payload.status, timeControl: payload.timeControl, players: payload.players })
       saveRoomId(payload.roomId)
     }
 
@@ -167,10 +168,13 @@ export function useRoom() {
 
     // Acknowledges this socket is now waiting in the server's Quick Play
     // queue — flips the UI to the "Đang tìm đối thủ..." screen.
-    function handleQuickPlayQueued() {
+    // `timeControl` is the id the server actually queued this player under
+    // (see matchmakingHandler.js) — what the search screen names.
+    function handleQuickPlayQueued(payload) {
       setPending(false)
       setError(null)
       setSearching(true)
+      setQueuedTimeControlId(payload?.timeControl ?? null)
     }
 
     // The server matched this player with someone else waiting — same
@@ -308,10 +312,12 @@ export function useRoom() {
     }
   }, [])
 
-  const createRoom = useCallback(() => {
+  // `timeControlId`: one of timeControls.js's ids; the server checks it
+  // (anything else gets the default time control).
+  const createRoom = useCallback((timeControlId) => {
     setError(null)
     setPending(true)
-    socket.emit('create_room', { playerId: getPlayerId() })
+    socket.emit('create_room', { playerId: getPlayerId(), timeControl: timeControlId })
   }, [])
 
   const joinRoom = useCallback((roomId) => {
@@ -324,10 +330,11 @@ export function useRoom() {
   // server matches immediately and this player goes straight to
   // handleMatchFound; otherwise handleQuickPlayQueued flips the UI to
   // "Đang tìm đối thủ...".
-  const startQuickPlay = useCallback(() => {
+  // Only players who picked the same `timeControlId` are paired.
+  const startQuickPlay = useCallback((timeControlId) => {
     setError(null)
     setPending(true)
-    socket.emit('quick_play', { playerId: getPlayerId() })
+    socket.emit('quick_play', { playerId: getPlayerId(), timeControl: timeControlId })
   }, [])
 
   // Leaves the queue. No round trip needed to update the UI — this
@@ -378,6 +385,7 @@ export function useRoom() {
     pending,
     rejoining,
     searching,
+    queuedTimeControlId,
     restoreVersion,
     createRoom,
     joinRoom,

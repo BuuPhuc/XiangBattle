@@ -1,6 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { logout } from './authSlice'
 import { loadGuestSettings } from '../../features/settings/guestSettingsStorage'
+import { loadTimeControlId } from '../../features/settings/timeControlStorage'
+import { isTimeControlId } from '../../features/game/timeControls.js'
 
 // Same defaults the database gives a new account (server/prisma
 // contract.prisma) — used while a signed-in user's settings are still
@@ -12,6 +14,8 @@ const ACCOUNT_DEFAULTS = { soundEnabled: true, arrowsEnabled: true }
 //   guest   — this browser's signed-out preferences (guestSettingsStorage)
 //   account — the signed-in user's server settings; null until loaded and
 //             again after logout
+//   timeControlId — the online time control this browser last picked
+//             (signed in or not; timeControlStorage.js)
 // The two are kept apart on purpose: signing in never touches `guest`, and
 // signing out just drops `account`, so neither overwrites the other.
 const settingsSlice = createSlice({
@@ -19,6 +23,7 @@ const settingsSlice = createSlice({
   initialState: () => ({
     guest: loadGuestSettings(),
     account: null,
+    timeControlId: loadTimeControlId(),
   }),
   reducers: {
     setAccountSettings: (state, action) => {
@@ -30,6 +35,9 @@ const settingsSlice = createSlice({
     },
     setGuestSoundEnabled: (state, action) => {
       state.guest.soundEnabled = Boolean(action.payload)
+    },
+    setTimeControlId: (state, action) => {
+      if (isTimeControlId(action.payload)) state.timeControlId = action.payload
     },
   },
   extraReducers: (builder) => {
@@ -51,5 +59,7 @@ export const selectSoundEnabled = (state) =>
 export const selectArrowsEnabled = (state) =>
   state.auth.isAuthenticated ? (state.settings.account ?? ACCOUNT_DEFAULTS).arrowsEnabled : ACCOUNT_DEFAULTS.arrowsEnabled
 
-export const { setAccountSettings, setGuestSoundEnabled } = settingsSlice.actions
+export const selectTimeControlId = (state) => state.settings.timeControlId
+
+export const { setAccountSettings, setGuestSoundEnabled, setTimeControlId } = settingsSlice.actions
 export default settingsSlice.reducer

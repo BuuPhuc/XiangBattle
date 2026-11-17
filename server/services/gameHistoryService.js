@@ -83,7 +83,7 @@ async function createGameRecord(io, room) {
       blackPlayerId,
       status: 'PLAYING',
       initialTime: Math.round(room.timeControl.gameTimeMs / 1000),
-      increment: 0,
+      increment: Math.round((room.timeControl.incrementMs || 0) / 1000),
       startedAt: new Date(),
     })
     room.dbGameId = game.id

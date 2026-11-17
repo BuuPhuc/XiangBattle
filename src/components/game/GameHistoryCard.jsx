@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import Button from '../ui/Button'
 import Avatar from '../ui/Avatar'
 import { cn } from '../utils/cn'
+import { formatSavedTimeControl } from '../../features/game/timeControls.js'
 
 function formatDate(isoString) {
   if (!isoString) return '—'
@@ -40,6 +41,7 @@ export function GameHistoryCard({ game, showColor = false }) {
   const meta = RESULT_META[game.result] || RESULT_META.DRAW
   const opponentName = game.opponent ? game.opponent.displayName || game.opponent.username : 'Người chơi đã xóa'
   const color = showColor ? COLOR_META[game.color] : null
+  const timeControl = formatSavedTimeControl(game.initialTime, game.increment) // "10 + 0", or null if unknown
 
   return (
     <div className="flex items-center gap-3 px-4 py-3 border-b border-outline-variant/20 last:border-b-0">
@@ -57,6 +59,7 @@ export function GameHistoryCard({ game, showColor = false }) {
         </div>
         <p className="font-body-md text-body-md text-on-surface truncate mt-0.5">vs {opponentName}</p>
         <p className="font-label-sm text-label-sm text-on-surface-variant/70 mt-0.5 truncate">
+          {timeControl && `${timeControl} · `}
           {game.moveCount} nước · {END_REASON_LABEL[game.endReason] || game.endReason} · {formatDate(game.endedAt)}
         </p>
       </div>

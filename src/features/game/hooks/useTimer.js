@@ -20,8 +20,15 @@ import { DEFAULT_TIME_CONTROL } from '../utils/timeUtils.js'
 // once, at mount; a caller that needs to re-seed an already-mounted
 // instance should force a remount (matching useGame's same convention).
 // Omitting it (fresh/local play) behaves exactly as before.
+//
+// `timeControl` is { gameTimeMs, moveTimeMs, incrementMs } (see
+// ../timeControls.js); incrementMs is added to a side's game time each time
+// its turn ends — the same rule the server referee applies (room.playMove).
+// `timeControl: null` means an untimed game (vs the bot): nothing ticks and
+// onTimeUp never fires.
 export function useTimer({ turn, isGameOver, onTimeUp, timeControl = DEFAULT_TIME_CONTROL, initialTimes }) {
-  const { moveTimeMs, gameTimeMs } = timeControl
+  const untimed = timeControl === null
+  const { moveTimeMs, gameTimeMs, incrementMs = 0 } = timeControl ?? DEFAULT_TIME_CONTROL
 
   const makeFreshTimes = useCallback(
     () => ({
@@ -62,7 +69,7 @@ export function useTimer({ turn, isGameOver, onTimeUp, timeControl = DEFAULT_TIM
   // side whose turn just ended, which is what keeps undo/redo from ever
   // refunding spent time. Also runs once on mount, to anchor the first turn.
   useEffect(() => {
-    if (isGameOver) return
+    if (isGameOver || untimed) return
     const now = Date.now()
     const prevTurn = activeTurnRef.current
 
@@ -74,7 +81,10 @@ export function useTimer({ turn, isGameOver, onTimeUp, timeControl = DEFAULT_TIM
         // move; once a side's turn ends its move clock has no meaning
         // until it's reset again for their next turn, so it snaps straight
         // to moveTimeMs rather than lingering on whatever it last ticked to.
-        [prevTurn]: { moveTime: moveTimeMs, gameTime: Math.max(0, committedRef.current[prevTurn].gameTime - elapsed) },
+        [prevTurn]: {
+          moveTime: moveTimeMs,
+          gameTime: Math.max(0, committedRef.current[prevTurn].gameTime - elapsed) + incrementMs,
+        },
         [turn]: { moveTime: moveTimeMs, gameTime: committedRef.current[turn].gameTime },
       }
       expiredRef.current = false
@@ -83,14 +93,14 @@ export function useTimer({ turn, isGameOver, onTimeUp, timeControl = DEFAULT_TIM
 
     activeTurnRef.current = turn
     anchorRef.current = now
-  }, [turn, isGameOver, moveTimeMs])
+  }, [turn, isGameOver, untimed, moveTimeMs, incrementMs])
 
   // Game over for any reason (checkmate included, not just a timeout this
   // hook itself reported): bank whatever time had elapsed on the active
   // side, so the frozen display reflects the real final moment instead of
   // stopping at the previous turn switch.
   useEffect(() => {
-    if (!isGameOver || activeTurnRef.current === null) return
+    if (untimed || !isGameOver || activeTurnRef.current === null) return
     const now = Date.now()
     const elapsed = Math.max(0, now - anchorRef.current)
     anchorRef.current = now
@@ -104,7 +114,7 @@ export function useTimer({ turn, isGameOver, onTimeUp, timeControl = DEFAULT_TIM
       },
     }
     setTimes(committedRef.current)
-  }, [isGameOver])
+  }, [isGameOver, untimed])
 
   // The ticking interval: recomputes the active side's live remaining time
   // every 100ms from `committedRef` and the real elapsed wall-clock time —
@@ -113,7 +123,7 @@ export function useTimer({ turn, isGameOver, onTimeUp, timeControl = DEFAULT_TIM
   // restarted (never stacked, never duplicated) exactly on a turn switch or
   // game end — one interval alive at a time, one clock per player.
   useEffect(() => {
-    if (isGameOver) return
+    if (isGameOver || untimed) return
 
     const intervalId = setInterval(() => {
       const now = Date.now()
@@ -138,7 +148,7 @@ export function useTimer({ turn, isGameOver, onTimeUp, timeControl = DEFAULT_TIM
     }, 100)
 
     return () => clearInterval(intervalId)
-  }, [turn, isGameOver, onTimeUp, liveDisplay])
+  }, [turn, isGameOver, untimed, onTimeUp, liveDisplay])
 
   const resetTimer = useCallback(() => {
     const fresh = makeFreshTimes()
@@ -152,6 +162,7 @@ export function useTimer({ turn, isGameOver, onTimeUp, timeControl = DEFAULT_TIM
   return {
     red: times.red,
     black: times.black,
+    untimed,
     resetTimer,
   }
 }

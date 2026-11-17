@@ -1,10 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import useRoom from '../../features/room/hooks/useRoom'
 import { getSavedRoomId } from '../../features/room/roomSession'
 import ChessGame from '../ChessGame/ChessGame'
+import TimeControlPicker from '../../components/game/TimeControlPicker'
+import { getTimeControl, formatTimeControlShort } from '../../features/game/timeControls.js'
+import { selectTimeControlId } from '../../store/slices/settingsSlice'
+
+function TimeControlBadge({ timeControl }) {
+  if (!timeControl) return null
+  return (
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary font-label-md text-label-md tabular-nums">
+      <Icon name="timer" className="text-[18px]" />
+      Ván {formatTimeControlShort(timeControl)}
+    </span>
+  )
+}
 
 // Room + online match entry point: create/join a room, wait for the second
 // seat, then — the moment the server assigns colors and starts the match —
@@ -31,6 +45,7 @@ export function Room() {
     pending,
     rejoining,
     searching,
+    queuedTimeControlId,
     restoreVersion,
     createRoom,
     joinRoom,
@@ -39,6 +54,10 @@ export function Room() {
     cancelQuickPlay,
   } = useRoom()
   const [joinCode, setJoinCode] = useState('')
+  // The picker's choice (TimeControlPicker, also on /play) — used by both
+  // Quick Play and "Tạo phòng". Joining by code plays whatever the room's
+  // creator picked.
+  const timeControlId = useSelector(selectTimeControlId)
   const [searchParams, setSearchParams] = useSearchParams()
 
   // Only fires once per mount, and only when there's no existing session
@@ -57,8 +76,8 @@ export function Room() {
     setSearchParams({}, { replace: true })
     if (getSavedRoomId()) return
     autoQuickPlayRef.current = true
-    startQuickPlay()
-  }, [searchParams, setSearchParams, startQuickPlay])
+    startQuickPlay(timeControlId)
+  }, [searchParams, setSearchParams, startQuickPlay, timeControlId])
 
   const handleJoinSubmit = (event) => {
     event.preventDefault()
@@ -80,6 +99,7 @@ export function Room() {
       <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-4">
         <span className="w-3 h-3 rounded-full bg-secondary animate-pulse inline-block" />
         <p className="font-body-md text-body-md text-on-surface-variant">Đang tìm đối thủ...</p>
+        <TimeControlBadge timeControl={getTimeControl(queuedTimeControlId ?? timeControlId)} />
         <div>
           <Button onClick={cancelQuickPlay} variant="outline" size="sm">
             Hủy tìm trận
@@ -112,6 +132,7 @@ export function Room() {
             messages,
             dbGameId,
             playerRatings,
+            timeControl: room.timeControl,
           }}
         />
       </div>
@@ -139,16 +160,18 @@ export function Room() {
 
       {!room && (
         <div className="space-y-6">
+          <TimeControlPicker />
+
           <div className="glass-panel border border-gold-shimmer/30 p-6 rounded-xl flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
             <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
               <Icon name="bolt" className="text-3xl" />
             </div>
             <div className="flex-1 text-center sm:text-left">
               <h2 className="font-headline-sm text-headline-sm text-on-surface">Quick Play</h2>
-              <p className="font-body-sm text-body-sm text-on-surface-variant">Tự động ghép bạn với một đối thủ đang chờ.</p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant">Tự động ghép bạn với một đối thủ chọn cùng mức thời gian.</p>
             </div>
             <Button
-              onClick={startQuickPlay}
+              onClick={() => startQuickPlay(timeControlId)}
               disabled={pending}
               className="w-full sm:w-auto flex-shrink-0 disabled:opacity-50"
             >
@@ -161,7 +184,7 @@ export function Room() {
               <Icon name="add_circle" className="text-4xl text-primary" />
               <h2 className="font-headline-sm text-headline-sm text-on-surface">Tạo phòng</h2>
               <p className="font-body-sm text-body-sm text-on-surface-variant">Tạo phòng mới và nhận mã để mời đối thủ.</p>
-              <Button onClick={createRoom} disabled={pending} className="w-full disabled:opacity-50">
+              <Button onClick={() => createRoom(timeControlId)} disabled={pending} className="w-full disabled:opacity-50">
                 {pending ? 'Đang tạo...' : 'Tạo phòng'}
               </Button>
             </div>
@@ -192,6 +215,7 @@ export function Room() {
         <div className="glass-panel border border-gold-shimmer/30 p-8 rounded-xl flex flex-col items-center gap-4 text-center">
           <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Mã phòng</span>
           <span className="font-headline-lg text-headline-lg text-primary tracking-[0.3em]">{room.roomId}</span>
+          <TimeControlBadge timeControl={room.timeControl} />
           <p className="font-body-md text-body-md text-on-surface-variant flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
             Đang chờ đối thủ...

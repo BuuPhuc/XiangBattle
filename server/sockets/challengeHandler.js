@@ -124,6 +124,8 @@ function registerChallengeHandlers(io, socket, roomManager) {
         vacateIdleRoom(io, roomManager, seats.guest.playerId)
         removeFromQuickPlayQueue(seats.host.socketId)
         removeFromQuickPlayQueue(seats.guest.socketId)
+        // A challenge has no time control of its own yet (nothing stored on
+        // the Challenge row), so it is played at the default one.
         room = startPairedMatch(io, roomManager, seats.host, seats.guest)
       } catch (error) {
         // No match was started, so the accept is undone rather than leaving
