@@ -85,6 +85,8 @@ export const TEST_USER = { id: 7, username: 'tester', displayName: null, rating:
 //   settings — the signed-in user's stored settings, served (and updated by
 //              PATCH) at /users/me/settings; every call is logged in
 //              settingsCalls as { method, body }
+//   replay   — (id) => the game GET /games/:id answers with (default: a
+//              finished game with no moves)
 //   sounds   — record every <audio> play() instead of playing it; read the
 //              file names back with soundsPlayed(page)
 export async function openMockedPage(
@@ -98,6 +100,7 @@ export async function openMockedPage(
     games,
     settings = DEFAULT_TEST_SETTINGS,
     sounds = false,
+    replay,
   } = {}
 ) {
   if (app.skipReason) {
@@ -123,6 +126,7 @@ export async function openMockedPage(
   })
   await page.route(/\/api\/games\/\d+/, (route) => {
     const id = Number(new URL(route.request().url()).pathname.split('/').at(-1))
+    if (replay) return route.fulfill(json({ success: true, game: replay(id) }))
     return route.fulfill(
       json({
         success: true,
