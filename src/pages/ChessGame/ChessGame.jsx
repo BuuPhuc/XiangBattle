@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useBlocker, useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import ChessBoard from '../../components/game/ChessBoard'
 import { useGame } from '../../features/game/hooks/useGame'
@@ -24,6 +24,7 @@ import { useAiOpponent } from '../../features/ai/hooks/useAiOpponent'
 import { AI_LEVELS } from '../../features/ai/engine/levels.js'
 import { useGameSounds } from '../../features/sound/useGameSounds'
 import { selectArrowsEnabled } from '../../store/slices/settingsSlice'
+import LogoutConfirmModal from '../../components/ui/LogoutConfirmModal'
 
 const RED_NAME = 'Bạn (Đỏ)'
 const BLACK_NAME = 'Đại sư Lý'
@@ -31,7 +32,7 @@ const BLACK_NAME = 'Đại sư Lý'
 // `onlineGame` is undefined for the local/offline board (default — both
 // sides playable from one screen, opponent is the built-in placeholder
 // name). When provided as { yourColor, roomId, moveHistory, matchResult,
-// timerState, messages, timeControl }, this same component becomes the online match
+// timerState, messages, timeControl, onLeave }, this same component becomes the online match
 // view: only your own color's pieces are selectable on your turn, the cards
 // read "Bạn" / "Đối thủ", every locally-committed move is relayed to the
 // opponent through the server (useOnlineGame) while the opponent's moves
@@ -205,6 +206,26 @@ export function ChessGame({ onlineGame, aiGame }) {
     reportGameOver()
   }, [isOnline, isGameOver, status, reportGameOver])
 
+  // Leaving a game in progress (the sidebar, the top bar, a notification,
+  // the browser's back button — any move to another page) asks first. An
+  // online game is lost by leaving it: confirming resigns, then leaves the
+  // room (onlineGame.onLeave), so the result and Elo are settled like any
+  // resignation. Vs the bot, the game is simply dropped. A finished game
+  // never asks.
+  const guardActive = (isOnline || isAi) && !isGameOver
+  const shouldBlock = useCallback(
+    ({ currentLocation, nextLocation }) => guardActive && currentLocation.pathname !== nextLocation.pathname,
+    [guardActive]
+  )
+  const leaveBlocker = useBlocker(shouldBlock)
+  const confirmLeave = () => {
+    if (isOnline && !isGameOver) {
+      resign()
+      onlineGame.onLeave?.()
+    }
+    leaveBlocker.proceed?.()
+  }
+
   const botName = isAi ? `Máy · ${AI_LEVELS[aiGame.levelId]?.label ?? ''}` : null
   const nameFor = (color) => {
     if (onlineGame) return onlineGame.yourColor === color ? 'Bạn' : 'Đối thủ'
@@ -338,6 +359,21 @@ export function ChessGame({ onlineGame, aiGame }) {
 
   return (
     <div className="w-full max-w-container-max mx-auto flex flex-col xl:flex-row gap-gutter justify-center">
+      {leaveBlocker.state === 'blocked' && (
+        <LogoutConfirmModal
+          message={isOnline ? 'Bạn có muốn thoát khỏi trận đấu không?' : 'Bạn có muốn thoát khỏi ván đấu với máy không?'}
+          detail={
+            isOnline
+              ? 'Trận đấu đang diễn ra thoát bây giờ bạn sẽ bị xử thua.'
+              : 'Ván đang đánh sẽ không được lưu.'
+          }
+          confirmLabel={isOnline ? 'Thoát và chịu thua' : 'Thoát'}
+          cancelLabel="Ở lại"
+          onConfirm={confirmLeave}
+          onCancel={() => leaveBlocker.reset?.()}
+        />
+      )}
+
       {isGameOver && !modalDismissed && (
         <GameOverModal
           winner={winner}

@@ -133,6 +133,10 @@ export function Room() {
             dbGameId,
             playerRatings,
             timeControl: room.timeControl,
+            // Confirmed "Thoát" while the match is on (ChessGame resigns
+            // first): leave the room for good, so coming back to "Chơi cờ"
+            // starts fresh instead of reopening this lost match.
+            onLeave: leaveRoom,
           }}
         />
       </div>

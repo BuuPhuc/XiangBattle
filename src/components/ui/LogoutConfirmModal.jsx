@@ -7,7 +7,7 @@ import Icon from './Icon'
 // (AppSidebar, Navbar) are themselves fixed/backdrop-blurred containers,
 // which would otherwise clip or mis-anchor a `fixed inset-0` overlay.
 // Settings' "Đăng xuất khỏi tất cả thiết bị" reuses it with its own wording
-// (message / detail / confirmLabel), a `busy` state while the request is in
+// (message / detail / confirmLabel / cancelLabel), a `busy` state while the request is in
 // flight (both buttons disabled, Escape and backdrop ignored) and an `error`.
 export function LogoutConfirmModal({
   onConfirm,
@@ -15,6 +15,7 @@ export function LogoutConfirmModal({
   message = 'Bạn có chắc chắn muốn đăng xuất?',
   detail = null,
   confirmLabel = 'Đăng xuất',
+  cancelLabel = 'Hủy',
   busy = false,
   error = null,
 }) {
@@ -58,7 +59,7 @@ export function LogoutConfirmModal({
             autoFocus
             className="flex-1 py-2.5 px-4 rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md hover:bg-surface-container transition-colors disabled:opacity-50"
           >
-            Hủy
+            {cancelLabel}
           </button>
           <button
             type="button"
