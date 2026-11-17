@@ -60,6 +60,11 @@ const ALL_SQUARES = Array.from({ length: 10 }, (_, row) =>
 // (a new move, or stepping through history). Only while it's enabled does
 // the board swallow the browser's right-click menu. Mouse only: touch
 // screens have no right click, so they can't draw yet.
+//
+// `hintArrows` ([{ from, to }] in real coordinates) are arrows the page
+// draws itself — Phân tích ván's "nước tốt nhất" on the Replay page — in
+// their own colour, apart from the player's drawings and never cleared by
+// them.
 export function ChessBoard({
   pieces,
   selectedId,
@@ -69,6 +74,7 @@ export function ChessBoard({
   flipped = false,
   lastMove = null,
   drawingEnabled = false,
+  hintArrows = [],
   children,
 }) {
   const viewCol = (col) => (flipped ? 8 - col : col)
@@ -238,6 +244,13 @@ export function ChessBoard({
             ))}
           </div>
 
+          {hintArrows.length > 0 && (
+            <BoardDrawings
+              variant="hint"
+              drawings={hintArrows.map((arrow) => ({ ...arrow, kind: 'arrow', key: `hint:${drawingKey(arrow.from, arrow.to)}` }))}
+              toView={toView}
+            />
+          )}
           {drawingEnabled && <BoardDrawings drawings={drawings} toView={toView} />}
         </div>
       </div>

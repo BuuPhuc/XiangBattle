@@ -35,8 +35,8 @@ export function FeaturesBento() {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Badge>Real-time</Badge>
-                <Badge icon="leaderboard">Elo Rating</Badge>
+                <Badge>Thời gian thực</Badge>
+                <Badge icon="leaderboard">Xếp hạng Elo</Badge>
               </div>
             </div>
           </div>
@@ -75,12 +75,12 @@ export function FeaturesBento() {
                 <Icon name="history" className="text-4xl text-primary" />
                 <h3 className="text-headline-md font-headline-md text-on-surface">Lưu trữ &amp; Phân tích</h3>
                 <p className="text-body-md font-body-md text-on-surface-variant max-w-sm">
-                  Tự động lưu lịch sử ván đấu. Xem lại (Replay) từng nước đi để rút kinh nghiệm.
+                  Tự động lưu lịch sử ván đấu. Xem lại từng nước đi, để máy chấm điểm và chỉ ra nước hớ để rút kinh nghiệm.
                 </p>
               </div>
               <div className="flex gap-2">
-                <Badge icon="play_circle">Replay</Badge>
-                <Badge icon="analytics">Engine Analysis</Badge>
+                <Badge icon="play_circle">Xem lại ván</Badge>
+                <Badge icon="analytics">Phân tích ván</Badge>
               </div>
             </div>
           </div>

@@ -36,7 +36,8 @@ function TabButton({ active, onClick, icon, label, badge }) {
 // exactly what MoveHistoryPanel used to render on its own — same header,
 // same card — just with the chrome now living here instead of inside
 // MoveHistoryPanel, so online play can reuse it under a tab bar instead.
-export function GameHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, chat }) {
+// `annotations`: passed through to MoveHistoryPanel (Phân tích ván marks).
+export function GameHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, chat, annotations }) {
   const [activeTab, setActiveTab] = useState(TABS.HISTORY)
 
   // Covers both "just switched to the Chat tab" and "already on it and a
@@ -74,7 +75,12 @@ export function GameHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, 
       )}
 
       <div className={cn('flex-grow min-h-0 flex flex-col', chat && activeTab !== TABS.HISTORY && 'hidden')}>
-        <MoveHistoryPanel moveHistory={moveHistory} currentMoveIndex={currentMoveIndex} onSelectMove={onSelectMove} />
+        <MoveHistoryPanel
+          moveHistory={moveHistory}
+          currentMoveIndex={currentMoveIndex}
+          onSelectMove={onSelectMove}
+          annotations={annotations}
+        />
       </div>
 
       {chat && (

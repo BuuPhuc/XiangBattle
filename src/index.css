@@ -499,6 +499,13 @@
     stroke: rgba(234, 108, 0, 0.78);
     stroke-width: 8;
   }
+  /* Phân tích ván's best-move arrow — green, apart from the player's own. */
+  .board-drawings-hint .board-arrow line {
+    stroke: rgba(22, 128, 61, 0.8);
+  }
+  .board-drawings-hint .board-arrow polygon {
+    fill: rgba(22, 128, 61, 0.8);
+  }
 
   /* A board you can look at and draw on, but not play on (replay, a
      finished game): the pieces and click targets ignore the mouse, so

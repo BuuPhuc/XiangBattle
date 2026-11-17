@@ -5,7 +5,9 @@ import { groupMovesIntoRows } from '../../../features/game/utils/historyUtils'
 
 const PAGE_SIZE = 10
 
-function MoveCell({ move, index, currentMoveIndex, onSelectMove, placeholder }) {
+// `annotation` ({ symbol, label, className } — Phân tích ván's ?! / ? / ??,
+// see features/analysis/gradeStyles.js) is shown right after the move.
+function MoveCell({ move, index, currentMoveIndex, onSelectMove, placeholder, annotation }) {
   if (!move) {
     return placeholder ? <span className="animate-pulse text-on-surface-variant">...</span> : null
   }
@@ -23,11 +25,18 @@ function MoveCell({ move, index, currentMoveIndex, onSelectMove, placeholder }) 
       aria-current={isViewed ? 'true' : undefined}
     >
       {move.notation}
+      {annotation && (
+        <span className={cn('ml-0.5 font-bold', annotation.className)} title={annotation.label} data-grade={annotation.symbol}>
+          {annotation.symbol}
+        </span>
+      )}
     </button>
   )
 }
 
-export function MoveHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove }) {
+// `annotations` (optional) — one entry per move index, null for none; only
+// the Replay page passes it, once a game has been analysed.
+export function MoveHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, annotations }) {
   const rows = groupMovesIntoRows(moveHistory)
   const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
   // Opens on the newest page, and jumps back to it whenever the page count
@@ -69,7 +78,13 @@ export function MoveHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove }
                 >
                   <td className="py-2 px-4 text-on-surface-variant">{row.number}</td>
                   <td className="py-2 px-4">
-                    <MoveCell move={row.red} index={row.redIndex} currentMoveIndex={currentMoveIndex} onSelectMove={onSelectMove} />
+                    <MoveCell
+                      move={row.red}
+                      index={row.redIndex}
+                      currentMoveIndex={currentMoveIndex}
+                      onSelectMove={onSelectMove}
+                      annotation={annotations?.[row.redIndex]}
+                    />
                   </td>
                   <td className="py-2 px-4 text-wood-dark">
                     <MoveCell
@@ -78,6 +93,7 @@ export function MoveHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove }
                       currentMoveIndex={currentMoveIndex}
                       onSelectMove={onSelectMove}
                       placeholder={isLastRow(row)}
+                      annotation={annotations?.[row.blackIndex]}
                     />
                   </td>
                 </tr>

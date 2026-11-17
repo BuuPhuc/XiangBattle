@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import Button from '../ui/Button'
 import Avatar from '../ui/Avatar'
+import Icon from '../ui/Icon'
 import { cn } from '../utils/cn'
 import { formatSavedTimeControl } from '../../features/game/timeControls.js'
 
@@ -63,11 +64,20 @@ export function GameHistoryCard({ game, showColor = false }) {
           {game.moveCount} nước · {END_REASON_LABEL[game.endReason] || game.endReason} · {formatDate(game.endedAt)}
         </p>
       </div>
-      <Link to={`/replay/${game.gameId}`} className="flex-shrink-0">
-        <Button variant="outline-sm" size="sm">
-          Xem
-        </Button>
-      </Link>
+      <div className="flex flex-shrink-0 items-center gap-2">
+        {/* Opens the replay and starts Phân tích ván straight away. */}
+        <Link to={`/replay/${game.gameId}?analyze=1`} aria-label={`Phân tích ván với ${opponentName}`}>
+          <Button variant="outline-sm" size="sm">
+            <Icon name="query_stats" className="text-[16px]" />
+            Phân tích
+          </Button>
+        </Link>
+        <Link to={`/replay/${game.gameId}`}>
+          <Button variant="outline-sm" size="sm">
+            Xem
+          </Button>
+        </Link>
+      </div>
     </div>
   )
 }

@@ -14,7 +14,9 @@ import { evaluate, pieceValue } from './evaluate.js'
 import { judgeSpan } from '../../game/utils/repetitionUtils.js'
 
 const INFINITY = 1_000_000
-const MATE = 100_000
+// A mate found `n` plies from the root scores ±(MATE − n) — exported so game
+// analysis (features/analysis) can tell a forced mate from a material score.
+export const MATE = 100_000
 const MAX_QUIESCENCE_PLIES = 6
 const MAX_EXTENDED_PLY = 10
 
@@ -179,7 +181,10 @@ function createSearcher({ deadline, historyPositions }) {
   // (noise shifts each score by at most ±noise), so every move is searched
   // exactly down to (best − margin) and anything below is just "too bad" —
   // far cheaper than scoring every move exactly.
-  function searchRoot(pieces, side, depth, rootMoves, noiseMargin) {
+  // `remember` = false leaves the root's remembered best move alone — for
+  // scoring one particular move (analyzeMoves) without that move being
+  // taken as the best one in the next iteration's ordering.
+  function searchRoot(pieces, side, depth, rootMoves, noiseMargin, remember = true) {
     const key = positionKey(pieces, side)
     line.push(pieces, side, key)
     const results = []
@@ -196,7 +201,7 @@ function createSearcher({ deadline, historyPositions }) {
       line.pop()
     }
     results.sort((a, b) => b.score - a.score)
-    bestMoveByKey.set(key, results[0].move)
+    if (remember) bestMoveByKey.set(key, results[0].move)
     return results
   }
 
@@ -259,6 +264,48 @@ export function chooseMove(pieces, side, { maxDepth = 3, timeMs = 2000, noise = 
   }
 
   return { move: pick(chosen.move), score: chosen.score, depth: completedDepth, nodes: searcher.nodes }
+}
+
+const sameMove = (a, b) => a.pieceId === b.pieceId && a.col === b.col && a.row === b.row
+
+// Game analysis (features/analysis): the best move for `side` on `pieces`
+// AND the score of `played` — the move actually played there — searched to
+// the SAME depth, so the two can be compared fairly. (Comparing the scores of
+// two consecutive positions instead mixes searches of different depths, and
+// the difference swings back and forth from one move to the next.)
+//   played   — { pieceId, col, row } or null (the last position of a game)
+//   maxDepth / timeMs / history — as for chooseMove
+// Returns { move, score, playedScore, depth } (scores from `side`'s point of
+// view; playedScore null without `played`), or null if `side` has no move.
+export function analyzeMoves(pieces, side, played, { maxDepth = 6, timeMs = 1000, history = [] } = {}) {
+  const rootMoves = generateLegalMoves(pieces, side)
+  if (rootMoves.length === 0) return null
+  const playedMove = played ? rootMoves.find((m) => sameMove(m, played)) ?? null : null
+
+  const searcher = createSearcher({ deadline: performance.now() + timeMs, historyPositions: history })
+  let done = null
+  for (let depth = 1; depth <= maxDepth; depth++) {
+    try {
+      const results = searcher.searchRoot(pieces, side, depth, rootMoves, 0)
+      let playedScore = null
+      if (playedMove) {
+        playedScore = sameMove(results[0].move, playedMove)
+          ? results[0].score
+          : searcher.searchRoot(pieces, side, depth, [playedMove], 0, false)[0].score
+      }
+      done = { best: results[0], playedScore, depth }
+    } catch (error) {
+      if (!(error instanceof SearchTimeout)) throw error
+      break // keep the last fully searched depth
+    }
+    if (Math.abs(done.best.score) >= MATE - 1000) break // forced mate found
+  }
+
+  if (!done) {
+    const fallback = orderMoves(rootMoves)[0]
+    return { move: pick(fallback), score: 0, playedScore: playedMove ? 0 : null, depth: 0 }
+  }
+  return { move: pick(done.best.move), score: done.best.score, playedScore: done.playedScore, depth: done.depth }
 }
 
 function pick(m) {

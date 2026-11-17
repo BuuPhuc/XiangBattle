@@ -39,10 +39,12 @@ function Arrow({ id, from, to }) {
   )
 }
 
-export function BoardDrawings({ drawings, toView }) {
+// `variant="hint"`: arrows the page draws (see ChessBoard's hintArrows), in
+// their own colour.
+export function BoardDrawings({ drawings, toView, variant }) {
   if (drawings.length === 0) return null
   return (
-    <svg className="board-drawings" viewBox="0 0 800 900" preserveAspectRatio="none" aria-hidden="true">
+    <svg className={variant === 'hint' ? 'board-drawings board-drawings-hint' : 'board-drawings'} viewBox="0 0 800 900" preserveAspectRatio="none" aria-hidden="true">
       {drawings.map((drawing) =>
         drawing.kind === 'arrow' ? (
           <Arrow key={drawing.key} id={drawing.key} from={toView(drawing.from)} to={toView(drawing.to)} />
