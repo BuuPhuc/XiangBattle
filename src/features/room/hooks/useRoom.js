@@ -45,6 +45,11 @@ export function useRoom() {
   const [rejoining, setRejoining] = useState(false) // true while an auto-rejoin attempt is in flight
   const [searching, setSearching] = useState(false) // true while queued for Quick Play, waiting for an opponent
   const [queuedTimeControlId, setQueuedTimeControlId] = useState(null) // the time control that queue is for, as the server confirmed it
+  // { rating, since } while queued: the Elo the server searches around (read
+  // from the account, 1200 for a guest) and when this search began (local
+  // clock, already-waited time subtracted) — the waiting screen derives the
+  // widening range from these with the same ratingWindow.js the server uses.
+  const [queueSearch, setQueueSearch] = useState(null)
 
   // Bumped on every event that hands down a full, authoritative game
   // snapshot (game_started, a successful reconnect, or a server-declared
@@ -180,6 +185,9 @@ export function useRoom() {
       setError(null)
       setSearching(true)
       setQueuedTimeControlId(payload?.timeControl ?? null)
+      setQueueSearch(
+        Number.isFinite(payload?.rating) ? { rating: payload.rating, since: Date.now() - (payload.waitedMs ?? 0) } : null
+      )
     }
 
     // The server matched this player with someone else waiting — same
@@ -398,6 +406,7 @@ export function useRoom() {
     rejoining,
     searching,
     queuedTimeControlId,
+    queueSearch,
     restoreVersion,
     createRoom,
     joinRoom,

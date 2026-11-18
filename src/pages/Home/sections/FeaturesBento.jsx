@@ -31,7 +31,7 @@ export function FeaturesBento() {
                 <Icon name="language" className="text-4xl text-secondary" />
                 <h3 className="text-headline-md font-headline-md text-on-surface">Chơi Online Toàn Cầu</h3>
                 <p className="text-body-md font-body-md text-on-surface-variant max-w-sm">
-                  Hệ thống ghép cặp thông minh, tìm đối thủ ngang tài ngang sức chỉ trong vài giây.
+                  Ghép cặp theo Elo: ưu tiên đối thủ ngang tài ngang sức, chờ lâu sẽ mở rộng để bạn không phải đợi mãi.
                 </p>
               </div>
               <div className="flex gap-2">

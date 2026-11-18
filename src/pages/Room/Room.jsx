@@ -9,6 +9,7 @@ import ChessGame from '../ChessGame/ChessGame'
 import TimeControlPicker from '../../components/game/TimeControlPicker'
 import { getTimeControl, formatTimeControlShort } from '../../features/game/timeControls.js'
 import { selectTimeControlId } from '../../store/slices/settingsSlice'
+import QuickPlaySearchStatus from './sections/QuickPlaySearchStatus'
 
 function TimeControlBadge({ timeControl }) {
   if (!timeControl) return null
@@ -47,6 +48,7 @@ export function Room() {
     rejoining,
     searching,
     queuedTimeControlId,
+    queueSearch,
     restoreVersion,
     createRoom,
     joinRoom,
@@ -99,7 +101,7 @@ export function Room() {
     return (
       <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-4">
         <span className="w-3 h-3 rounded-full bg-secondary animate-pulse inline-block" />
-        <p className="font-body-md text-body-md text-on-surface-variant">Đang tìm đối thủ...</p>
+        <QuickPlaySearchStatus search={queueSearch} />
         <TimeControlBadge timeControl={getTimeControl(queuedTimeControlId ?? timeControlId)} />
         <div>
           <Button onClick={cancelQuickPlay} variant="outline" size="sm">
