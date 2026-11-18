@@ -9,8 +9,9 @@ import ChallengeButton from '../../../components/challenge/ChallengeButton'
 // kept fresh afterward by the 'friend_presence' socket event the Friends
 // page listens for — never something this component tracks itself. Same for
 // `challenge` (the Thách đấu button's state and handlers, from the page's
-// useChallenges).
-export function FriendRow({ friend, onRemove, removing, challenge }) {
+// useChallenges). `liveGame` (from useLiveGames) is the match this friend
+// is playing right now, if any — it adds "Đang chơi" and a "Xem ván" button.
+export function FriendRow({ friend, onRemove, removing, challenge, liveGame }) {
   const name = friend.displayName || friend.username
 
   return (
@@ -32,10 +33,22 @@ export function FriendRow({ friend, onRemove, removing, challenge }) {
           <Icon name="star" className="text-[14px] text-gold-shimmer" filled />
           {friend.rating}
           <span className="mx-1">·</span>
-          <span className={friend.online ? 'text-secondary' : ''}>{friend.online ? 'Đang online' : 'Offline'}</span>
+          {liveGame ? (
+            <span className="text-primary font-semibold">Đang chơi</span>
+          ) : (
+            <span className={friend.online ? 'text-secondary' : ''}>{friend.online ? 'Đang online' : 'Offline'}</span>
+          )}
         </p>
       </div>
       <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
+        {liveGame && (
+          <Link to={`/watch/${liveGame.roomId}`}>
+            <Button variant="outline-sm" size="sm">
+              <Icon name="visibility" className="text-[16px] mr-1" />
+              Xem ván
+            </Button>
+          </Link>
+        )}
         {challenge && <ChallengeButton {...challenge} />}
         <Link to={`/profile/${friend.id}`}>
           <Button variant="outline-sm" size="sm">

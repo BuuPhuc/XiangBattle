@@ -35,6 +35,10 @@ export function useRoom() {
   // back to a loading/placeholder display for those, never a fake number.
   const [playerRatings, setPlayerRatings] = useState(null)
   const [opponentConnected, setOpponentConnected] = useState(true)
+  // Who is watching this match — { count, viewers, guests } (see the
+  // server's room.spectatorSummary), for the eye next to the time control.
+  // Arrives with every snapshot and live via spectators_update.
+  const [spectators, setSpectators] = useState(null)
   const [error, setError] = useState(null)
   const [notice, setNotice] = useState(null) // one-off info message, e.g. "opponent left mid-game"
   const [pending, setPending] = useState(false)
@@ -108,6 +112,7 @@ export function useRoom() {
       setDbGameId(payload.dbGameId ?? null)
       setPlayerRatings(ratingsFromPlayers(payload.players))
       setOpponentConnected(payload.opponent ? payload.opponent.connected !== false : true)
+      setSpectators(payload.spectators ?? null)
       setRoom({ roomId: payload.roomId, status: payload.status, timeControl: payload.timeControl, players: payload.players })
       setRestoreVersion((v) => v + 1)
       wasPlayingRef.current = payload.status === 'playing'
@@ -263,6 +268,10 @@ export function useRoom() {
       setPlayerRatings(payload)
     }
 
+    function handleSpectatorsUpdate(payload) {
+      setSpectators(payload)
+    }
+
     // Ask the server to resume whatever room/match this identity was last
     // in. Runs immediately if already connected, and again on every future
     // (re)connect — that one listener covers both a hard refresh (brand
@@ -292,6 +301,7 @@ export function useRoom() {
     socket.on('match_found', handleMatchFound)
     socket.on('game_persisted', handleGamePersisted)
     socket.on('player_ratings', handlePlayerRatings)
+    socket.on('spectators_update', handleSpectatorsUpdate)
 
     return () => {
       socket.off('connect', attemptRejoin)
@@ -309,6 +319,7 @@ export function useRoom() {
       socket.off('match_found', handleMatchFound)
       socket.off('game_persisted', handleGamePersisted)
       socket.off('player_ratings', handlePlayerRatings)
+      socket.off('spectators_update', handleSpectatorsUpdate)
     }
   }, [])
 
@@ -380,6 +391,7 @@ export function useRoom() {
     dbGameId,
     playerRatings,
     opponentConnected,
+    spectators,
     error,
     notice,
     pending,

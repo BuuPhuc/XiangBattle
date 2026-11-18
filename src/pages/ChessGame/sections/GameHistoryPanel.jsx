@@ -37,6 +37,8 @@ function TabButton({ active, onClick, icon, label, badge }) {
 // same card — just with the chrome now living here instead of inside
 // MoveHistoryPanel, so online play can reuse it under a tab bar instead.
 // `annotations`: passed through to MoveHistoryPanel (Phân tích ván marks).
+// `chat.label` / `chat.icon` rename the chat tab (the spectators' "Khán giả"
+// tab); `chat.readOnlyNotice` / `chat.error` go to ChatPanel.
 export function GameHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, chat, annotations }) {
   const [activeTab, setActiveTab] = useState(TABS.HISTORY)
 
@@ -60,8 +62,8 @@ export function GameHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, 
           <TabButton
             active={activeTab === TABS.CHAT}
             onClick={() => setActiveTab(TABS.CHAT)}
-            icon="chat"
-            label="Trò chuyện"
+            icon={chat.icon ?? 'chat'}
+            label={chat.label ?? 'Trò chuyện'}
             badge={chat.unreadCount}
           />
         </div>
@@ -85,7 +87,12 @@ export function GameHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, 
 
       {chat && (
         <div className={cn('flex-grow min-h-0 flex flex-col', activeTab !== TABS.CHAT && 'hidden')}>
-          <ChatPanel messages={chat.messages} sendMessage={chat.sendMessage} />
+          <ChatPanel
+            messages={chat.messages}
+            sendMessage={chat.sendMessage}
+            readOnlyNotice={chat.readOnlyNotice}
+            error={chat.error}
+          />
         </div>
       )}
     </div>

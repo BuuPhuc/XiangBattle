@@ -11,8 +11,6 @@ import { GAME_STATUS, findPieceAt } from '../../features/game/gameLogic.js'
 import { getLegalMovesForPiece } from '../../features/game/utils/moveUtils.js'
 import { formatClockTime, DEFAULT_TIME_CONTROL } from '../../features/game/utils/timeUtils.js'
 import { getTurnAtIndex } from '../../features/game/utils/historyUtils.js'
-import { formatTimeControlShort } from '../../features/game/timeControls.js'
-import Icon from '../../components/ui/Icon'
 import PlayerCard from './sections/PlayerCard'
 import GameHistoryPanel from './sections/GameHistoryPanel'
 import MatchActions from './sections/MatchActions'
@@ -25,6 +23,7 @@ import { AI_LEVELS } from '../../features/ai/engine/levels.js'
 import { useGameSounds } from '../../features/sound/useGameSounds'
 import { selectArrowsEnabled } from '../../store/slices/settingsSlice'
 import LogoutConfirmModal from '../../components/ui/LogoutConfirmModal'
+import MatchInfoBar from './sections/MatchInfoBar'
 
 const RED_NAME = 'Bạn (Đỏ)'
 const BLACK_NAME = 'Đại sư Lý'
@@ -434,18 +433,7 @@ export function ChessGame({ onlineGame, aiGame }) {
           sandwiching a much bigger history/chat panel that stretches to
           match the board column's height (see GameHistoryPanel.jsx). */}
       <div className="w-full xl:w-96 flex flex-col gap-3 order-2">
-        {isOnline && (
-          <div
-            className="flex items-center justify-center gap-1.5 font-label-md text-label-md text-on-surface-variant"
-            data-testid="match-time-control"
-          >
-            <Icon name="timer" className="text-[18px] text-primary" />
-            <span>
-              Ván <strong className="text-primary tabular-nums">{formatTimeControlShort(timeControl)}</strong> · tối đa{' '}
-              {Math.round(timeControl.moveTimeMs / 60000)} phút/nước
-            </span>
-          </div>
-        )}
+        {isOnline && <MatchInfoBar timeControl={timeControl} spectators={onlineGame.spectators} />}
         {renderPlayerCard(topColor, { online: true })}
         <GameHistoryPanel
           moveHistory={moveHistory}

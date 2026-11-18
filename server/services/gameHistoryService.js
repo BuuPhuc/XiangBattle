@@ -1,6 +1,7 @@
 const { db } = require('../prisma/db')
 const { calculateElo } = require('./eloService')
 const { notifyGameResult } = require('./notificationService')
+const { toWatchers } = require('../sockets/spectatorEvents')
 
 const Game = db.orm.public.Game
 const Move = db.orm.public.Move
@@ -89,6 +90,7 @@ async function createGameRecord(io, room) {
     room.dbGameId = game.id
     console.log(`[game-db] created game #${game.id} for room ${room.roomId}`)
     io.to(room.roomId).emit('game_persisted', { gameId: game.id })
+    toWatchers(io, room.roomId, 'persisted', { gameId: game.id })
   } catch (error) {
     console.error(`[game-db] failed to create game for room ${room.roomId}:`, error.message)
   }
@@ -105,6 +107,14 @@ async function createGameRecord(io, room) {
 // go out, so this broadcasts the result as its own event the moment it's
 // ready, same fill-in-later pattern as game_persisted.
 async function attachPlayerRatings(io, room) {
+  // Account names for the seats, straight from each seat's verified socket
+  // (socket.user) while both are connected at match start — what
+  // spectators see on the player cards. A guest seat stays nameless.
+  room.players.forEach((player) => {
+    const seatSocket = io.sockets.sockets.get(player.socketId)
+    if (seatSocket && seatSocket.user) player.username = seatSocket.user.username
+  })
+
   const redPlayer = room.players.find((player) => player.color === 'red')
   const blackPlayer = room.players.find((player) => player.color === 'black')
   const redPlayerId = parseUserId(redPlayer && redPlayer.playerId)
@@ -120,7 +130,16 @@ async function attachPlayerRatings(io, room) {
       red: redUser ? redUser.rating : null,
       black: blackUser ? blackUser.rating : null,
     }
+    ;[
+      [redPlayer, redUser],
+      [blackPlayer, blackUser],
+    ].forEach(([player, user]) => {
+      if (!player || !user) return
+      player.avatarUrl = user.avatarUrl || null
+      if (!player.username) player.username = user.username
+    })
     io.to(room.roomId).emit('player_ratings', room.playerRatings)
+    toWatchers(io, room.roomId, 'players', { players: room.players.map((player) => room.seatForSpectators(player)) })
   } catch (error) {
     console.error(`[rating] failed to load player ratings for room ${room.roomId}:`, error.message)
   }
@@ -250,7 +269,10 @@ async function finishGameRecord(io, room, status, winnerColor) {
     })
 
     console.log(`[game-db] game #${gameId} finished — ${result} (${endReason})`)
-    if (ratingInfo) io.to(room.roomId).emit('rating_updated', ratingInfo)
+    if (ratingInfo) {
+      io.to(room.roomId).emit('rating_updated', ratingInfo)
+      toWatchers(io, room.roomId, 'rating_updated', ratingInfo)
+    }
     // Only reachable once the transaction above has committed this game as
     // FINISHED — a second call for the same game returned at the
     // dbResultSaved guard or threw AlreadyFinishedError instead. Not

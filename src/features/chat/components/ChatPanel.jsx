@@ -10,7 +10,9 @@ const NEAR_BOTTOM_THRESHOLD_PX = 80
 // the input, always pinned at the bottom. Auto-scrolls to the newest
 // message only when the user was already near the bottom — someone
 // scrolled up to reread earlier messages is left alone.
-export function ChatPanel({ messages, sendMessage }) {
+// `readOnlyNotice` (spectator chat, for a guest) replaces the input with a
+// note — they can read along but not write. `error` shows above the input.
+export function ChatPanel({ messages, sendMessage, readOnlyNotice, error }) {
   const scrollRef = useRef(null)
   const wasNearBottomRef = useRef(true)
 
@@ -38,7 +40,14 @@ export function ChatPanel({ messages, sendMessage }) {
           ))}
         </div>
       )}
-      <ChatInput onSend={sendMessage} />
+      {error && <p className="px-3 pt-2 font-label-sm text-label-sm text-error">{error}</p>}
+      {readOnlyNotice ? (
+        <div className="border-t border-outline-variant/30 p-3 font-label-sm text-label-sm text-on-surface-variant text-center">
+          {readOnlyNotice}
+        </div>
+      ) : (
+        <ChatInput onSend={sendMessage} />
+      )}
     </div>
   )
 }

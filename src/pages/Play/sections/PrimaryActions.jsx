@@ -10,6 +10,7 @@ const MODES = [
     to: '/room',
   },
   { icon: 'smart_toy', label: 'Chơi với máy', iconBg: 'bg-tertiary-container text-on-tertiary-container', to: '/ai' },
+  { icon: 'live_tv', label: 'Xem ván đang diễn ra', iconBg: 'bg-primary-container text-on-primary-container', to: '/live', span: 'md:col-span-2' },
 ]
 
 export function PrimaryActions() {
@@ -30,13 +31,13 @@ export function PrimaryActions() {
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
-        {MODES.map(({ icon, label, iconBg, to }) => {
+        {MODES.map(({ icon, label, iconBg, to, span = '' }) => {
           const Component = to ? Link : 'button'
           return (
             <Component
               key={label}
               {...(to ? { to } : {})}
-              className="bg-white/40 backdrop-blur-xl border border-outline-variant/30 p-8 rounded-xl flex items-center justify-between group transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_4px_12px_rgba(139,94,60,0.15)]"
+              className={`${span} bg-white/40 backdrop-blur-xl border border-outline-variant/30 p-8 rounded-xl flex items-center justify-between group transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_4px_12px_rgba(139,94,60,0.15)]`}
             >
               <div className="flex items-center gap-4">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center ${iconBg}`}>

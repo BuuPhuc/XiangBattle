@@ -12,6 +12,8 @@ import Leaderboard from '../pages/Leaderboard/Leaderboard'
 import ClubComingSoon from '../pages/Social/ClubComingSoon'
 import Puzzles from '../pages/Puzzles/Puzzles'
 import PuzzleSolve from '../pages/Puzzles/PuzzleSolve'
+import LiveGames from '../pages/Live/LiveGames'
+import WatchGame from '../pages/Watch/WatchGame'
 
 export const appRoutes = [
   { path: '/play', element: <Play /> },
@@ -40,6 +42,10 @@ export const appRoutes = [
   // Worker, progress in localStorage), never the server or the online game.
   { path: '/puzzles', element: <Puzzles /> },
   { path: '/puzzles/:puzzleId', element: <PuzzleSolve /> },
+  // Xem ván đang diễn ra — open to everyone (guests watch and read the
+  // spectators' chat; writing in it needs an account, enforced server-side).
+  { path: '/live', element: <LiveGames /> },
+  { path: '/watch/:roomId', element: <WatchGame /> },
 ]
 
 export default appRoutes

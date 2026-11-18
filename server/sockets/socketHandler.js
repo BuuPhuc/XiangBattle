@@ -10,6 +10,8 @@ const {
 const { registerMatchmakingHandlers, removeFromQuickPlayQueue } = require('./matchmakingHandler')
 const { registerChatHandlers } = require('./chatHandler')
 const { registerChallengeHandlers } = require('./challengeHandler')
+const { registerSpectateHandlers } = require('./spectateHandler')
+const { toWatchers, watchChannel } = require('./spectatorEvents')
 const { resolvePlayerId } = require('../utils/playerIdentity')
 const { authenticateToken } = require('../services/sessionService')
 const { createGameRecord, attachPlayerRatings, parseUserId } = require('../services/gameHistoryService')
@@ -73,6 +75,7 @@ function leaveCurrentRoom(io, socket, roomManager) {
   const player = room.getPlayer(socket.id)
   const roomId = room.roomId
   const wasFinished = Boolean(room.matchResult)
+  const leavingColor = player ? player.color : null
   const result = roomManager.leaveRoom(socket.id)
   socket.leave(roomId)
   if (player) {
@@ -87,8 +90,17 @@ function leaveCurrentRoom(io, socket, roomManager) {
 
   if (result.deleted) {
     console.log(`[room] ${roomId} deleted (empty)`)
+    // Nobody left to watch: the audience keeps its last view and is told
+    // the room is gone.
+    toWatchers(io, roomId, 'closed', { roomId })
+    io.in(watchChannel(roomId)).socketsLeave(watchChannel(roomId))
     return
   }
+
+  // Spectators keep looking at the (finished) game they were watching;
+  // they're only told someone left. A new match in this room (a rematch
+  // invite accepted) reaches them as a fresh spectate:state.
+  toWatchers(io, roomId, 'player_left', { color: leavingColor })
 
   console.log(`[room] ${socket.id} left ${roomId}`)
   if (!wasFinished) {
@@ -106,6 +118,7 @@ function handleMidMatchDisconnect(io, roomManager, socket, room) {
   const { player } = result
   console.log(`[reconnect] ${player.playerId} disconnected from ${room.roomId} — grace period started`)
   io.to(room.roomId).emit('opponent_disconnected', { playerNumber: player.playerNumber })
+  toWatchers(io, room.roomId, 'connection', { color: player.color, connected: false })
   scheduleDisconnectForfeit(io, roomManager, room.roomId, player.playerId)
 }
 
@@ -151,6 +164,7 @@ function registerSocketHandlers(io) {
     registerMatchmakingHandlers(io, socket, roomManager)
     registerChatHandlers(io, socket, roomManager)
     registerChallengeHandlers(io, socket, roomManager)
+    registerSpectateHandlers(io, socket, roomManager)
 
     socket.on('create_room', (payload) => {
       const playerId = resolvePlayerId(socket, payload && payload.playerId)

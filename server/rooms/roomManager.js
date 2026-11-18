@@ -28,6 +28,7 @@ class RoomManager {
     this.rooms = new Map() // roomId -> Room
     this.socketToRoom = new Map() // socketId -> roomId, so "already in a room?" is O(1) — rebound on every reconnect
     this.playerIdToRoom = new Map() // playerId -> roomId, stable across a socket change — this is what makes reconnect possible
+    this.socketToWatchedRoom = new Map() // socketId -> roomId it is watching as a spectator (never a seat; one room per socket)
   }
 
   hasRoom(roomId) {
@@ -163,6 +164,51 @@ class RoomManager {
   // socket wasn't in a room, otherwise { room, deleted } — `room` still
   // reflects the remaining players so the caller can notify them, `deleted`
   // says whether it was removed from the registry for being empty.
+  // Starts watching `roomId` from `socketId` (dropping whatever room this
+  // socket watched before). `viewer` is { key, userId, username } — `key`
+  // is the viewer's identity, so someone seated in this very room can't
+  // also be counted as watching it. Returns { room, previousRoom }.
+  watchRoom(roomId, socketId, viewer) {
+    const room = this.rooms.get(roomId)
+    if (!room) {
+      throw roomError('ROOM_NOT_FOUND', 'Ván đấu không tồn tại hoặc đã kết thúc.')
+    }
+    if (room.getPlayerByPlayerId(viewer.key)) {
+      throw roomError('YOU_ARE_PLAYING', 'Bạn đang chơi trong ván này.')
+    }
+    const previousRoom = this.socketToWatchedRoom.get(socketId) === roomId ? null : this.unwatchRoom(socketId)
+    room.addSpectator(socketId, viewer)
+    this.socketToWatchedRoom.set(socketId, roomId)
+    return { room, previousRoom }
+  }
+
+  // Stops this socket watching. Returns the room it was watching (still
+  // registered), or null.
+  unwatchRoom(socketId) {
+    const roomId = this.socketToWatchedRoom.get(socketId)
+    if (!roomId) return null
+    this.socketToWatchedRoom.delete(socketId)
+    const room = this.rooms.get(roomId)
+    if (!room) return null
+    room.removeSpectator(socketId)
+    return room
+  }
+
+  getWatchedRoom(socketId) {
+    const roomId = this.socketToWatchedRoom.get(socketId)
+    return roomId ? this.rooms.get(roomId) || null : null
+  }
+
+  // Matches being played right now — the "Ván đang diễn ra" list.
+  listLiveRooms() {
+    return [...this.rooms.values()].filter((room) => room.status === ROOM_STATUS.PLAYING && !room.matchResult)
+  }
+
+  // A room leaving the registry takes its audience with it.
+  forgetSpectators(room) {
+    room.spectatorSocketIds().forEach((socketId) => this.socketToWatchedRoom.delete(socketId))
+  }
+
   leaveRoom(socketId) {
     const roomId = this.socketToRoom.get(socketId)
     if (!roomId) return null
@@ -177,6 +223,7 @@ class RoomManager {
     room.removePlayer(socketId)
 
     if (room.isEmpty()) {
+      this.forgetSpectators(room)
       this.rooms.delete(roomId)
       return { room, deleted: true }
     }
@@ -187,6 +234,7 @@ class RoomManager {
     const room = this.rooms.get(roomId)
     if (!room) return
     room.clearTurnTimer()
+    this.forgetSpectators(room)
     room.players.forEach((player) => {
       this.socketToRoom.delete(player.socketId)
       this.playerIdToRoom.delete(player.playerId)

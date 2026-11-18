@@ -50,6 +50,9 @@ const MAX_PLAYERS = 2
 // would ever reach.
 const MAX_MESSAGES = 200
 
+// The spectator log ("Khán giả" chat) has the same in-memory-only cap.
+const MAX_SPECTATOR_MESSAGES = 200
+
 const DEFAULT_TIME_CONTROL = getTimeControl(DEFAULT_TIME_CONTROL_ID)
 
 // A Room is membership + minimal match bookkeeping — roomId, players (with
@@ -117,6 +120,20 @@ class Room {
     this.players = [
       { socketId: hostSocketId, playerId: hostPlayerId, playerNumber: 1, color: null, connected: true },
     ]
+    // When the current match began (startGame) — the live-games list sorts
+    // by it. null while waiting for a second player.
+    this.startedAt = null
+    // People watching this room ("Xem ván đang diễn ra"). Never seated,
+    // never in `players`, never in roomManager's socket/player maps — so
+    // every player-only event (make_move, resign, chat:send…) already
+    // rejects them with NOT_IN_ROOM. Keyed by viewer identity (the
+    // account's `u:<id>`, or a guest's own id) so one person with two tabs
+    // counts once: key -> { key, userId, username, avatarUrl, socketIds }.
+    this.spectators = new Map()
+    // The spectators' own chat log — a separate channel the players never
+    // see. Kept across rematches (the audience is the same people), freed
+    // with the Room like the players' chat.
+    this.spectatorMessages = []
   }
 
   isFull() {
@@ -208,6 +225,7 @@ class Room {
       player.color = player.playerNumber === 1 ? COLORS.RED : COLORS.BLACK
     })
     this.status = ROOM_STATUS.PLAYING
+    this.startedAt = Date.now()
     this.currentTurn = COLORS.RED
     this.moveHistory = []
     this.resetBoard()
@@ -390,6 +408,115 @@ class Room {
     return this.playerRatings[color] ?? null
   }
 
+  // Adds one socket of a viewer. `viewer.key` is the viewer's identity (see
+  // the spectators map above); a second tab of the same viewer just adds
+  // its socket to the existing entry.
+  addSpectator(socketId, { key, userId = null, username = null }) {
+    let viewer = this.spectators.get(key)
+    if (!viewer) {
+      viewer = { key, userId, username, avatarUrl: null, socketIds: new Set(), messageTimestamps: [] }
+      this.spectators.set(key, viewer)
+    }
+    viewer.socketIds.add(socketId)
+    return viewer
+  }
+
+  // Removes one socket; the viewer goes away with their last one. Returns
+  // whether that socket was watching here at all.
+  removeSpectator(socketId) {
+    for (const [key, viewer] of this.spectators) {
+      if (viewer.socketIds.delete(socketId)) {
+        if (viewer.socketIds.size === 0) this.spectators.delete(key)
+        return true
+      }
+    }
+    return false
+  }
+
+  getSpectatorBySocket(socketId) {
+    for (const viewer of this.spectators.values()) {
+      if (viewer.socketIds.has(socketId)) return viewer
+    }
+    return null
+  }
+
+  spectatorSocketIds() {
+    return [...this.spectators.values()].flatMap((viewer) => [...viewer.socketIds])
+  }
+
+  // Who is watching, for the eye next to the time control: accounts by
+  // name, guests only as a number.
+  spectatorSummary() {
+    const viewers = []
+    let guests = 0
+    for (const viewer of this.spectators.values()) {
+      if (viewer.userId) viewers.push({ userId: viewer.userId, username: viewer.username, avatarUrl: viewer.avatarUrl })
+      else guests += 1
+    }
+    return { count: this.spectators.size, viewers, guests }
+  }
+
+  // A spectator chat message — same server-built shape as addMessage, so
+  // the client renders it with the same ChatMessage component.
+  addSpectatorMessage(playerId, playerName, message) {
+    const entry = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      playerId,
+      playerName,
+      message,
+      createdAt: Date.now(),
+    }
+    this.spectatorMessages.push(entry)
+    if (this.spectatorMessages.length > MAX_SPECTATOR_MESSAGES) this.spectatorMessages.shift()
+    return entry
+  }
+
+  // A seat as an outsider sees it: who sits there (account name/avatar
+  // when known — see gameHistoryService.js's attachPlayerRatings — never a
+  // socket or a guest's private id).
+  seatForSpectators(player) {
+    return {
+      playerNumber: player.playerNumber,
+      color: player.color,
+      connected: player.connected,
+      userId: parseUserId(player.playerId),
+      username: player.username || null,
+      avatarUrl: player.avatarUrl || null,
+      rating: this.ratingFor(player.color),
+    }
+  }
+
+  // Everything a spectator needs to show this room from scratch — the
+  // board's history, the clocks, the result — and nothing that is the
+  // players' own business (their chat, draw offers, rematch requests).
+  toSpectatorState() {
+    return {
+      roomId: this.roomId,
+      status: this.status,
+      timeControl: { ...this.timeControl },
+      players: this.players.map((player) => this.seatForSpectators(player)),
+      currentTurn: this.currentTurn,
+      moveHistory: this.moveHistory,
+      matchResult: this.matchResult,
+      timerState: this.getTimerSnapshot(),
+      dbGameId: this.dbGameId || null,
+      spectators: this.spectatorSummary(),
+      messages: this.spectatorMessages,
+    }
+  }
+
+  // One row of the "Ván đang diễn ra" list.
+  toLiveSummary() {
+    return {
+      roomId: this.roomId,
+      timeControl: { ...this.timeControl },
+      players: this.players.map((player) => this.seatForSpectators(player)),
+      moveCount: this.moveHistory.length,
+      startedAt: this.startedAt,
+      spectatorCount: this.spectators.size,
+    }
+  }
+
   // Shape sent to clients — never leak socketId, clients only need seat
   // numbers/colors/connection status and (via the separate `you`/`opponent`
   // fields on their own events) which seat is theirs.
@@ -440,6 +567,9 @@ class Room {
       // this is what lets a reconnecting client restore the chat log without
       // a separate chat:history round trip.
       messages: this.messages,
+      // Who is watching (the eye next to the time control) — kept current
+      // afterwards by spectators_update.
+      spectators: this.spectatorSummary(),
     }
   }
 }

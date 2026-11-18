@@ -7,6 +7,7 @@ import socket from '../../socket/socket'
 import useDebouncedValue from '../../components/hooks/useDebouncedValue'
 import useChallenges from '../../features/challenge/useChallenges'
 import FriendRow from './sections/FriendRow'
+import { useLiveGames, findLiveGameOf } from '../../features/spectate/useLiveGames'
 import RequestRow from './sections/RequestRow'
 import UserSearchResult from './sections/UserSearchResult'
 
@@ -26,6 +27,8 @@ const TABS = [
 // live via the shared socket connection's 'friend_presence' event — never
 // a second Socket.IO connection (see server/services/presenceService.js).
 export function Friends() {
+  // Which friends are in a match right now — a "Xem ván" button for them.
+  const { games: liveGames } = useLiveGames()
   // A friend-request notification links here with `state.tab = 'received'`
   // (see NotificationPanel.jsx) so it lands on the requests, not the
   // default friends list.
@@ -341,6 +344,7 @@ export function Friends() {
                   onRemove={handleRemove}
                   removing={busyIds.has(friend.id)}
                   challenge={challenges.propsFor(friend.id)}
+                  liveGame={findLiveGameOf(liveGames, friend.id)}
                 />
               ))
             )}

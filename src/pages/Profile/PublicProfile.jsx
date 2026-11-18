@@ -8,6 +8,7 @@ import userService from '../../services/userService'
 import GameHistorySection from './sections/GameHistorySection'
 import FriendAction from './sections/FriendAction'
 import ChallengeAction from './sections/ChallengeAction'
+import WatchAction from './sections/WatchAction'
 
 function StatCard({ label, value }) {
   return (
@@ -127,6 +128,7 @@ export function PublicProfile() {
         </p>
         <FriendAction userId={userId} />
         <ChallengeAction userId={userId} />
+        <WatchAction userId={userId} />
       </div>
 
       <div>

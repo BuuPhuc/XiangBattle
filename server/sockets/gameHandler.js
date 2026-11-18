@@ -10,6 +10,7 @@ const {
 const rematchInvites = require('../services/rematchInviteService')
 const { checkChallengeAllowed } = require('../services/challengeService')
 const { notifyRematchRequest } = require('../services/notificationService')
+const { emitGameOver, toWatchers, sendSpectatorState } = require('./spectatorEvents')
 
 function moveError(code, message) {
   return { code, message }
@@ -26,6 +27,9 @@ function broadcastGameStarted(io, room) {
   room.players.forEach((player) => {
     io.to(player.socketId).emit('game_started', { ...room.toGameStarted(player.socketId), dbGameId: room.dbGameId || null })
   })
+  // Anyone already watching (a room watched while it waited, or a rematch)
+  // follows the new match from its first position.
+  sendSpectatorState(io, room)
 }
 
 // Records a server-decided result, tells both players, and persists it
@@ -36,7 +40,7 @@ function concludeMatch(io, room, status, winner) {
   const result = room.recordMatchResult(status, winner)
   if (wasFinished) return
   console.log(`[game] ${room.roomId} over (${status}) — ${winner || 'no one'} wins`)
-  io.to(room.roomId).emit('game_over', result)
+  emitGameOver(io, room, result)
   finishGameRecord(io, room, status, winner)
 }
 
@@ -116,6 +120,7 @@ function registerGameHandlers(io, socket, roomManager) {
     // (same rule engine, so the same result) — only the opponent needs it
     // relayed. Sent before any game_over so the final position shows first.
     socket.to(room.roomId).emit('move_made', { roomId: room.roomId, move: entry, currentTurn: room.currentTurn })
+    toWatchers(io, room.roomId, 'move', { move: entry, currentTurn: room.currentTurn })
 
     // Checkmate / stalemate / repetition verdict: decided here, from the
     // server's own board and position history. concludeMatch records it
@@ -160,7 +165,7 @@ function registerGameHandlers(io, socket, roomManager) {
     const winner = player.color === 'red' ? 'black' : 'red'
     const result = room.recordMatchResult(GAME_STATUS.RESIGN, winner)
     console.log(`[game] ${room.roomId} ${player.color} resigned — ${winner} wins`)
-    io.to(room.roomId).emit('game_over', result)
+    emitGameOver(io, room, result)
     finishGameRecord(io, room, GAME_STATUS.RESIGN, winner)
   })
 
@@ -226,7 +231,7 @@ function registerGameHandlers(io, socket, roomManager) {
     if (payload && payload.accept) {
       const result = room.recordMatchResult(GAME_STATUS.DRAW, null)
       console.log(`[game] ${room.roomId} draw accepted by ${player.color}`)
-      io.to(room.roomId).emit('game_over', result)
+      emitGameOver(io, room, result)
       finishGameRecord(io, room, GAME_STATUS.DRAW, null)
     } else {
       room.clearDrawOffer()
