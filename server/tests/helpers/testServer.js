@@ -12,6 +12,7 @@ const { spawn } = require('node:child_process')
 const SERVER_DIR = path.resolve(__dirname, '..', '..')
 const REPO_ROOT = path.resolve(SERVER_DIR, '..')
 const FAKE_TOKEN_STORE = path.join(__dirname, 'fakeTokenVersionStore.js')
+const FAKE_RATING_LOOKUP = path.join(__dirname, 'fakeRatingLookup.js')
 
 // socket.io-client lives in the frontend's node_modules (the server package
 // only has the socket.io server).
@@ -29,14 +30,17 @@ function freePort() {
   })
 }
 
-async function startServer() {
+// `env`: extra environment for this backend (e.g. the matchmaking tests'
+// XIANGBATTLE_MATCH_WINDOW_SCALE).
+async function startServer({ env = {} } = {}) {
   const port = await freePort()
   // fakeTokenVersionStore.js keeps account token versions in memory, so the
   // made-up account ids below need no database rows — preloaded here, the
   // only place it is ever loaded (it refuses to load without this env flag).
-  const child = spawn(process.execPath, ['-r', FAKE_TOKEN_STORE, 'server.js'], {
+  // fakeRatingLookup.js likewise gives made-up accounts a Quick Play Elo.
+  const child = spawn(process.execPath, ['-r', FAKE_TOKEN_STORE, '-r', FAKE_RATING_LOOKUP, 'server.js'], {
     cwd: SERVER_DIR,
-    env: { ...process.env, PORT: String(port), XIANGBATTLE_FAKE_TOKEN_STORE: '1' },
+    env: { ...process.env, ...env, PORT: String(port), XIANGBATTLE_FAKE_TOKEN_STORE: '1' },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
   let output = ''
