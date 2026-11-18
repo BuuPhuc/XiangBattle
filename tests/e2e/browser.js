@@ -46,6 +46,10 @@ export async function openApp({ socketUrl } = {}) {
   app.page.on('request', (r) => {
     if (/\/api\/(games|leaderboard|users)/.test(r.url())) app.apiCalls.push(r.url())
   })
+  // Vite compiles the app on its first page load — 20-30 s on a cold start,
+  // right at a test's 30 s navigation limit. Do it once here, with room to
+  // spare, so no test's own first page load is racing the compile.
+  await app.page.goto(`${app.baseUrl}/`, { timeout: 120_000 })
   return app
 }
 
