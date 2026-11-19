@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import RatedBadge from '../../components/game/RatedBadge'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
@@ -166,6 +167,7 @@ export function Replay() {
               <span className="tabular-nums">Ván {formatSavedTimeControl(game.initialTime, game.increment)} · </span>
             )}
             {RESULT_LABEL[game.result] || game.result} · {END_REASON_LABEL[game.endReason] || game.endReason}
+            {game.rated === false && <RatedBadge rated={false} className="ml-2 align-middle" />}
           </div>
         </div>
 

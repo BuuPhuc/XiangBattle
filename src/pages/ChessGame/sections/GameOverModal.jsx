@@ -29,6 +29,7 @@ export function GameOverModal({
   playAgainError,
   ratingChange,
   ratingAfter,
+  friendly,
 }) {
   const isDraw = DRAW_STATUSES.has(status)
   const winnerName = winner === 'red' ? redName : blackName
@@ -112,6 +113,11 @@ export function GameOverModal({
             actually arrived (see ChessGame.jsx's ratingUpdate) — never
             computed or guessed on the client, and absent entirely for a
             non-persisted (guest) match. */}
+        {friendly && (
+          <p className="mb-6 -mt-2 font-label-md text-label-md text-on-surface-variant" data-testid="friendly-result">
+            Ván giao hữu — không tính Elo
+          </p>
+        )}
         {ratingChange !== undefined && (
           <div className="mb-6 -mt-2">
             <p

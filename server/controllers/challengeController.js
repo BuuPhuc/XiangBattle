@@ -58,6 +58,7 @@ function toPublic(challenge) {
     senderId: challenge.senderId,
     receiverId: challenge.receiverId,
     status: challenge.status,
+    timeControlId: challenge.timeControlId,
     createdAt: challenge.createdAt,
     expiresAt: challenge.expiresAt,
   }
@@ -70,7 +71,8 @@ const getPendingChallenges = withErrorHandling(async (req, res) => {
   return res.json({ success: true, ...pending })
 })
 
-// POST /api/challenges { receiverId } — challenge receiverId. The sender is
+// POST /api/challenges { receiverId, timeControl } — challenge receiverId,
+// at time control `timeControl` (checked in challengeService). The sender is
 // always the verified JWT's user: a senderId in the body is never read, so
 // there is nothing a client could send to challenge on someone else's behalf.
 const sendChallenge = withErrorHandling(async (req, res) => {
@@ -79,12 +81,12 @@ const sendChallenge = withErrorHandling(async (req, res) => {
     return res.status(400).json({ success: false, code: 'INVALID_USER_ID', message: 'Mã người dùng không hợp lệ.' })
   }
 
-  const challenge = await challengeService.sendChallenge(req.auth.userId, receiverId)
+  const challenge = await challengeService.sendChallenge(req.auth.userId, receiverId, req.body && req.body.timeControl)
 
   // Only reached once a new PENDING row exists — a duplicate send threw
   // above and announces nothing. Stored first, pushed second: a receiver who
   // is offline finds the notification waiting when they next log in.
-  await notificationService.notifyChallenge(challenge.id, challenge.senderId, challenge.receiverId)
+  await notificationService.notifyChallenge(challenge.id, challenge.senderId, challenge.receiverId, challenge.timeControlId)
   notificationService.announceChallengeUpdate(challenge)
 
   return res.status(201).json({ success: true, challenge: toPublic(challenge) })

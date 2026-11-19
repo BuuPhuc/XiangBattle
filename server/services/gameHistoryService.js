@@ -84,6 +84,7 @@ async function createGameRecord(io, room) {
       blackPlayerId,
       status: 'PLAYING',
       initialTime: Math.round(room.timeControl.gameTimeMs / 1000),
+      rated: Boolean(room.rated),
       increment: Math.round((room.timeControl.incrementMs || 0) / 1000),
       startedAt: new Date(),
     })
@@ -175,6 +176,36 @@ async function saveMoveRecord(room, moveEntry, player) {
 // itself says this game is no longer PLAYING — see finishGameRecord.
 class AlreadyFinishedError extends Error {}
 
+// What a finished game does to both players' standing. `red` / `black` are
+// their User rows as of now ({ rating, wins, losses, draws }); `winnerColor`
+// is null for a draw. Wins/losses/draws always count; the ratings move only
+// for a `rated` game (Quick Play) — a friendly one ("Giao hữu": room code,
+// friend challenge) leaves both where they are. Pure, so it is tested
+// without a database (tests/gameResult.test.js).
+function settleRatings({ rated, isDraw, winnerColor, red, black }) {
+  const scoreRed = isDraw ? 0.5 : winnerColor === 'red' ? 1 : 0
+  const elo = rated
+    ? calculateElo(red.rating, black.rating, scoreRed)
+    : { newRatingA: red.rating, newRatingB: black.rating, changeA: 0, changeB: 0 }
+
+  // Full new stat lines for both sides — computed once here so the update
+  // and the returned/emitted payload can never disagree about what was
+  // actually written.
+  const redStats = { wins: red.wins, losses: red.losses, draws: red.draws }
+  const blackStats = { wins: black.wins, losses: black.losses, draws: black.draws }
+  if (isDraw) {
+    redStats.draws += 1
+    blackStats.draws += 1
+  } else if (winnerColor === 'red') {
+    redStats.wins += 1
+    blackStats.losses += 1
+  } else {
+    redStats.losses += 1
+    blackStats.wins += 1
+  }
+  return { elo, redStats, blackStats }
+}
+
 // Persists the final result, runs the Elo update, and updates both
 // players' win/loss/draw tallies — all inside one transaction, so a Game
 // can never end up FINISHED with only one side's rating/stats applied.
@@ -208,6 +239,7 @@ async function finishGameRecord(io, room, status, winnerColor) {
   if (!redPlayerId || !blackPlayerId) return null
 
   const { isDraw, result, endReason } = describeResult(status, winnerColor)
+  const rated = Boolean(room.rated)
   const winnerPlayerId = isDraw ? null : winnerColor === 'red' ? redPlayerId : blackPlayerId
 
   try {
@@ -230,24 +262,7 @@ async function finishGameRecord(io, room, status, winnerColor) {
         return null
       }
 
-      const scoreRed = isDraw ? 0.5 : winnerColor === 'red' ? 1 : 0
-      const elo = calculateElo(redUser.rating, blackUser.rating, scoreRed)
-
-      // Full new stat lines for both sides — computed once here so the
-      // update and the returned/emitted payload can never disagree about
-      // what was actually written.
-      const redStats = { wins: redUser.wins, losses: redUser.losses, draws: redUser.draws }
-      const blackStats = { wins: blackUser.wins, losses: blackUser.losses, draws: blackUser.draws }
-      if (isDraw) {
-        redStats.draws += 1
-        blackStats.draws += 1
-      } else if (winnerColor === 'red') {
-        redStats.wins += 1
-        blackStats.losses += 1
-      } else {
-        redStats.losses += 1
-        blackStats.wins += 1
-      }
+      const { elo, redStats, blackStats } = settleRatings({ rated, isDraw, winnerColor, red: redUser, black: blackUser })
 
       await Promise.all([
         tx.orm.public.User.where({ id: redPlayerId }).update({ rating: elo.newRatingA, ...redStats }),
@@ -263,6 +278,7 @@ async function finishGameRecord(io, room, status, winnerColor) {
 
       return {
         gameId,
+        rated,
         red: { userId: redPlayerId, rating: { before: redUser.rating, after: elo.newRatingA, change: elo.changeA }, ...redStats },
         black: { userId: blackPlayerId, rating: { before: blackUser.rating, after: elo.newRatingB, change: elo.changeB }, ...blackStats },
       }
@@ -304,6 +320,7 @@ async function getFinishedGameOpponent(gameId, userId) {
 
 module.exports = {
   describeResult,
+  settleRatings,
   parseUserId,
   createGameRecord,
   attachPlayerRatings,

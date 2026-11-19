@@ -62,6 +62,7 @@ async function getGameById(req, res) {
       winner: toPublicPlayer(game.winner),
       result: game.result,
       endReason: game.endReason,
+      rated: game.rated !== false, // false: a friendly game ("Giao hữu"), Elo unchanged
       initialTime: game.initialTime, // seconds each side started with
       increment: game.increment, // seconds added per move
       startedAt: game.startedAt,

@@ -61,7 +61,8 @@ class RoomManager {
 
   // `timeControlId`: see Room's constructor (unknown ids fall back to the
   // default time control).
-  createRoom(hostSocketId, hostPlayerId, timeControlId) {
+  // `options.rated`: see Room's constructor (friendly unless said otherwise).
+  createRoom(hostSocketId, hostPlayerId, timeControlId, options) {
     if (this.isSocketInRoom(hostSocketId) || this.isPlayerIdInRoom(hostPlayerId)) {
       throw roomError('ALREADY_IN_ROOM', 'Bạn đang ở trong một phòng khác.')
     }
@@ -71,7 +72,7 @@ class RoomManager {
       roomId = generateRoomCode()
     }
 
-    const room = new Room(roomId, hostSocketId, hostPlayerId, timeControlId)
+    const room = new Room(roomId, hostSocketId, hostPlayerId, timeControlId, options)
     this.rooms.set(roomId, room)
     this.socketToRoom.set(hostSocketId, roomId)
     this.playerIdToRoom.set(hostPlayerId, roomId)

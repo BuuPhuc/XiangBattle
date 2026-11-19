@@ -3,6 +3,7 @@ import Icon from '../../components/ui/Icon'
 import Avatar from '../../components/ui/Avatar'
 import { formatTimeControlShort } from '../../features/game/timeControls.js'
 import { useLiveGames } from '../../features/spectate/useLiveGames'
+import RatedBadge from '../../components/game/RatedBadge'
 
 const COLOR_LABEL = { red: 'Đỏ', black: 'Đen' }
 
@@ -84,6 +85,7 @@ export function LiveGames() {
                     <Icon name="timer" className="text-[18px] text-primary" />
                     {formatTimeControlShort(game.timeControl)}
                   </span>
+                  {game.rated !== undefined && <RatedBadge rated={game.rated} />}
                   <span className="tabular-nums">{game.moveCount} nước</span>
                   <span className="inline-flex items-center gap-1 tabular-nums" title="Người đang xem">
                     <Icon name="visibility" className="text-[18px]" />

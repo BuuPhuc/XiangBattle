@@ -103,6 +103,10 @@ model Game {
 
   initialTime    Int
   increment      Int       @default(0)
+  // Counted for Elo? Only Quick Play matches are (and their rematches);
+  // room-code and friend-challenge matches are friendly ("Giao hữu") —
+  // stats still count, the rating doesn't move. Earlier games were all rated.
+  rated          Boolean   @default(true)
 
   startedAt      TimestamptzString?
   endedAt        TimestamptzString?
@@ -251,6 +255,9 @@ model Challenge {
   userHighId  Int
 
   status      ChallengeStatus @default(PENDING)
+  // The clock the challenged match is played at — one of
+  // src/features/game/timeControls.js's ids, checked server-side.
+  timeControlId String  @default("10+0")
 
   expiresAt   TimestamptzString
   respondedAt TimestamptzString?

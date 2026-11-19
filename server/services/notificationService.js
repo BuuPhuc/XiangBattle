@@ -3,6 +3,7 @@ const { and, or } = require('@prisma/orm-family-sql/orm-client')
 const { userRoom } = require('./presenceService')
 const rematchInvites = require('./rematchInviteService')
 const challengeService = require('./challengeService')
+const { getTimeControl, formatTimeControlShort } = require('../../src/features/game/timeControls.js')
 
 const Notification = db.orm.public.Notification
 const Friendship = db.orm.public.Friendship
@@ -181,13 +182,14 @@ async function notifyRematchRequest(gameId, requesterId, toUserId, inviteStamp) 
 // notification: a re-send after a reject/cancel/expiry is a new Challenge
 // row with a new id, and a duplicate send never creates a row at all (see
 // challengeService.sendChallenge).
-async function notifyChallenge(challengeId, senderId, toUserId) {
+async function notifyChallenge(challengeId, senderId, toUserId, timeControlId) {
   const sender = await User.select(...RELATED_USER_FIELDS).first({ id: senderId })
+  const clock = formatTimeControlShort(getTimeControl(timeControlId))
   return createNotification({
     userId: toUserId,
     type: 'CHALLENGE',
     title: 'Lời mời thách đấu',
-    message: `${displayNameOf(sender)} muốn thách đấu với bạn.`,
+    message: `${displayNameOf(sender)} muốn thách đấu với bạn · Ván ${clock} · Giao hữu.`,
     dedupeKey: `challenge:${challengeId}`,
     relatedUserId: senderId,
     relatedRequestId: challengeId,
@@ -205,6 +207,7 @@ function announceChallengeUpdate(challenge) {
     status: challenge.status,
     senderId: challenge.senderId,
     receiverId: challenge.receiverId,
+    timeControlId: challenge.timeControlId,
     createdAt: challenge.createdAt,
     expiresAt: challenge.expiresAt,
   }

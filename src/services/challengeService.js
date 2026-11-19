@@ -9,7 +9,8 @@ export const challengeService = {
   // { sent: [{ id, userId }], received: [{ id, userId }] } — open challenges
   // in both directions, each naming the other player.
   getPending: () => api.get('/challenges/pending').then((res) => res.data),
-  send: (receiverId) => api.post('/challenges', { receiverId }).then((res) => res.data),
+  // `timeControl`: one of timeControls.js's ids (the server checks it).
+  send: (receiverId, timeControl) => api.post('/challenges', { receiverId, timeControl }).then((res) => res.data),
   reject: (challengeId) => api.patch(`/challenges/${challengeId}/reject`).then((res) => res.data),
   cancel: (challengeId) => api.delete(`/challenges/${challengeId}`).then((res) => res.data),
 

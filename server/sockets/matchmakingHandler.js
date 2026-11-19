@@ -81,10 +81,11 @@ function queuedPayload(entry, now) {
 // (`host` takes seat 1, i.e. red), the game record, reconnect and everything
 // after are exactly what a hand-made room gets. `host`/`guest` are
 // { socketId, playerId }. `timeControlId` picks the clock (unknown or
-// missing: the default). Throws roomManager's own error (e.g.
-// ALREADY_IN_ROOM) if either cannot be seated, leaving no room behind.
-function startPairedMatch(io, roomManager, host, guest, timeControlId) {
-  const created = roomManager.createRoom(host.socketId, host.playerId, timeControlId)
+// missing: the default). `options.rated`: whether it moves Elo — true only
+// for Quick Play. Throws roomManager's own error (e.g. ALREADY_IN_ROOM) if
+// either cannot be seated, leaving no room behind.
+function startPairedMatch(io, roomManager, host, guest, timeControlId, options) {
+  const created = roomManager.createRoom(host.socketId, host.playerId, timeControlId, options)
   let room
   try {
     room = roomManager.joinRoom(created.roomId, guest.socketId, guest.playerId).room
@@ -129,7 +130,8 @@ function runMatching() {
     waitingQueue.delete(host.playerId)
     waitingQueue.delete(guest.playerId)
     try {
-      const room = startPairedMatch(io, roomManager, host, guest, host.timeControlId)
+      // Quick Play is the one rated way to play (Elo moves).
+      const room = startPairedMatch(io, roomManager, host, guest, host.timeControlId, { rated: true })
       console.log(
         `[matchmaking] matched ${host.playerId} (${host.rating}) vs ${guest.playerId} (${guest.rating}) (${host.timeControlId}) into room ${room.roomId}`
       )

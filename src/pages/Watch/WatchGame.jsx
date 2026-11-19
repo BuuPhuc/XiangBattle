@@ -240,7 +240,7 @@ function SpectatorBoard({ spectate }) {
       </div>
 
       <div className="w-full xl:w-96 flex flex-col gap-3 order-2">
-        <MatchInfoBar timeControl={snapshot.timeControl} spectators={spectators} />
+        <MatchInfoBar timeControl={snapshot.timeControl} rated={snapshot.rated} spectators={spectators} />
         {renderPlayerCard(topColor)}
         <GameHistoryPanel
           moveHistory={moveHistory}

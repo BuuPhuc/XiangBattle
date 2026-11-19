@@ -39,6 +39,9 @@ export function useChallenges() {
   const [accepted, setAccepted] = useState(() => new Set()) // players whose match is starting
   const [blocked, setBlocked] = useState(() => new Set()) // players the server said cannot be challenged
   const [busyIds, setBusyIds] = useState(() => new Set())
+  // challenge id -> its time control id, for showing "Ván 15 + 5" on an
+  // open challenge (sent or received).
+  const [timeControls, setTimeControls] = useState({})
   // Latest outcome worth telling the user about: { userId, tone, text }.
   const [feedback, setFeedback] = useState(null)
 
@@ -53,6 +56,9 @@ export function useChallenges() {
           if (cancelled) return
           setSent(Object.fromEntries((data.sent || []).map((entry) => [entry.userId, entry.id])))
           setReceived(Object.fromEntries((data.received || []).map((entry) => [entry.userId, entry.id])))
+          setTimeControls(
+            Object.fromEntries([...(data.sent || []), ...(data.received || [])].map((entry) => [entry.id, entry.timeControlId]))
+          )
         })
         .catch(() => {
           // Buttons fall back to "Thách đấu"; the server still refuses a
@@ -60,7 +66,8 @@ export function useChallenges() {
         })
     }
 
-    function handleUpdated({ challengeId, status, senderId, receiverId }) {
+    function handleUpdated({ challengeId, status, senderId, receiverId, timeControlId }) {
+      if (timeControlId) setTimeControls((current) => ({ ...current, [challengeId]: timeControlId }))
       const iAmSender = senderId === myId
       const otherId = iAmSender ? receiverId : senderId
       const setMap = iAmSender ? setSent : setReceived
@@ -97,12 +104,13 @@ export function useChallenges() {
   }, [])
 
   const challenge = useCallback(
-    async (userId) => {
+    async (userId, timeControlId) => {
       setFeedback(null)
       setBusy(userId, true)
       try {
-        const data = await challengeService.send(userId)
+        const data = await challengeService.send(userId, timeControlId)
         setSent((current) => withEntry(current, userId, data.challenge.id))
+        setTimeControls((current) => ({ ...current, [data.challenge.id]: data.challenge.timeControlId }))
         setFeedback({ userId, tone: 'info', text: 'Đã gửi lời mời thách đấu.' })
       } catch (err) {
         const { code, message, challengeId } = errorData(err)
@@ -206,12 +214,13 @@ export function useChallenges() {
     (userId) => ({
       state: stateFor(userId),
       busy: busyIds.has(userId),
-      onChallenge: () => challenge(userId),
+      timeControlId: timeControls[received[userId] ?? sent[userId]] ?? null,
+      onChallenge: (timeControlId) => challenge(userId, timeControlId),
       onCancel: () => cancel(userId),
       onAccept: () => accept(userId),
       onReject: () => reject(userId),
     }),
-    [stateFor, busyIds, challenge, cancel, accept, reject],
+    [stateFor, busyIds, timeControls, received, sent, challenge, cancel, accept, reject],
   )
 
   const clearFeedback = useCallback(() => setFeedback(null), [])

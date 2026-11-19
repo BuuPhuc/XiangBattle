@@ -1,5 +1,6 @@
 const { db } = require('../prisma/db')
 const { areFriends } = require('./friendService')
+const { getTimeControl } = require('../../src/features/game/timeControls.js')
 
 const User = db.orm.public.User
 const Challenge = db.orm.public.Challenge
@@ -142,7 +143,9 @@ function rejectAgainstPending(existing, senderId) {
 // senderId challenges receiverId. senderId always comes from the caller's
 // verified JWT (see challengeController.js); receiverId is the only thing
 // taken from the request, and everything about it is checked here.
-async function sendChallenge(senderId, receiverId) {
+// `timeControlId` is the clock the match will be played at; anything that
+// isn't one of the presets becomes the default (as for "Tạo phòng").
+async function sendChallenge(senderId, receiverId, timeControlId) {
   if (senderId === receiverId) {
     throw challengeServiceError('SELF_CHALLENGE', 'Không thể tự thách đấu chính mình.')
   }
@@ -165,6 +168,7 @@ async function sendChallenge(senderId, receiverId) {
       userLowId,
       userHighId,
       status: 'PENDING',
+      timeControlId: getTimeControl(timeControlId).id,
       expiresAt: new Date(Date.now() + CHALLENGE_TTL_MS),
     })
   } catch (error) {
@@ -264,7 +268,13 @@ async function releaseAccepted(challengeId) {
 }
 
 function toPendingEntry(challenge, otherUserId) {
-  return { id: challenge.id, userId: otherUserId, createdAt: challenge.createdAt, expiresAt: challenge.expiresAt }
+  return {
+    id: challenge.id,
+    userId: otherUserId,
+    timeControlId: challenge.timeControlId,
+    createdAt: challenge.createdAt,
+    expiresAt: challenge.expiresAt,
+  }
 }
 
 // userId's open challenges in both directions, each naming the *other*

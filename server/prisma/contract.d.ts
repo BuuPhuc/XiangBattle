@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'2c55642e1f5dedeb48d969db3539b22d6872573d97df625e02d11a7f1d1ba9f8'>;
+  StorageHashBase<'fcce1ce316a90a8b4356f17ee196d727b9c6664fa0a0a69c9c532ad6e4d6e9b6'>;
 export type ExecutionHash =
   ExecutionHashBase<'bc51ac76f83d2534cc99307e3fa62a73f05f7c27df78361282fb65004d73327e'>;
 export type ProfileHash =
@@ -256,6 +256,7 @@ export type FieldOutputTypes = {
       readonly userLowId: CodecTypes['pg/int4@1']['output'];
       readonly userHighId: CodecTypes['pg/int4@1']['output'];
       readonly status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED';
+      readonly timeControlId: CodecTypes['pg/text@1']['output'];
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly respondedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -305,6 +306,7 @@ export type FieldOutputTypes = {
         | null;
       readonly initialTime: CodecTypes['pg/int4@1']['output'];
       readonly increment: CodecTypes['pg/int4@1']['output'];
+      readonly rated: CodecTypes['pg/bool@1']['output'];
       readonly startedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly endedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -383,6 +385,7 @@ export type FieldInputTypes = {
       readonly userLowId: CodecTypes['pg/int4@1']['input'];
       readonly userHighId: CodecTypes['pg/int4@1']['input'];
       readonly status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED';
+      readonly timeControlId: CodecTypes['pg/text@1']['input'];
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly respondedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -432,6 +435,7 @@ export type FieldInputTypes = {
         | null;
       readonly initialTime: CodecTypes['pg/int4@1']['input'];
       readonly increment: CodecTypes['pg/int4@1']['input'];
+      readonly rated: CodecTypes['pg/bool@1']['input'];
       readonly startedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly endedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -511,6 +515,7 @@ export type StorageColumnTypes = {
       readonly respondedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly senderId: CodecTypes['pg/int4@1']['output'];
       readonly status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED';
+      readonly timeControlId: CodecTypes['pg/text@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly userHighId: CodecTypes['pg/int4@1']['output'];
       readonly userLowId: CodecTypes['pg/int4@1']['output'];
@@ -556,6 +561,7 @@ export type StorageColumnTypes = {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly increment: CodecTypes['pg/int4@1']['output'];
       readonly initialTime: CodecTypes['pg/int4@1']['output'];
+      readonly rated: CodecTypes['pg/bool@1']['output'];
       readonly redPlayerId: CodecTypes['pg/int4@1']['output'];
       readonly result: 'RED_WIN' | 'BLACK_WIN' | 'DRAW' | null;
       readonly roomCode: CodecTypes['pg/text@1']['output'];
@@ -638,6 +644,7 @@ export type StorageColumnInputTypes = {
       readonly respondedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly senderId: CodecTypes['pg/int4@1']['input'];
       readonly status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED';
+      readonly timeControlId: CodecTypes['pg/text@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly userHighId: CodecTypes['pg/int4@1']['input'];
       readonly userLowId: CodecTypes['pg/int4@1']['input'];
@@ -683,6 +690,7 @@ export type StorageColumnInputTypes = {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly increment: CodecTypes['pg/int4@1']['input'];
       readonly initialTime: CodecTypes['pg/int4@1']['input'];
+      readonly rated: CodecTypes['pg/bool@1']['input'];
       readonly redPlayerId: CodecTypes['pg/int4@1']['input'];
       readonly result: 'RED_WIN' | 'BLACK_WIN' | 'DRAW' | null;
       readonly roomCode: CodecTypes['pg/text@1']['input'];
@@ -866,6 +874,15 @@ type ContractBase = Omit<
                   readonly default: {
                     readonly kind: 'literal';
                     readonly value: DefaultLiteralValue<'pg/text@1', 'PENDING'>;
+                  };
+                };
+                readonly timeControlId: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', '10+0'>;
                   };
                 };
                 readonly expiresAt: {
@@ -1267,6 +1284,15 @@ type ContractBase = Omit<
                   readonly default: {
                     readonly kind: 'literal';
                     readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
+                  };
+                };
+                readonly rated: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
                   };
                 };
                 readonly startedAt: {
@@ -1962,6 +1988,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly timeControlId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly expiresAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -2019,6 +2049,7 @@ type ContractBase = Omit<
                 readonly userLowId: { readonly column: 'userLowId' };
                 readonly userHighId: { readonly column: 'userHighId' };
                 readonly status: { readonly column: 'status' };
+                readonly timeControlId: { readonly column: 'timeControlId' };
                 readonly expiresAt: { readonly column: 'expiresAt' };
                 readonly respondedAt: { readonly column: 'respondedAt' };
                 readonly createdAt: { readonly column: 'createdAt' };
@@ -2260,6 +2291,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
+              readonly rated: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
               readonly startedAt: {
                 readonly nullable: true;
                 readonly type: {
@@ -2341,6 +2376,7 @@ type ContractBase = Omit<
                 readonly endReason: { readonly column: 'endReason' };
                 readonly initialTime: { readonly column: 'initialTime' };
                 readonly increment: { readonly column: 'increment' };
+                readonly rated: { readonly column: 'rated' };
                 readonly startedAt: { readonly column: 'startedAt' };
                 readonly endedAt: { readonly column: 'endedAt' };
                 readonly createdAt: { readonly column: 'createdAt' };

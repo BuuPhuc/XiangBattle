@@ -88,8 +88,9 @@ function resolveSeats(io, roomManager, socket, challenge) {
 //      conditional UPDATE. A cancel that landed first, or a second accept,
 //      makes this throw — and no room has been touched yet.
 //   4. Only then is the match started, through the same startPairedMatch
-//      Quick Play uses. No rating/stat is touched here; that happens when the
-//      game ends, in gameHistoryService.finishGameRecord, like any other.
+//      Quick Play uses — at the challenge's time control, and friendly
+//      (unrated). Stats are settled when the game ends, in
+//      gameHistoryService.finishGameRecord, like any other.
 function registerChallengeHandlers(io, socket, roomManager) {
   socket.on('accept_challenge', async (payload, ack) => {
     const reply = typeof ack === 'function' ? ack : () => {}
@@ -124,9 +125,9 @@ function registerChallengeHandlers(io, socket, roomManager) {
         vacateIdleRoom(io, roomManager, seats.guest.playerId)
         removeFromQuickPlayQueue(seats.host.socketId)
         removeFromQuickPlayQueue(seats.guest.socketId)
-        // A challenge has no time control of its own yet (nothing stored on
-        // the Challenge row), so it is played at the default one.
-        room = startPairedMatch(io, roomManager, seats.host, seats.guest)
+        // At the clock the challenger picked (stored on the row, checked
+        // when it was sent); a friend challenge is friendly — no Elo.
+        room = startPairedMatch(io, roomManager, seats.host, seats.guest, challenge.timeControlId, { rated: false })
       } catch (error) {
         // No match was started, so the accept is undone rather than leaving
         // an ACCEPTED challenge with no game behind it.

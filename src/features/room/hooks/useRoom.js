@@ -10,7 +10,7 @@ import { getPlayerId, getSavedRoomId, saveRoomId, clearSavedRoomId } from '../ro
 // One listener registration for the whole hook lifetime (cleaned up on
 // unmount) — nothing here opens its own socket connection.
 export function useRoom() {
-  const [room, setRoom] = useState(null) // { roomId, status, timeControl, players } | null
+  const [room, setRoom] = useState(null) // { roomId, status, timeControl, rated, players } | null — rated: Elo counts (Quick Play only)
   const [you, setYou] = useState(null) // { playerNumber, color } | null — color is null until game_started
   const [opponent, setOpponent] = useState(null) // { playerNumber, color, connected } | null — only known once playing
   const [currentTurn, setCurrentTurn] = useState(null) // 'red' | 'black' | null
@@ -118,7 +118,7 @@ export function useRoom() {
       setPlayerRatings(ratingsFromPlayers(payload.players))
       setOpponentConnected(payload.opponent ? payload.opponent.connected !== false : true)
       setSpectators(payload.spectators ?? null)
-      setRoom({ roomId: payload.roomId, status: payload.status, timeControl: payload.timeControl, players: payload.players })
+      setRoom({ roomId: payload.roomId, status: payload.status, timeControl: payload.timeControl, rated: payload.rated === true, players: payload.players })
       setRestoreVersion((v) => v + 1)
       wasPlayingRef.current = payload.status === 'playing'
     }
@@ -136,7 +136,7 @@ export function useRoom() {
       setMessages([])
       setDbGameId(null)
       setPlayerRatings(null)
-      setRoom({ roomId: payload.roomId, status: payload.status, timeControl: payload.timeControl, players: payload.players })
+      setRoom({ roomId: payload.roomId, status: payload.status, timeControl: payload.timeControl, rated: payload.rated === true, players: payload.players })
       saveRoomId(payload.roomId)
       wasPlayingRef.current = false
     }
@@ -146,7 +146,7 @@ export function useRoom() {
       setError(null)
       setNotice(null)
       setYou(payload.you)
-      setRoom({ roomId: payload.roomId, status: payload.status, timeControl: payload.timeControl, players: payload.players })
+      setRoom({ roomId: payload.roomId, status: payload.status, timeControl: payload.timeControl, rated: payload.rated === true, players: payload.players })
       saveRoomId(payload.roomId)
     }
 

@@ -67,8 +67,15 @@ class Room {
   // `timeControlId` is one of timeControls.js's ids ('5+0', '10+0', …);
   // anything else — missing, or made up by a client — falls back to the
   // default. Fixed for the room's life, so a rematch keeps it.
-  constructor(roomId, hostSocketId, hostPlayerId, timeControlId = DEFAULT_TIME_CONTROL_ID) {
+  //
+  // `rated`: whether matches here move Elo. Only Quick Play rooms are rated
+  // (and so are their rematches, played in the same room); a room made with
+  // "Tạo phòng" or by accepting a friend challenge is friendly ("Giao hữu") —
+  // its games are saved and count in wins/losses/draws, but nobody's rating
+  // changes (see gameHistoryService.finishGameRecord).
+  constructor(roomId, hostSocketId, hostPlayerId, timeControlId = DEFAULT_TIME_CONTROL_ID, { rated = false } = {}) {
     this.roomId = roomId
+    this.rated = Boolean(rated)
     this.status = ROOM_STATUS.WAITING
     this.createdAt = Date.now()
     this.currentTurn = null // assigned by startGame()
@@ -494,6 +501,7 @@ class Room {
       roomId: this.roomId,
       status: this.status,
       timeControl: { ...this.timeControl },
+      rated: this.rated,
       players: this.players.map((player) => this.seatForSpectators(player)),
       currentTurn: this.currentTurn,
       moveHistory: this.moveHistory,
@@ -510,6 +518,7 @@ class Room {
     return {
       roomId: this.roomId,
       timeControl: { ...this.timeControl },
+      rated: this.rated,
       players: this.players.map((player) => this.seatForSpectators(player)),
       moveCount: this.moveHistory.length,
       startedAt: this.startedAt,
@@ -525,6 +534,7 @@ class Room {
       roomId: this.roomId,
       status: this.status,
       timeControl: { ...this.timeControl },
+      rated: this.rated,
       players: this.players.map((player) => ({
         playerNumber: player.playerNumber,
         color: player.color,

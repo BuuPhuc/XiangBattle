@@ -363,6 +363,13 @@
                   "plane": "domain"
                 }
               },
+              "timeControlId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "updatedAt": {
                 "nullable": false,
                 "type": {
@@ -439,6 +446,9 @@
                 },
                 "status": {
                   "column": "status"
+                },
+                "timeControlId": {
+                  "column": "timeControlId"
                 },
                 "updatedAt": {
                   "column": "updatedAt"
@@ -823,6 +833,13 @@
                   "kind": "scalar"
                 }
               },
+              "rated": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
               "redPlayerId": {
                 "nullable": false,
                 "type": {
@@ -977,6 +994,9 @@
                 },
                 "initialTime": {
                   "column": "initialTime"
+                },
+                "rated": {
+                  "column": "rated"
                 },
                 "redPlayerId": {
                   "column": "redPlayerId"
@@ -1982,6 +2002,15 @@
                     "plane": "storage"
                   }
                 },
+                "timeControlId": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "10+0"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
                 "updatedAt": {
                   "codecId": "pg/timestamptz-string@1",
                   "nativeType": "timestamptz",
@@ -2497,6 +2526,15 @@
                 "initialTime": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
+                  "nullable": false
+                },
+                "rated": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
                   "nullable": false
                 },
                 "redPlayerId": {
@@ -3285,7 +3323,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "2c55642e1f5dedeb48d969db3539b22d6872573d97df625e02d11a7f1d1ba9f8"
+    "storageHash": "fcce1ce316a90a8b4356f17ee196d727b9c6664fa0a0a69c9c532ad6e4d6e9b6"
   },
   "execution": {
     "executionHash": "bc51ac76f83d2534cc99307e3fa62a73f05f7c27df78361282fb65004d73327e",

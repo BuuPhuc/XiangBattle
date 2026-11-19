@@ -386,8 +386,9 @@ export function ChessGame({ onlineGame, aiGame }) {
           playAgainRequest={isOnline ? playAgainRequest : undefined}
           onRespondPlayAgain={isOnline ? respondPlayAgain : undefined}
           playAgainError={isOnline ? moveError : undefined}
-          ratingChange={myRatingUpdate ? myRatingUpdate.rating.change : undefined}
-          ratingAfter={myRatingUpdate ? myRatingUpdate.rating.after : undefined}
+          friendly={isOnline && onlineGame.rated === false}
+          ratingChange={myRatingUpdate && onlineGame?.rated !== false ? myRatingUpdate.rating.change : undefined}
+          ratingAfter={myRatingUpdate && onlineGame?.rated !== false ? myRatingUpdate.rating.after : undefined}
         />
       )}
 
@@ -433,7 +434,7 @@ export function ChessGame({ onlineGame, aiGame }) {
           sandwiching a much bigger history/chat panel that stretches to
           match the board column's height (see GameHistoryPanel.jsx). */}
       <div className="w-full xl:w-96 flex flex-col gap-3 order-2">
-        {isOnline && <MatchInfoBar timeControl={timeControl} spectators={onlineGame.spectators} />}
+        {isOnline && <MatchInfoBar timeControl={timeControl} rated={onlineGame.rated} spectators={onlineGame.spectators} />}
         {renderPlayerCard(topColor, { online: true })}
         <GameHistoryPanel
           moveHistory={moveHistory}

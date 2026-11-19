@@ -1,0 +1,86 @@
+[
+  {
+    "id": "column.public.challenge.timeControlId",
+    "label": "Add column \"timeControlId\" to \"challenge\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "timeControlId",
+        "table": "challenge"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"timeControlId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenge",
+          "timeControlId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"timeControlId\"",
+        "sql": "ALTER TABLE \"public\".\"challenge\" ADD COLUMN \"timeControlId\" text DEFAULT '10+0' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"timeControlId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenge",
+          "timeControlId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.game.rated",
+    "label": "Add column \"rated\" to \"game\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "rated",
+        "table": "game"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"rated\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "game",
+          "rated"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"rated\"",
+        "sql": "ALTER TABLE \"public\".\"game\" ADD COLUMN \"rated\" bool DEFAULT true NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"rated\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "game",
+          "rated"
+        ]
+      }
+    ]
+  }
+]

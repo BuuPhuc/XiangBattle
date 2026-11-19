@@ -296,6 +296,7 @@ const getUserGames = withErrorHandling(async (req, res) => {
       color: isRed ? 'red' : 'black', // the side this user (userId) played
       winner: toPublicPlayer(game.winner),
       endReason: game.endReason,
+      rated: game.rated !== false, // false: a friendly game ("Giao hữu"), Elo unchanged
       initialTime: game.initialTime, // seconds each side started with
       increment: game.increment, // seconds added per move
       moveCount: game.moves,
