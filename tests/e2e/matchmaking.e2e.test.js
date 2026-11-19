@@ -43,6 +43,8 @@ test('waiting screen shows the Elo range and time; a guest in range is paired', 
 
     await page.getByTestId('match-time-control').waitFor()
     assert.equal(await status.count(), 0)
+    // Quick Play is the rated way to play.
+    assert.match(await page.getByTestId('rated-badge').innerText(), /Tính Elo/)
 
     // Leave cleanly (resign), so nothing lingers for other tests.
     await page.getByRole('button', { name: 'Đầu hàng' }).first().click()
