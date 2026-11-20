@@ -13,7 +13,26 @@ import { otherTurn } from '../../src/features/game/gameLogic.js'
 let app
 before(async () => {
   app = await openApp()
+  await warmPuzzleSolver()
 })
+
+// The solver runs in a Web Worker that is only created on the first move,
+// so Vite compiles it (and the solver it imports) right then — slow on a
+// cold start, and in a full run it once pushed the first solving test past
+// its 30 s wait for the computer's reply. Make that first move here, with
+// room to spare, so no test's own first move is racing the compile.
+async function warmPuzzleSolver() {
+  if (app.skipReason) return
+  const puzzle = firstOf(2, 'red')
+  const line = solutionLine(buildPuzzlePieces(puzzle), puzzle.toMove, puzzle.moves)
+  const page = app.page
+  await page.goto(`${app.baseUrl}/puzzles/${puzzle.id}`, { timeout: 120_000 })
+  await page.locator('.piece').first().waitFor({ timeout: 120_000 })
+  await play(page, line[0], false)
+  await page.waitForFunction((want) => document.querySelector('.last-move-to')?.dataset.square === want, sq(line[1].to), {
+    timeout: 120_000,
+  })
+}
 after(() => closeApp(app))
 
 const pathname = (page) => new URL(page.url()).pathname
