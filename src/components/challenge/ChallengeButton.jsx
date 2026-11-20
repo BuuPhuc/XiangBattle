@@ -92,7 +92,7 @@ function ChallengeMenu({ busy, onChallenge }) {
           >
             <p className="px-2 pt-1 font-label-md text-label-md text-on-surface">Chọn thời gian ván</p>
             <p className="px-2 pb-2 font-label-sm text-label-sm text-on-surface-variant">
-              Thách đấu là ván giao hữu — không tính Elo.
+              Thách đấu là ván giao hữu — không tính điểm.
             </p>
             {TIME_CONTROLS.map((control) => (
               <button

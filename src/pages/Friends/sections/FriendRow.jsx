@@ -36,7 +36,7 @@ export function FriendRow({ friend, onRemove, removing, challenge, liveGame }) {
           {liveGame ? (
             <span className="text-primary font-semibold">Đang chơi</span>
           ) : (
-            <span className={friend.online ? 'text-secondary' : ''}>{friend.online ? 'Đang online' : 'Offline'}</span>
+            <span className={friend.online ? 'text-secondary' : ''}>{friend.online ? 'Trực tuyến' : 'Ngoại tuyến'}</span>
           )}
         </p>
       </div>

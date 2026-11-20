@@ -262,7 +262,7 @@ const me = withErrorHandling(async (req, res) => {
 const logoutAll = withErrorHandling(async (req, res) => {
   const revoked = await revokeAllSessions(req.auth.userId)
   if (!revoked) {
-    return res.status(401).json({ success: false, code: 'INVALID_TOKEN', message: 'Token không hợp lệ.' })
+    return res.status(401).json({ success: false, code: 'INVALID_TOKEN', message: 'Phiên đăng nhập không hợp lệ.' })
   }
   return res.json({ success: true, message: 'Đã đăng xuất khỏi tất cả thiết bị.' })
 })

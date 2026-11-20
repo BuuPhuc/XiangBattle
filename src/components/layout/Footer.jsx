@@ -8,7 +8,7 @@ const SUPPORT_LINKS = [
   { label: 'Hướng dẫn luật chơi', to: '/academy' },
   { label: 'Câu hỏi thường gặp', to: `/about#${ABOUT_SECTIONS.rules}` },
 ]
-const LEGAL_LINKS = [{ label: 'Privacy Policy', to: `/about#${ABOUT_SECTIONS.data}` }]
+const LEGAL_LINKS = [{ label: 'Chính sách quyền riêng tư', to: `/about#${ABOUT_SECTIONS.data}` }]
 
 function FooterLinkList({ title, links }) {
   return (

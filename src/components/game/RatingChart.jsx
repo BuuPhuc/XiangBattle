@@ -48,7 +48,7 @@ export function RatingChart({ points }) {
         viewBox={`0 0 ${layout.width} ${layout.height}`}
         className="w-full h-auto block select-none"
         role="img"
-        aria-label={`Biểu đồ Elo qua ${points.length} ván xếp hạng, từ ${layout.start.rating} đến ${last.rating}`}
+        aria-label={`Biểu đồ điểm xếp hạng qua ${points.length} ván xếp hạng, từ ${layout.start.rating} đến ${last.rating}`}
       >
         {layout.ticks.map((tick) => (
           <g key={tick.value}>
@@ -84,7 +84,7 @@ export function RatingChart({ points }) {
             data-testid="rating-point"
             role={point.gameId != null ? 'link' : 'img'}
             tabIndex={0}
-            aria-label={`${formatDay(point.endedAt)}: ${point.rating} Elo (${formatRatingChange(point.change)})`}
+            aria-label={`${formatDay(point.endedAt)}: ${point.rating} điểm (${formatRatingChange(point.change)})`}
             className={cn('outline-none', point.gameId != null && 'cursor-pointer')}
             onPointerDown={(event) => {
               lastPointer.current = event.pointerType
@@ -124,9 +124,9 @@ export function RatingChart({ points }) {
         >
           <p className="text-on-surface-variant">{formatDay(shown.endedAt)}</p>
           <p className="text-on-surface">
-            <strong className="tabular-nums">{shown.rating}</strong> Elo{' '}
+            <strong className="tabular-nums">{shown.rating}</strong> điểm{' '}
             <span className={cn('font-bold tabular-nums', shown.change >= 0 ? 'text-secondary' : 'text-error')}>
-              {formatRatingChange(shown.change)}
+              ({formatRatingChange(shown.change)})
             </span>
           </p>
           {shown.opponent && (

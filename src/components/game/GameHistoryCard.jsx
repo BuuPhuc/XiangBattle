@@ -53,6 +53,20 @@ export function GameHistoryCard({ game, showColor = false }) {
         <div className="flex items-center gap-1.5">
           <span className={cn('w-2 h-2 rounded-full', meta.dot)} />
           <span className={cn('font-label-sm text-label-sm font-bold', meta.text)}>{meta.label}</span>
+          {/* Points won or lost, next to the result (the name line below truncates
+              on a phone) — recorded for rated games since "Lịch sử điểm xếp hạng". */}
+          {game.rated !== false && Number.isInteger(game.ratingChange) && (
+            <span
+              className={cn(
+                'font-label-sm text-label-sm font-bold tabular-nums whitespace-nowrap',
+                game.ratingChange >= 0 ? 'text-secondary' : 'text-error'
+              )}
+              data-testid="rating-change"
+              title={`Điểm sau ván: ${game.ratingAfter}`}
+            >
+              {formatRatingChange(game.ratingChange)} điểm
+            </span>
+          )}
           {color && (
             <span className="flex items-center gap-1 ml-2 font-label-sm text-label-sm text-on-surface-variant" data-testid="game-color">
               <span className={cn('w-2.5 h-2.5 rounded-full', color.swatch)} />
@@ -63,19 +77,6 @@ export function GameHistoryCard({ game, showColor = false }) {
         <p className="font-body-md text-body-md text-on-surface truncate mt-0.5">
           vs {opponentName}
           {game.rated === false && <RatedBadge rated={false} className="ml-2 align-middle" />}
-          {/* Elo won or lost — recorded for rated games since "Lịch sử Elo". */}
-          {game.rated !== false && Number.isInteger(game.ratingChange) && (
-            <span
-              className={cn(
-                'ml-2 align-middle font-label-sm text-label-sm font-bold tabular-nums',
-                game.ratingChange >= 0 ? 'text-secondary' : 'text-error'
-              )}
-              data-testid="rating-change"
-              title={`Elo sau ván: ${game.ratingAfter}`}
-            >
-              {formatRatingChange(game.ratingChange)}
-            </span>
-          )}
         </p>
         <p className="font-label-sm text-label-sm text-on-surface-variant/70 mt-0.5 truncate">
           {timeControl && `${timeControl} · `}

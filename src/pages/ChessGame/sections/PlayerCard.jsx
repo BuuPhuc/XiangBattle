@@ -97,7 +97,9 @@ export function PlayerCard({ name, elo, side, moveTime, gameTime, clockActive, o
         {/* elo is null/undefined until the real rating is known (loading,
             or no account to read one from, e.g. a guest or the offline
             practice opponent) — never a placeholder number. */}
-        <p className="font-label-sm text-label-sm text-on-surface-variant">ELO {elo ?? '—'}</p>
+        <p className="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap" data-testid="player-rating">
+          {elo == null ? '—' : `${elo} điểm`}
+        </p>
       </div>
 
       <div className="relative shrink-0">

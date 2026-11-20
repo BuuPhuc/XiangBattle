@@ -194,7 +194,7 @@ export function Room() {
               <h2 className="font-headline-sm text-headline-sm text-on-surface">Tạo phòng</h2>
               <p className="font-body-sm text-body-sm text-on-surface-variant">Tạo phòng mới và nhận mã để mời đối thủ.</p>
               <p className="font-label-sm text-label-sm text-on-surface-variant/80" data-testid="room-friendly-note">
-                Ván giao hữu — không tính Elo. Muốn tính Elo, hãy dùng "Chơi ngay".
+                Ván giao hữu — không tính điểm. Muốn tính điểm, hãy dùng "Chơi ngay".
               </p>
               <Button onClick={() => createRoom(timeControlId)} disabled={pending} className="w-full disabled:opacity-50">
                 {pending ? 'Đang tạo...' : 'Tạo phòng'}

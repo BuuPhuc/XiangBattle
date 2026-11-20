@@ -41,7 +41,7 @@ export function AiGame() {
           <span>
             Đối đầu máy · <strong>{level.label}</strong> · Bạn cầm {game.playerColor === 'red' ? 'Đỏ' : 'Đen'}
           </span>
-          <span className="font-label-sm text-label-sm text-on-surface-variant">(không tính Elo)</span>
+          <span className="font-label-sm text-label-sm text-on-surface-variant">(không tính điểm)</span>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline-sm" size="sm" onClick={() => start(setup)}>

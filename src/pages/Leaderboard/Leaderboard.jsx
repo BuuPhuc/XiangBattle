@@ -80,7 +80,7 @@ export function Leaderboard() {
           Bảng xếp hạng
         </h1>
         <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-          Xếp hạng người chơi dựa trên điểm Rating/Elo hiện tại.
+          Xếp hạng người chơi dựa trên điểm xếp hạng hiện tại.
         </p>
       </div>
 
@@ -89,7 +89,7 @@ export function Leaderboard() {
           <Link to={loginPathFor('/leaderboard')} className="text-primary font-bold hover:underline">
             Đăng nhập
           </Link>{' '}
-          để xem hạng của bạn và có điểm Elo khi chơi online.
+          để xem hạng của bạn và có điểm xếp hạng khi chơi online.
         </p>
       )}
 

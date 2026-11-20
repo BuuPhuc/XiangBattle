@@ -31,7 +31,7 @@ export function QuickPlaySearchStatus({ search }) {
     <div className="space-y-1" data-testid="quick-play-search">
       {Number.isFinite(range) ? (
         <p className="font-body-md text-body-md text-on-surface-variant">
-          Đang tìm đối thủ quanh <strong className="text-primary tabular-nums">{search.rating}</strong> Elo{' '}
+          Đang tìm đối thủ quanh <strong className="text-primary tabular-nums">{search.rating}</strong> điểm{' '}
           <span className="tabular-nums">
             ({search.rating - range}–{search.rating + range})
           </span>
@@ -42,7 +42,7 @@ export function QuickPlaySearchStatus({ search }) {
       )}
       <p className="font-label-sm text-label-sm text-on-surface-variant/80 tabular-nums">
         Đã chờ {formatWaited(waited)}
-        {Number.isFinite(range) && ' · khoảng Elo sẽ mở rộng dần nếu chưa tìm thấy'}
+        {Number.isFinite(range) && ' · khoảng điểm sẽ mở rộng dần nếu chưa tìm thấy'}
       </p>
     </div>
   )

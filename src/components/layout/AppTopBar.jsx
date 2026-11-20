@@ -9,7 +9,7 @@ export function AppTopBar() {
 
   return (
     <nav
-      aria-label="Top Navigation"
+      aria-label="Thanh điều hướng"
       className="fixed top-0 w-full z-50 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-xl md:hidden flex justify-between items-center px-gutter py-4 shadow-sm"
     >
       <span className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim tracking-tight">

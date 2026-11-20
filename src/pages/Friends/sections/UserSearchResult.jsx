@@ -30,7 +30,7 @@ export function UserSearchResult({ user, onSendRequest, onCancel, onAccept, onRe
         </Link>
         <p className="font-label-sm text-label-sm text-on-surface-variant/70 flex items-center gap-1.5 mt-0.5">
           <Icon name="star" className="text-[14px] text-gold-shimmer" filled />
-          Rating {user.rating}
+          {user.rating} điểm
         </p>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">

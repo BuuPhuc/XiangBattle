@@ -139,7 +139,7 @@ export function PublicProfile() {
       <div>
         <h2 className="font-headline-sm text-headline-sm text-on-surface mb-3">Thống kê</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatCard label="Elo" value={profile.rating} />
+          <StatCard label="Điểm xếp hạng" value={profile.rating} />
           <StatCard label="Tổng số trận" value={totalGames} />
           <StatCard label="Thắng" value={profile.wins} />
           <StatCard label="Thua" value={profile.losses} />

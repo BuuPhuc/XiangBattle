@@ -31,7 +31,7 @@ export function useRatingHistory(userId) {
         if (cancelled) return
         setState({
           status: 'error',
-          error: (err.response && err.response.data && err.response.data.message) || 'Không thể tải lịch sử Elo.',
+          error: (err.response && err.response.data && err.response.data.message) || 'Không thể tải lịch sử điểm xếp hạng.',
           history: null,
           fetchedAt: null,
         })

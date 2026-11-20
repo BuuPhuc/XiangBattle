@@ -33,7 +33,7 @@ export function RatingHistorySection({ ratingHistory, isOwn = false }) {
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <h2 className="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
           <Icon name="show_chart" className="text-[20px]" />
-          Lịch sử Elo
+          Lịch sử điểm xếp hạng
         </h2>
         {status === 'ready' && points.length > 0 && (
           <div className="flex rounded-full bg-surface-container p-0.5" role="group" aria-label="Khoảng thời gian">
@@ -71,7 +71,7 @@ export function RatingHistorySection({ ratingHistory, isOwn = false }) {
         )}
         {status === 'ready' && points.length === 0 && (
           <div className="py-8 text-center space-y-2" data-testid="rating-history-empty">
-            <p className="font-headline-sm text-headline-sm text-on-surface tabular-nums">{history.currentRating} Elo</p>
+            <p className="font-headline-sm text-headline-sm text-on-surface tabular-nums">{history.currentRating} điểm</p>
             <p className="font-body-sm text-body-sm text-on-surface-variant">Biểu đồ sẽ có sau ván xếp hạng đầu tiên.</p>
             {isOwn && (
               <Link to="/room?mode=quick" className="inline-block pt-1">
@@ -86,8 +86,8 @@ export function RatingHistorySection({ ratingHistory, isOwn = false }) {
         {status === 'ready' && points.length > 0 && (
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-2">
-              <Tile label="Elo hiện tại" value={history.currentRating} testId="rating-current" />
-              <Tile label="Elo cao nhất" value={history.peakRating} testId="rating-peak" />
+              <Tile label="Điểm hiện tại" value={history.currentRating} testId="rating-current" />
+              <Tile label="Điểm cao nhất" value={history.peakRating} testId="rating-peak" />
               <Tile label="Ván xếp hạng" value={history.ratedGames} testId="rating-games" />
             </div>
             {shown.length > 0 ? (

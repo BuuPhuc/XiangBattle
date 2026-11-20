@@ -17,8 +17,8 @@ const RULES = [
   },
   {
     icon: 'leaderboard',
-    title: 'Elo chỉ tính cho ván online giữa hai tài khoản',
-    desc: 'Ván đấu online mà cả hai người đều đã đăng nhập được lưu lại và tính điểm Elo. Ván có khách, ván với máy và ván chơi trên một màn hình không được tính điểm.',
+    title: 'Điểm xếp hạng chỉ tính cho ván Chơi ngay',
+    desc: 'Điểm xếp hạng (tính theo hệ số Elo) chỉ thay đổi ở ván Chơi ngay giữa hai tài khoản, kể cả khi bấm "Chơi lại" trong phòng đó. Ván tạo phòng và ván thách đấu bạn bè là ván giao hữu: vẫn được lưu và tính vào số thắng/thua/hòa, nhưng không làm thay đổi điểm. Ván có khách, ván với máy và ván chơi trên một màn hình không được tính điểm.',
   },
   {
     icon: 'gavel',
@@ -29,7 +29,7 @@ const RULES = [
 
 const STORED_DATA = [
   'Thông tin tài khoản: tên người dùng, email, mật khẩu (chỉ lưu dạng đã băm, không ai đọc được), ảnh đại diện và lời giới thiệu.',
-  'Điểm Elo và số ván thắng / thua / hòa.',
+  'Điểm xếp hạng và số ván thắng / thua / hòa.',
   'Lịch sử các ván online giữa hai tài khoản, gồm toàn bộ nước đi — để bạn có thể xem lại.',
   'Danh sách bạn bè, lời mời, lời thách đấu và thông báo.',
   'Tiến độ ở Học viện và các cài đặt của bạn.',
@@ -92,7 +92,7 @@ export function About() {
           mức độ, học luật và cách đi từng quân ở Học viện, rồi xem lại các ván đã chơi để rút kinh nghiệm.
         </p>
         <p className="text-body-lg font-body-lg text-on-surface-variant">
-          Bạn có thể chơi ngay mà không cần tài khoản. Đăng ký tài khoản khi bạn muốn có điểm Elo, lưu lịch sử ván
+          Bạn có thể chơi ngay mà không cần tài khoản. Đăng ký tài khoản khi bạn muốn có điểm xếp hạng, lưu lịch sử ván
           đấu, kết bạn và thách đấu bạn bè.
         </p>
       </header>

@@ -33,7 +33,7 @@ export function OnlineFriends() {
     return (
       <div className={ROW_CLASS}>
         <span className="w-3 h-3 rounded-full bg-secondary animate-pulse" aria-hidden="true" />
-        <div className={TEXT_CLASS}>Đang tải bạn bè online...</div>
+        <div className={TEXT_CLASS}>Đang tải bạn bè trực tuyến...</div>
       </div>
     )
   }
@@ -41,7 +41,7 @@ export function OnlineFriends() {
   if (status === 'error') {
     return (
       <div className={ROW_CLASS}>
-        <div className={TEXT_CLASS}>Không thể tải danh sách bạn bè online.</div>
+        <div className={TEXT_CLASS}>Không thể tải danh sách bạn bè trực tuyến.</div>
         <button type="button" onClick={reload} className="text-label-sm font-label-sm font-semibold text-primary hover:underline">
           Thử lại
         </button>
@@ -91,7 +91,7 @@ export function OnlineFriends() {
         )}
       </div>
       <div className={`${TEXT_CLASS} min-w-0`}>
-        {friends.length} bạn bè đang online
+        {friends.length} bạn bè đang trực tuyến
         <span className="block opacity-70 truncate">{summarize(friends)}</span>
       </div>
     </div>

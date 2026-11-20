@@ -31,12 +31,12 @@ export function FeaturesBento() {
                 <Icon name="language" className="text-4xl text-secondary" />
                 <h3 className="text-headline-md font-headline-md text-on-surface">Chơi Online Toàn Cầu</h3>
                 <p className="text-body-md font-body-md text-on-surface-variant max-w-sm">
-                  Ghép cặp theo Elo: ưu tiên đối thủ ngang tài ngang sức, chờ lâu sẽ mở rộng để bạn không phải đợi mãi.
+                  Ghép cặp theo điểm xếp hạng: ưu tiên đối thủ ngang tài ngang sức, chờ lâu sẽ mở rộng để bạn không phải đợi mãi.
                 </p>
               </div>
               <div className="flex gap-2">
                 <Badge>Thời gian thực</Badge>
-                <Badge icon="leaderboard">Xếp hạng Elo</Badge>
+                <Badge icon="leaderboard">Bảng xếp hạng</Badge>
               </div>
             </div>
           </div>

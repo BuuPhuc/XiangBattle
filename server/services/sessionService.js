@@ -57,7 +57,7 @@ function attachIo(instance) {
 // the only three authenticateToken can produce.
 const SESSION_ERROR = {
   TOKEN_EXPIRED: { code: 'TOKEN_EXPIRED', message: 'Phiên đăng nhập đã hết hạn.' },
-  INVALID_TOKEN: { code: 'INVALID_TOKEN', message: 'Token không hợp lệ.' },
+  INVALID_TOKEN: { code: 'INVALID_TOKEN', message: 'Phiên đăng nhập không hợp lệ.' },
   TOKEN_REVOKED: { code: 'TOKEN_REVOKED', message: 'Phiên đăng nhập đã bị thu hồi. Vui lòng đăng nhập lại.' },
 }
 

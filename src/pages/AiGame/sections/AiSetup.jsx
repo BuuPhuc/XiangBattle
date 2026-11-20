@@ -42,7 +42,7 @@ export function AiSetup({ initialLevelId = 'medium', initialColor = 'red', onSta
           Đối đầu với máy
         </h1>
         <p className="font-body-md text-body-md text-on-surface-variant">
-          Ván đấu với máy không tính Elo và không lưu vào lịch sử trận đấu.
+          Ván đấu với máy không tính điểm và không lưu vào lịch sử trận đấu.
         </p>
       </div>
 

@@ -115,7 +115,7 @@ export function GameOverModal({
             non-persisted (guest) match. */}
         {friendly && (
           <p className="mb-6 -mt-2 font-label-md text-label-md text-on-surface-variant" data-testid="friendly-result">
-            Ván giao hữu — không tính Elo
+            Ván giao hữu — không tính điểm
           </p>
         )}
         {ratingChange !== undefined && (
@@ -126,9 +126,9 @@ export function GameOverModal({
               }`}
             >
               {ratingChange > 0 ? '+' : ''}
-              {ratingChange} Rating
+              {ratingChange} điểm
             </p>
-            <p className="font-label-sm text-label-sm text-on-surface-variant">Rating: {ratingAfter}</p>
+            <p className="font-label-sm text-label-sm text-on-surface-variant">Điểm xếp hạng: {ratingAfter}</p>
           </div>
         )}
 

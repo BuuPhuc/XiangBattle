@@ -58,7 +58,7 @@ function resolveSeats(io, roomManager, socket, challenge) {
   }
   const senderSocketId = presenceService.getSocketIds(challenge.senderId).find((id) => io.sockets.sockets.has(id))
   if (!senderSocketId) {
-    throw seatError('CHALLENGER_OFFLINE', 'Người thách đấu hiện không trực tuyến. Hãy thử lại khi họ online.')
+    throw seatError('CHALLENGER_OFFLINE', 'Người thách đấu hiện không trực tuyến. Hãy thử lại khi họ trực tuyến.')
   }
 
   const host = { socketId: senderSocketId, playerId: `u:${challenge.senderId}` }

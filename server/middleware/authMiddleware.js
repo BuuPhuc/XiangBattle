@@ -18,7 +18,7 @@ function bearerToken(req) {
 async function requireAuth(req, res, next) {
   const token = bearerToken(req)
   if (!token) {
-    return res.status(401).json({ success: false, code: 'UNAUTHORIZED', message: 'Thiếu token xác thực.' })
+    return res.status(401).json({ success: false, code: 'UNAUTHORIZED', message: 'Bạn cần đăng nhập.' })
   }
 
   let result
