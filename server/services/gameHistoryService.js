@@ -227,6 +227,16 @@ function settleRatings({ rated, isDraw, winnerColor, red, black }) {
 // io.emit('game_persisted', ...) above. Returns the rating info too so
 // tests/callers can inspect it; returns null when nothing was persisted
 // (a guest was playing) or this game was already processed.
+// The Game columns that record both players' Elo around a rated game.
+function ratingColumns(redBefore, blackBefore, elo) {
+  return {
+    redRatingBefore: redBefore,
+    redRatingAfter: elo.newRatingA,
+    blackRatingBefore: blackBefore,
+    blackRatingAfter: elo.newRatingB,
+  }
+}
+
 async function finishGameRecord(io, room, status, winnerColor) {
   if (!room.dbGameId || room.dbResultSaved) return null
   room.dbResultSaved = true
@@ -267,6 +277,10 @@ async function finishGameRecord(io, room, status, winnerColor) {
       await Promise.all([
         tx.orm.public.User.where({ id: redPlayerId }).update({ rating: elo.newRatingA, ...redStats }),
         tx.orm.public.User.where({ id: blackPlayerId }).update({ rating: elo.newRatingB, ...blackStats }),
+        // The "Lịch sử Elo" points — rated games only; a friendly game
+        // leaves these null (its Elo didn't move).
+        rated &&
+          tx.orm.public.Game.where({ id: gameId }).update(ratingColumns(redUser.rating, blackUser.rating, elo)),
       ])
 
       console.log(
@@ -321,6 +335,7 @@ async function getFinishedGameOpponent(gameId, userId) {
 module.exports = {
   describeResult,
   settleRatings,
+  ratingColumns,
   parseUserId,
   createGameRecord,
   attachPlayerRatings,

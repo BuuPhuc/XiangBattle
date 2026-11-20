@@ -6,6 +6,8 @@ import Avatar from '../../components/ui/Avatar'
 import useAuth from '../../components/hooks/useAuth'
 import userService from '../../services/userService'
 import GameHistorySection from './sections/GameHistorySection'
+import RatingHistorySection from './sections/RatingHistorySection'
+import useRatingHistory from '../../features/history/useRatingHistory'
 
 function StatCard({ label, value }) {
   return (
@@ -28,6 +30,8 @@ function formatJoinDate(isoString) {
 // Redux via updateUser so Header/Sidebar pick it up too.
 export function Profile() {
   const { user, updateUser } = useAuth()
+  // "Lịch sử Elo" — also gives "Thống kê" its win streaks.
+  const ratingHistory = useRatingHistory(user && user.id)
   const [status, setStatus] = useState('loading') // 'loading' | 'ready' | 'error'
   const [error, setError] = useState(null)
   // Bumped by the "Thử lại" button to re-run the fetch effect below.
@@ -85,6 +89,7 @@ export function Profile() {
   }
 
   const totalGames = (user.wins ?? 0) + (user.losses ?? 0) + (user.draws ?? 0)
+  const streak = ratingHistory.history && ratingHistory.history.streak
   const winRate = totalGames > 0 ? Math.round((user.wins / totalGames) * 100) : 0
 
   return (
@@ -108,15 +113,20 @@ export function Profile() {
 
       <div>
         <h2 className="font-headline-sm text-headline-sm text-on-surface mb-3">Thống kê</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <StatCard label="Rating" value={user.rating} />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label="Elo" value={user.rating} />
           <StatCard label="Tổng số trận" value={totalGames} />
           <StatCard label="Thắng" value={user.wins} />
           <StatCard label="Thua" value={user.losses} />
           <StatCard label="Hòa" value={user.draws} />
           <StatCard label="Tỷ lệ thắng" value={`${winRate}%`} />
+          {/* Every finished game counts, friendly ones too — like Thắng/Thua/Hòa. */}
+          <StatCard label="Chuỗi thắng hiện tại" value={streak ? streak.current : '—'} />
+          <StatCard label="Chuỗi thắng dài nhất" value={streak ? streak.best : '—'} />
         </div>
       </div>
+
+      <RatingHistorySection ratingHistory={ratingHistory} isOwn />
 
       <GameHistorySection userId={user.id} />
     </div>

@@ -10,6 +10,7 @@ const {
   updateMySettings,
   getPublicProfile,
   getUserGames,
+  getRatingHistory,
   searchUsers,
 } = require('../controllers/userController')
 
@@ -50,5 +51,6 @@ router.get('/search', requireAuth, searchUsers)
 // would swallow those requests as userId="me" / userId="search" instead.
 router.get('/:userId', requireAuth, getPublicProfile)
 router.get('/:userId/games', requireAuth, getUserGames)
+router.get('/:userId/rating-history', requireAuth, getRatingHistory)
 
 module.exports = router

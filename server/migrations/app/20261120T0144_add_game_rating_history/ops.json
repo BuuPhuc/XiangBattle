@@ -1,0 +1,170 @@
+[
+  {
+    "id": "column.public.game.blackRatingAfter",
+    "label": "Add column \"blackRatingAfter\" to \"game\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "blackRatingAfter",
+        "table": "game"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"blackRatingAfter\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "game",
+          "blackRatingAfter"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"blackRatingAfter\"",
+        "sql": "ALTER TABLE \"public\".\"game\" ADD COLUMN \"blackRatingAfter\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"blackRatingAfter\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "game",
+          "blackRatingAfter"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.game.blackRatingBefore",
+    "label": "Add column \"blackRatingBefore\" to \"game\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "blackRatingBefore",
+        "table": "game"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"blackRatingBefore\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "game",
+          "blackRatingBefore"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"blackRatingBefore\"",
+        "sql": "ALTER TABLE \"public\".\"game\" ADD COLUMN \"blackRatingBefore\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"blackRatingBefore\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "game",
+          "blackRatingBefore"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.game.redRatingAfter",
+    "label": "Add column \"redRatingAfter\" to \"game\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "redRatingAfter",
+        "table": "game"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"redRatingAfter\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "game",
+          "redRatingAfter"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"redRatingAfter\"",
+        "sql": "ALTER TABLE \"public\".\"game\" ADD COLUMN \"redRatingAfter\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"redRatingAfter\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "game",
+          "redRatingAfter"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.game.redRatingBefore",
+    "label": "Add column \"redRatingBefore\" to \"game\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "redRatingBefore",
+        "table": "game"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"redRatingBefore\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "game",
+          "redRatingBefore"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"redRatingBefore\"",
+        "sql": "ALTER TABLE \"public\".\"game\" ADD COLUMN \"redRatingBefore\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"redRatingBefore\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "game",
+          "redRatingBefore"
+        ]
+      }
+    ]
+  }
+]

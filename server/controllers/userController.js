@@ -6,6 +6,7 @@ const { uploadAvatarBuffer } = require('../utils/cloudinary')
 const { canViewGameHistory } = require('../services/gameAccessService')
 const { getRelationshipStatus } = require('../services/friendService')
 const presenceService = require('../services/presenceService')
+const { ratingSide, toRatingPoints, peakRating, winStreaks } = require('../services/ratingHistory')
 
 const User = db.orm.public.User
 const Game = db.orm.public.Game
@@ -230,6 +231,13 @@ const getPublicProfile = withErrorHandling(async (req, res) => {
   })
 })
 
+// 'WIN' | 'LOSS' | 'DRAW' of a finished game, from userId's side.
+function resultFor(game, userId) {
+  if (game.result === 'DRAW') return 'DRAW'
+  const isRed = game.redPlayerId === userId
+  return (isRed && game.result === 'RED_WIN') || (!isRed && game.result === 'BLACK_WIN') ? 'WIN' : 'LOSS'
+}
+
 // GET /api/users/:userId/games — a user's FINISHED-match history, newest
 // first, for the Public Profile's "Ván đấu gần đây" section. Access is
 // gated through gameAccessService.canViewGameHistory (the owner's own
@@ -286,8 +294,8 @@ const getUserGames = withErrorHandling(async (req, res) => {
   const items = games.map((game) => {
     const isRed = game.redPlayerId === userId
     const opponent = isRed ? game.blackPlayer : game.redPlayer
-    const userWon = (isRed && game.result === 'RED_WIN') || (!isRed && game.result === 'BLACK_WIN')
-    const result = game.result === 'DRAW' ? 'DRAW' : userWon ? 'WIN' : 'LOSS'
+    const result = resultFor(game, userId)
+    const elo = ratingSide(game, userId)
 
     return {
       gameId: game.id,
@@ -297,6 +305,10 @@ const getUserGames = withErrorHandling(async (req, res) => {
       winner: toPublicPlayer(game.winner),
       endReason: game.endReason,
       rated: game.rated !== false, // false: a friendly game ("Giao hữu"), Elo unchanged
+      // This user's Elo change and Elo after the game; null for a friendly
+      // game and for rated games finished before these were recorded.
+      ratingChange: elo ? elo.after - elo.before : null,
+      ratingAfter: elo ? elo.after : null,
       initialTime: game.initialTime, // seconds each side started with
       increment: game.increment, // seconds added per move
       moveCount: game.moves,
@@ -310,6 +322,59 @@ const getUserGames = withErrorHandling(async (req, res) => {
     success: true,
     games: items,
     pagination: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
+  })
+})
+
+// The chart shows at most this many rated games (the most recent ones).
+const RATING_HISTORY_MAX_POINTS = 200
+
+// GET /api/users/:userId/rating-history — the profile's "Lịch sử Elo": one
+// point per rated game (Elo after it, change, date; oldest first), the
+// highest Elo reached, how many rated games were recorded, and win streaks
+// over ALL finished games (friendly ones too, like wins/losses/draws).
+// Visible to any signed-in user, like the profile itself — Elo is public on
+// the leaderboard already. Which game a point is and who it was against are
+// only included when the caller may see this user's recent games
+// (canViewGameHistory, the owner's own setting).
+const getRatingHistory = withErrorHandling(async (req, res) => {
+  const userId = Number(req.params.userId)
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ success: false, code: 'INVALID_USER_ID', message: 'Mã người dùng không hợp lệ.' })
+  }
+
+  const user = await User.first({ id: userId })
+  if (!user) {
+    return res.status(404).json({ success: false, code: 'USER_NOT_FOUND', message: 'Không tìm thấy người chơi.' })
+  }
+
+  const games = await Game.where((g) => or(g.redPlayerId.eq(userId), g.blackPlayerId.eq(userId)))
+    .where({ status: 'FINISHED' })
+    .include('redPlayer', (u) => u.select('id', 'username', 'displayName'))
+    .include('blackPlayer', (u) => u.select('id', 'username', 'displayName'))
+    .orderBy((g) => g.endedAt.asc())
+    .all()
+
+  const allPoints = toRatingPoints(games, userId)
+  const showGames = await canViewGameHistory(req.auth.userId, userId, user)
+  const byId = new Map(games.map((game) => [game.id, game]))
+  const points = allPoints.slice(-RATING_HISTORY_MAX_POINTS).map((point) => {
+    const { endedAt, rating, change, gameId } = point
+    const shown = { endedAt, rating, change }
+    if (!showGames) return shown
+    const game = byId.get(gameId)
+    const opponent = game.redPlayerId === userId ? game.blackPlayer : game.redPlayer
+    return { ...shown, gameId, opponent: toPublicPlayer(opponent) }
+  })
+
+  return res.json({
+    success: true,
+    history: {
+      currentRating: user.rating,
+      peakRating: peakRating(allPoints),
+      ratedGames: allPoints.length,
+      points,
+      streak: winStreaks(games.map((game) => resultFor(game, userId))),
+    },
   })
 })
 
@@ -350,4 +415,4 @@ const searchUsers = withErrorHandling(async (req, res) => {
   return res.json({ success: true, users })
 })
 
-module.exports = { getMe, updateMe, uploadAvatar, getMySettings, updateMySettings, getPublicProfile, getUserGames, searchUsers }
+module.exports = { getMe, updateMe, uploadAvatar, getMySettings, updateMySettings, getPublicProfile, getUserGames, getRatingHistory, searchUsers }

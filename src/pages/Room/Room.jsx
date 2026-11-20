@@ -176,7 +176,7 @@ export function Room() {
               <Icon name="bolt" className="text-3xl" />
             </div>
             <div className="flex-1 text-center sm:text-left">
-              <h2 className="font-headline-sm text-headline-sm text-on-surface">Quick Play</h2>
+              <h2 className="font-headline-sm text-headline-sm text-on-surface">Chơi ngay</h2>
               <p className="font-body-sm text-body-sm text-on-surface-variant">Tự động ghép bạn với một đối thủ chọn cùng mức thời gian.</p>
             </div>
             <Button

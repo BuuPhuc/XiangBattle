@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'fcce1ce316a90a8b4356f17ee196d727b9c6664fa0a0a69c9c532ad6e4d6e9b6'>;
+  StorageHashBase<'dc300b3d80e1d80b6d7352bd9933dba2b07f78311ac8b59dba8c56c4b9950e40'>;
 export type ExecutionHash =
   ExecutionHashBase<'bc51ac76f83d2534cc99307e3fa62a73f05f7c27df78361282fb65004d73327e'>;
 export type ProfileHash =
@@ -307,6 +307,10 @@ export type FieldOutputTypes = {
       readonly initialTime: CodecTypes['pg/int4@1']['output'];
       readonly increment: CodecTypes['pg/int4@1']['output'];
       readonly rated: CodecTypes['pg/bool@1']['output'];
+      readonly redRatingBefore: CodecTypes['pg/int4@1']['output'] | null;
+      readonly redRatingAfter: CodecTypes['pg/int4@1']['output'] | null;
+      readonly blackRatingBefore: CodecTypes['pg/int4@1']['output'] | null;
+      readonly blackRatingAfter: CodecTypes['pg/int4@1']['output'] | null;
       readonly startedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly endedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -436,6 +440,10 @@ export type FieldInputTypes = {
       readonly initialTime: CodecTypes['pg/int4@1']['input'];
       readonly increment: CodecTypes['pg/int4@1']['input'];
       readonly rated: CodecTypes['pg/bool@1']['input'];
+      readonly redRatingBefore: CodecTypes['pg/int4@1']['input'] | null;
+      readonly redRatingAfter: CodecTypes['pg/int4@1']['input'] | null;
+      readonly blackRatingBefore: CodecTypes['pg/int4@1']['input'] | null;
+      readonly blackRatingAfter: CodecTypes['pg/int4@1']['input'] | null;
       readonly startedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly endedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -546,6 +554,8 @@ export type StorageColumnTypes = {
     };
     readonly game: {
       readonly blackPlayerId: CodecTypes['pg/int4@1']['output'];
+      readonly blackRatingAfter: CodecTypes['pg/int4@1']['output'] | null;
+      readonly blackRatingBefore: CodecTypes['pg/int4@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly endedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly endReason:
@@ -563,6 +573,8 @@ export type StorageColumnTypes = {
       readonly initialTime: CodecTypes['pg/int4@1']['output'];
       readonly rated: CodecTypes['pg/bool@1']['output'];
       readonly redPlayerId: CodecTypes['pg/int4@1']['output'];
+      readonly redRatingAfter: CodecTypes['pg/int4@1']['output'] | null;
+      readonly redRatingBefore: CodecTypes['pg/int4@1']['output'] | null;
       readonly result: 'RED_WIN' | 'BLACK_WIN' | 'DRAW' | null;
       readonly roomCode: CodecTypes['pg/text@1']['output'];
       readonly startedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
@@ -675,6 +687,8 @@ export type StorageColumnInputTypes = {
     };
     readonly game: {
       readonly blackPlayerId: CodecTypes['pg/int4@1']['input'];
+      readonly blackRatingAfter: CodecTypes['pg/int4@1']['input'] | null;
+      readonly blackRatingBefore: CodecTypes['pg/int4@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly endedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly endReason:
@@ -692,6 +706,8 @@ export type StorageColumnInputTypes = {
       readonly initialTime: CodecTypes['pg/int4@1']['input'];
       readonly rated: CodecTypes['pg/bool@1']['input'];
       readonly redPlayerId: CodecTypes['pg/int4@1']['input'];
+      readonly redRatingAfter: CodecTypes['pg/int4@1']['input'] | null;
+      readonly redRatingBefore: CodecTypes['pg/int4@1']['input'] | null;
       readonly result: 'RED_WIN' | 'BLACK_WIN' | 'DRAW' | null;
       readonly roomCode: CodecTypes['pg/text@1']['input'];
       readonly startedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
@@ -1294,6 +1310,26 @@ type ContractBase = Omit<
                     readonly kind: 'literal';
                     readonly value: DefaultLiteralValue<'pg/bool@1', true>;
                   };
+                };
+                readonly redRatingBefore: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly redRatingAfter: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly blackRatingBefore: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly blackRatingAfter: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
                 };
                 readonly startedAt: {
                   readonly nativeType: 'timestamptz';
@@ -2295,6 +2331,22 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
               };
+              readonly redRatingBefore: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly redRatingAfter: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly blackRatingBefore: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly blackRatingAfter: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
               readonly startedAt: {
                 readonly nullable: true;
                 readonly type: {
@@ -2377,6 +2429,10 @@ type ContractBase = Omit<
                 readonly initialTime: { readonly column: 'initialTime' };
                 readonly increment: { readonly column: 'increment' };
                 readonly rated: { readonly column: 'rated' };
+                readonly redRatingBefore: { readonly column: 'redRatingBefore' };
+                readonly redRatingAfter: { readonly column: 'redRatingAfter' };
+                readonly blackRatingBefore: { readonly column: 'blackRatingBefore' };
+                readonly blackRatingAfter: { readonly column: 'blackRatingAfter' };
                 readonly startedAt: { readonly column: 'startedAt' };
                 readonly endedAt: { readonly column: 'endedAt' };
                 readonly createdAt: { readonly column: 'createdAt' };

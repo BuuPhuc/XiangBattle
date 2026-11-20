@@ -21,6 +21,8 @@ export const userService = {
   // for where that policy actually lives.
   getUserGames: (userId, { page = 1, limit = 10 } = {}) =>
     api.get(`/users/${userId}/games`, { params: { page, limit } }).then((res) => res.data),
+  // "Lịch sử Elo": { currentRating, peakRating, ratedGames, points, streak }.
+  getRatingHistory: (userId) => api.get(`/users/${userId}/rating-history`).then((res) => res.data.history),
   // Leaderboard — players ranked by rating DESC (computed server-side).
   // Also returns the caller's own rank/stats, even off the requested page.
   getLeaderboard: ({ page = 1, limit = 50 } = {}) =>

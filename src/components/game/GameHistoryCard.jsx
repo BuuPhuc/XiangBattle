@@ -5,6 +5,7 @@ import Avatar from '../ui/Avatar'
 import Icon from '../ui/Icon'
 import { cn } from '../utils/cn'
 import { formatSavedTimeControl } from '../../features/game/timeControls.js'
+import { formatRatingChange } from '../../features/history/ratingChart.js'
 
 function formatDate(isoString) {
   if (!isoString) return '—'
@@ -62,6 +63,19 @@ export function GameHistoryCard({ game, showColor = false }) {
         <p className="font-body-md text-body-md text-on-surface truncate mt-0.5">
           vs {opponentName}
           {game.rated === false && <RatedBadge rated={false} className="ml-2 align-middle" />}
+          {/* Elo won or lost — recorded for rated games since "Lịch sử Elo". */}
+          {game.rated !== false && Number.isInteger(game.ratingChange) && (
+            <span
+              className={cn(
+                'ml-2 align-middle font-label-sm text-label-sm font-bold tabular-nums',
+                game.ratingChange >= 0 ? 'text-secondary' : 'text-error'
+              )}
+              data-testid="rating-change"
+              title={`Elo sau ván: ${game.ratingAfter}`}
+            >
+              {formatRatingChange(game.ratingChange)}
+            </span>
+          )}
         </p>
         <p className="font-label-sm text-label-sm text-on-surface-variant/70 mt-0.5 truncate">
           {timeControl && `${timeControl} · `}

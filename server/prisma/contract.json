@@ -785,6 +785,20 @@
                   "kind": "scalar"
                 }
               },
+              "blackRatingAfter": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "blackRatingBefore": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
               "createdAt": {
                 "nullable": false,
                 "type": {
@@ -842,6 +856,20 @@
               },
               "redPlayerId": {
                 "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "redRatingAfter": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "redRatingBefore": {
+                "nullable": true,
                 "type": {
                   "codecId": "pg/int4@1",
                   "kind": "scalar"
@@ -977,6 +1005,12 @@
                 "blackPlayerId": {
                   "column": "blackPlayerId"
                 },
+                "blackRatingAfter": {
+                  "column": "blackRatingAfter"
+                },
+                "blackRatingBefore": {
+                  "column": "blackRatingBefore"
+                },
                 "createdAt": {
                   "column": "createdAt"
                 },
@@ -1000,6 +1034,12 @@
                 },
                 "redPlayerId": {
                   "column": "redPlayerId"
+                },
+                "redRatingAfter": {
+                  "column": "redRatingAfter"
+                },
+                "redRatingBefore": {
+                  "column": "redRatingBefore"
                 },
                 "result": {
                   "column": "result"
@@ -2480,6 +2520,16 @@
                   "nativeType": "int4",
                   "nullable": false
                 },
+                "blackRatingAfter": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "blackRatingBefore": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
                 "createdAt": {
                   "codecId": "pg/timestamptz-string@1",
                   "default": {
@@ -2541,6 +2591,16 @@
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
                   "nullable": false
+                },
+                "redRatingAfter": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "redRatingBefore": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
                 },
                 "result": {
                   "codecId": "pg/text@1",
@@ -3323,7 +3383,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "fcce1ce316a90a8b4356f17ee196d727b9c6664fa0a0a69c9c532ad6e4d6e9b6"
+    "storageHash": "dc300b3d80e1d80b6d7352bd9933dba2b07f78311ac8b59dba8c56c4b9950e40"
   },
   "execution": {
     "executionHash": "bc51ac76f83d2534cc99307e3fa62a73f05f7c27df78361282fb65004d73327e",
