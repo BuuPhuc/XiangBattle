@@ -105,6 +105,7 @@ export async function openMockedPage(
     settings = DEFAULT_TEST_SETTINGS,
     sounds = false,
     replay,
+    ratingHistory,
   } = {}
 ) {
   if (app.skipReason) {
@@ -128,6 +129,21 @@ export async function openMockedPage(
     gameCalls.push({ userId: url.pathname.split('/').at(-2), limit: url.searchParams.get('limit') })
     await route.fulfill(games ? await games(route.request(), gameCalls.length) : json({ success: true, games: [] }))
   })
+  // "Lịch sử Elo" on the Profile pages — no rated games unless a test says.
+  await page.route(/\/api\/users\/\d+\/rating-history/, (route) =>
+    route.fulfill(
+      json({
+        success: true,
+        history: ratingHistory ?? {
+          currentRating: user.rating ?? 1200,
+          peakRating: null,
+          ratedGames: 0,
+          points: [],
+          streak: { current: 0, best: 0 },
+        },
+      })
+    )
+  )
   await page.route(/\/api\/games\/\d+/, (route) => {
     const id = Number(new URL(route.request().url()).pathname.split('/').at(-1))
     if (replay) return route.fulfill(json({ success: true, game: replay(id) }))
