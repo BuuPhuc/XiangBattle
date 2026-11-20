@@ -46,8 +46,8 @@ test('the chart, its tiles, a point on hover, and a click opening the replay', a
   const { page } = ctx
   const section = page.getByTestId('rating-history')
   await section.getByTestId('rating-chart').waitFor()
-  assert.match(await section.getByTestId('rating-current').innerText(), /^1234\s+Elo hiện tại$/)
-  assert.match(await section.getByTestId('rating-peak').innerText(), /^1240\s+Elo cao nhất$/)
+  assert.match(await section.getByTestId('rating-current').innerText(), /^1234\s+Điểm hiện tại$/)
+  assert.match(await section.getByTestId('rating-peak').innerText(), /^1240\s+Điểm cao nhất$/)
   assert.match(await section.getByTestId('rating-games').innerText(), /^3\s+Ván xếp hạng$/)
   assert.equal(await section.getByTestId('rating-point').count(), 3)
 
@@ -55,7 +55,7 @@ test('the chart, its tiles, a point on hover, and a click opening the replay', a
   const tooltip = page.getByTestId('rating-tooltip')
   await tooltip.waitFor()
   const text = await tooltip.innerText()
-  assert.match(text, /1234 Elo/)
+  assert.match(text, /1234 điểm/)
   assert.match(text, /−6/)
   assert.match(text, /vs ke_thu/)
   assert.match(text, /Bấm để xem lại ván/)
@@ -88,7 +88,7 @@ test('no rated game yet: current Elo, the note, and "Chơi ngay"', async (t) => 
   const empty = page.getByTestId('rating-history-empty')
   await empty.waitFor()
   const text = await empty.innerText()
-  assert.match(text, new RegExp(`${USER.rating} Elo`))
+  assert.match(text, new RegExp(`${USER.rating} điểm`))
   assert.match(text, /Biểu đồ sẽ có sau ván xếp hạng đầu tiên/)
   assert.equal(await empty.getByRole('link', { name: /Chơi ngay/ }).getAttribute('href'), '/room?mode=quick')
   assert.equal(await page.getByTestId('rating-chart').count(), 0)
@@ -120,12 +120,12 @@ test('Thống kê shows Elo and both win streaks; recent games show +/− Elo', 
   const { page } = ctx
   await page.getByText('Chuỗi thắng dài nhất').waitFor()
   const stats = await page.getByRole('heading', { name: 'Thống kê' }).locator('..').innerText()
-  assert.match(stats, /1234\s*Elo/)
+  assert.match(stats, /1234\s*Điểm xếp hạng/)
   assert.match(stats, /2\s*Chuỗi thắng hiện tại/)
   assert.match(stats, /4\s*Chuỗi thắng dài nhất/)
 
   await page.getByText('vs opp_3').waitFor()
-  assert.deepEqual(await page.getByTestId('rating-change').allInnerTexts(), ['+12', '−8'], 'friendly and older games show no change')
+  assert.deepEqual(await page.getByTestId('rating-change').allInnerTexts(), ['+12 điểm', '−8 điểm'], 'friendly and older games show no change')
 })
 
 test("another player's hidden games: the numbers, but no opponent and nothing to open", async (t) => {
@@ -149,7 +149,7 @@ test("another player's hidden games: the numbers, but no opponent and nothing to
 
   await section.getByTestId('rating-point').first().hover()
   const text = await page.getByTestId('rating-tooltip').innerText()
-  assert.match(text, /1216 Elo/)
+  assert.match(text, /1216 điểm/)
   assert.doesNotMatch(text, /vs |Bấm để xem lại/)
   await section.getByTestId('rating-point').first().click()
   assert.match(page.url(), /\/profile\/88$/, 'a point without a game opens nothing')

@@ -67,7 +67,7 @@ test('Thách đấu: pick a time control from the menu; it is sent and shown whi
   await page.getByRole('button', { name: 'Thách đấu' }).click()
   const menu = page.getByRole('menu', { name: 'Chọn thời gian ván' })
   await menu.waitFor()
-  assert.match(await menu.innerText(), /giao hữu — không tính Elo/)
+  assert.match(await menu.innerText(), /giao hữu — không tính điểm/)
   const items = await menu.getByRole('menuitem').allInnerTexts()
   assert.equal(items.length, 4)
   // Nothing on the page may cover or clip the menu (it was once drawn inside
@@ -127,7 +127,7 @@ test('Recent matches marks a friendly game "Giao hữu", not a rated one', async
 test('"Tạo phòng" is friendly: the note, the badge in the match, and the result', async (t) => {
   await runStep(app, t, async (page) => {
     await page.goto(`${app.baseUrl}/room`)
-    assert.match(await page.getByTestId('room-friendly-note').innerText(), /không tính Elo/)
+    assert.match(await page.getByTestId('room-friendly-note').innerText(), /không tính điểm/)
     await page.getByRole('button', { name: 'Tạo phòng', exact: true }).click()
     await page.getByText('Đang chờ đối thủ...').waitFor()
     const code = (await page.locator('.tracking-\\[0\\.3em\\]').first().innerText()).trim()
@@ -144,7 +144,8 @@ test('"Tạo phòng" is friendly: the note, the badge in the match, and the resu
 
     black.emit('resign')
     await page.getByTestId('friendly-result').waitFor()
-    assert.match(await page.getByTestId('friendly-result').innerText(), /Ván giao hữu — không tính Elo/)
-    assert.equal(await page.getByText(/Rating:/).count(), 0, 'a friendly game shows no rating change')
+    assert.match(await page.getByTestId('friendly-result').innerText(), /Ván giao hữu — không tính điểm/)
+    assert.equal(await page.getByText(/Điểm xếp hạng:/).count(), 0, 'a friendly game shows no rating change')
+    assert.doesNotMatch(await page.evaluate(() => document.body.innerText), /\bElo\b|\bELO\b|\bRating\b/)
   })
 })

@@ -133,7 +133,7 @@ test('resign ends the game, with no rating change shown', (t) =>
     await page.getByText('Bạn có chắc muốn đầu hàng?').waitFor()
     await page.getByRole('button', { name: 'Đầu hàng' }).last().click()
     await page.getByText('Bạn đã đầu hàng!').waitFor({ timeout: 3000 })
-    assert.equal(await page.getByText(/Rating/).count(), 0)
+    assert.equal(await page.getByText(/Điểm xếp hạng:/).count(), 0)
   }))
 
 test('"Chơi lại" in the result dialog restarts the game', (t) =>

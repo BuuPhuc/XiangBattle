@@ -29,8 +29,9 @@ test('waiting screen shows the Elo range and time; a guest in range is paired', 
     const status = page.getByTestId('quick-play-search')
     await status.waitFor()
     const text = await status.innerText()
-    assert.match(text, /Đang tìm đối thủ quanh 1200 Elo \(1100–1300\)/)
+    assert.match(text, /Đang tìm đối thủ quanh 1200 điểm \(1100–1300\)/)
     assert.match(text, /Đã chờ 0:0\d/)
+    assert.doesNotMatch(await page.evaluate(() => document.body.innerText), /\bElo\b|\bELO\b|\bRating\b/)
     await page.getByText(/Đã chờ 0:0[2-9]/).waitFor({ timeout: 5000 }) // the clock ticks
 
     const other = await connect(backend.url, {})
@@ -44,7 +45,11 @@ test('waiting screen shows the Elo range and time; a guest in range is paired', 
     await page.getByTestId('match-time-control').waitFor()
     assert.equal(await status.count(), 0)
     // Quick Play is the rated way to play.
-    assert.match(await page.getByTestId('rated-badge').innerText(), /Tính Elo/)
+    assert.match(await page.getByTestId('rated-badge').innerText(), /Tính điểm/)
+    // The player cards say "1200 điểm" (or "—" for a guest, who has no
+    // points), never "ELO 1200".
+    for (const text of await page.getByTestId('player-rating').allInnerTexts()) assert.match(text, /^(—|\d+ điểm)$/)
+    assert.doesNotMatch(await page.evaluate(() => document.body.innerText), /\bElo\b|\bELO\b|\bRating\b/)
 
     // Leave cleanly (resign), so nothing lingers for other tests.
     await page.getByRole('button', { name: 'Đầu hàng' }).first().click()

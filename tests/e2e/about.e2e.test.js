@@ -65,7 +65,7 @@ test('Footer: every link goes somewhere real, no "#" links left', async (t) => {
     ['Giới thiệu', '/about'],
     ['Hướng dẫn luật chơi', '/academy'],
     ['Câu hỏi thường gặp', '/about#luat-choi'],
-    ['Privacy Policy', '/about#du-lieu'],
+    ['Chính sách quyền riêng tư', '/about#du-lieu'],
   ])
   for (const hidden of ['Support', 'Terms of Service', 'Press Kit']) {
     assert.equal(await footer(page).getByText(hidden, { exact: true }).count(), 0, `"${hidden}" should be hidden`)
@@ -83,7 +83,7 @@ test('Footer links open the right page / section', async (t) => {
   await waitInView(page, '#luat-choi')
 
   // Clicking another section link while already on /about scrolls there too.
-  await footer(page).getByRole('link', { name: 'Privacy Policy' }).click()
+  await footer(page).getByRole('link', { name: 'Chính sách quyền riêng tư' }).click()
   await page.waitForURL((url) => url.hash === '#du-lieu')
   await waitInView(page, '#du-lieu')
 
