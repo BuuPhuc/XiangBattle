@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Card from '../../../components/ui/Card'
 import Icon from '../../../components/ui/Icon'
 import Button from '../../../components/ui/Button'
 import { academyPaths } from '../../../features/academy/paths.js'
@@ -84,7 +85,7 @@ export function ChallengePlayer({ course, lesson, challenge, index, lessonProgre
           />
         ) : (
           <>
-            <div className="glass-panel border border-outline-variant/40 rounded-2xl p-5 space-y-2">
+            <Card tone="subtle" radius="2xl" className="p-5 space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <h1 className="font-label-md text-label-md font-bold text-on-surface">{challenge.title}</h1>
                 {game.stepCount > 1 && (
@@ -94,7 +95,7 @@ export function ChallengePlayer({ course, lesson, challenge, index, lessonProgre
                 )}
               </div>
               <p className="font-body-md text-body-md text-on-surface-variant">{challenge.instruction}</p>
-            </div>
+            </Card>
 
             {/* aria-live so a screen reader hears "Chính xác!" / the retry
                 message as it appears. */}
@@ -141,7 +142,7 @@ export function ChallengePlayer({ course, lesson, challenge, index, lessonProgre
               )}
             </div>
 
-            <div className="glass-panel border border-gold-shimmer/30 rounded-2xl p-5 space-y-4 xl:mt-auto">
+            <Card radius="2xl" className="p-5 space-y-4 xl:mt-auto">
               <div className="flex items-center justify-between gap-3">
                 <span className="font-label-md text-label-md font-bold text-on-surface">
                   Thử thách {index + 1} / {total}
@@ -218,7 +219,7 @@ export function ChallengePlayer({ course, lesson, challenge, index, lessonProgre
                   </Button>
                 </div>
               </div>
-            </div>
+            </Card>
           </>
         )}
       </div>

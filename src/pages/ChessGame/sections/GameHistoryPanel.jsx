@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Card from '../../../components/ui/Card'
 import Icon from '../../../components/ui/Icon'
 import { cn } from '../../../components/utils/cn'
 import MoveHistoryPanel from './MoveHistoryPanel'
@@ -55,7 +56,7 @@ export function GameHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, 
     // at xl the sidebar row stretches to match the board column's height,
     // and flex-grow/min-h-0 here is what lets this panel absorb all of the
     // leftover space between the two compact player bars.
-    <div className="glass-panel border border-gold-shimmer/30 rounded-xl flex flex-col overflow-hidden h-64 xl:h-auto xl:flex-grow xl:min-h-0">
+    <Card className="flex flex-col overflow-hidden h-64 xl:h-auto xl:flex-grow xl:min-h-0">
       {chat ? (
         <div className="flex border-b border-outline-variant/30 bg-surface-container-low rounded-t-xl flex-shrink-0">
           <TabButton active={activeTab === TABS.HISTORY} onClick={() => setActiveTab(TABS.HISTORY)} icon="history" label="Lịch sử" />
@@ -95,7 +96,7 @@ export function GameHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, 
           />
         </div>
       )}
-    </div>
+    </Card>
   )
 }
 

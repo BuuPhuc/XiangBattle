@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Card from '../../../components/ui/Card'
 import Icon from '../../../components/ui/Icon'
 import Button from '../../../components/ui/Button'
 import { academyPaths } from '../../../features/academy/paths.js'
@@ -8,7 +9,7 @@ import { ProgressBar } from './AcademyParts'
 // done.
 export function LessonComplete({ course, lesson, lessonProgress, nextLesson, onReplay }) {
   return (
-    <div className="academy-fade-in glass-panel border border-gold-shimmer/30 rounded-2xl p-6 space-y-5 text-center">
+    <Card padding="md" radius="2xl" className="academy-fade-in space-y-5 text-center">
       <Icon name="emoji_events" filled className="text-6xl text-tertiary-fixed-dim block" />
       <div className="space-y-1">
         <h1 className="font-headline-md text-headline-md text-on-surface">Chúc mừng!</h1>
@@ -48,7 +49,7 @@ export function LessonComplete({ course, lesson, lessonProgress, nextLesson, onR
           Chơi lại
         </Button>
       </div>
-    </div>
+    </Card>
   )
 }
 

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import Icon from '../../components/ui/Icon'
 import Avatar from '../../components/ui/Avatar'
@@ -56,7 +57,7 @@ export function LiveGames() {
       {!loaded ? (
         <p className="text-center py-16 font-label-md text-label-md text-on-surface-variant">Đang tải…</p>
       ) : games.length === 0 ? (
-        <div className="glass-panel border border-gold-shimmer/30 rounded-xl text-center py-16 px-4">
+        <Card className="text-center py-16 px-4">
           <Icon name="visibility_off" size="xl" className="text-on-surface-variant" />
           <p className="font-headline-sm text-headline-sm text-on-surface mt-3">Hiện chưa có ván nào đang diễn ra</p>
           <p className="font-body-md text-body-md text-on-surface-variant mt-1 mb-6">Hay là bạn mở một ván?</p>
@@ -66,16 +67,19 @@ export function LiveGames() {
           >
             Chơi cờ
           </Link>
-        </div>
+        </Card>
       ) : (
         <ul className="space-y-3" data-testid="live-games">
           {games.map((game) => {
             const red = game.players.find((p) => p.color === 'red')
             const black = game.players.find((p) => p.color === 'black')
             return (
-              <li
+              <Card
+                as="li"
                 key={game.roomId}
-                className="glass-panel border border-outline-variant/30 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4"
+                tone="subtle"
+                padding="sm"
+                className="flex flex-col sm:flex-row sm:items-center gap-4"
               >
                 <div className="flex-1 min-w-0 space-y-2">
                   {red && <PlayerLine player={red} />}
@@ -100,7 +104,7 @@ export function LiveGames() {
                   <Icon name="visibility" size="md" />
                   Xem
                 </Link>
-              </li>
+              </Card>
             )
           })}
         </ul>

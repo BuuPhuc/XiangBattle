@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import Avatar from '../../components/ui/Avatar'
@@ -82,7 +83,7 @@ export function EditProfile() {
     <div className="max-w-xl mx-auto py-12 px-4">
       <h1 className="font-headline-lg text-headline-lg text-on-surface mb-6 text-center">Chỉnh sửa hồ sơ</h1>
 
-      <form onSubmit={handleSubmit} className="glass-panel border border-gold-shimmer/30 p-8 rounded-xl space-y-6">
+      <Card as="form" padding="lg" onSubmit={handleSubmit} className="space-y-6">
         {formError && (
           <div className="px-4 py-3 rounded-lg bg-error/10 border border-error/30 text-error font-label-md text-label-md text-center">
             {formError}
@@ -150,7 +151,7 @@ export function EditProfile() {
             {saving ? 'Đang lưu...' : 'Lưu thông tin'}
           </Button>
         </div>
-      </form>
+      </Card>
     </div>
   )
 }

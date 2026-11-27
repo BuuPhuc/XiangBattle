@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import RatedBadge from '../../components/game/RatedBadge'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import ChessBoard from '../../components/game/ChessBoard'
@@ -156,7 +157,7 @@ export function Replay() {
   return (
     <div className="w-full max-w-container-max mx-auto flex flex-col xl:flex-row gap-gutter justify-center">
       <div className="flex-grow flex flex-col items-center order-1 w-full xl:max-w-[780px]">
-        <div className="w-full mb-3 glass-panel border border-gold-shimmer/30 rounded-xl px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+        <Card className="w-full mb-3 px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2 font-label-md text-label-md">
             <span className="text-error">{playerLabel(game.redPlayer)}</span>
             <span className="text-on-surface-variant">vs</span>
@@ -169,7 +170,7 @@ export function Replay() {
             {RESULT_LABEL[game.result] || game.result} · {END_REASON_LABEL[game.endReason] || game.endReason}
             {game.rated === false && <RatedBadge rated={false} className="ml-2 align-middle" />}
           </div>
-        </div>
+        </Card>
 
         {/* board-readonly: nothing on the board responds to a click (as
             before), but the board itself still takes the drawing gestures. */}
@@ -190,7 +191,7 @@ export function Replay() {
           </div>
         </div>
 
-        <div className="w-full mt-3 glass-panel border border-gold-shimmer/30 rounded-xl px-4 py-2.5 flex items-center justify-center gap-2">
+        <Card className="w-full mt-3 px-4 py-2.5 flex items-center justify-center gap-2">
           <Button
             variant="icon"
             size="md"
@@ -230,7 +231,7 @@ export function Replay() {
           >
             <Icon name="last_page" />
           </Button>
-        </div>
+        </Card>
 
         <div className="w-full mt-3 flex justify-center">
           <Button variant="outline" onClick={handleExit}>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import useAuth from '../../components/hooks/useAuth'
 import authService from '../../services/authService'
@@ -64,7 +65,7 @@ export function Login() {
         <p className="font-body-md text-body-md text-on-surface-variant">Chào mừng trở lại XiangBattle.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="glass-panel border border-gold-shimmer/30 p-8 rounded-xl space-y-5">
+      <Card as="form" padding="lg" onSubmit={handleSubmit} className="space-y-5">
         {sessionNotice && !formError && (
           <div
             role="status"
@@ -129,7 +130,7 @@ export function Login() {
             Đăng ký
           </Link>
         </p>
-      </form>
+      </Card>
     </div>
   )
 }

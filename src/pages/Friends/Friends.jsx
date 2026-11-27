@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import Icon from '../../components/ui/Icon'
 import friendService from '../../services/friendService'
@@ -329,7 +330,7 @@ export function Friends() {
             />
           </div>
 
-          <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden">
+          <Card className="overflow-hidden">
             {filteredFriends.length === 0 ? (
               <div className="py-10 text-center px-4 space-y-2">
                 <Icon name="group_off" size="xl" className="text-on-surface-variant/40 block" />
@@ -349,7 +350,7 @@ export function Friends() {
                 />
               ))
             )}
-          </div>
+          </Card>
         </div>
       )}
 
@@ -368,7 +369,7 @@ export function Friends() {
             </div>
 
             {userQuery.trim() && (
-              <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden">
+              <Card className="overflow-hidden">
                 {userSearchStatus === 'loading' && (
                   <p className="py-6 text-center font-body-sm text-body-sm text-on-surface-variant flex items-center justify-center gap-2">
                     <Icon name="search" size="sm" />
@@ -391,13 +392,13 @@ export function Friends() {
                       busy={busyIds.has(result.id)}
                     />
                   ))}
-              </div>
+              </Card>
             )}
           </div>
 
           <div>
             <h2 className="font-label-md text-label-md font-bold text-on-surface-variant mb-2">Lời mời đang chờ</h2>
-            <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden">
+            <Card className="overflow-hidden">
               {received.length === 0 ? (
                 <div className="py-10 text-center px-4 space-y-2">
                   <Icon name="mail" size="xl" className="text-on-surface-variant/40 block" />
@@ -415,13 +416,13 @@ export function Friends() {
                   />
                 ))
               )}
-            </div>
+            </Card>
           </div>
         </div>
       )}
 
       {status === 'ready' && activeTab === 'sent' && (
-        <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden">
+        <Card className="overflow-hidden">
           {sent.length === 0 ? (
             <div className="py-10 text-center px-4 space-y-2">
               <Icon name="outgoing_mail" size="xl" className="text-on-surface-variant/40 block" />
@@ -432,7 +433,7 @@ export function Friends() {
               <RequestRow key={request.id} request={request} mode="sent" onCancel={handleCancel} busy={busyIds.has(request.id)} />
             ))
           )}
-        </div>
+        </Card>
       )}
     </div>
   )

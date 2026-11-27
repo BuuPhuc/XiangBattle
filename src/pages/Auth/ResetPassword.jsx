@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import authService from '../../services/authService'
 import { endSessionAndLeave, setOwnSessionEndInFlight } from '../../features/auth/sessionEnd'
@@ -96,7 +97,7 @@ export function ResetPassword() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="glass-panel border border-gold-shimmer/30 p-8 rounded-xl space-y-5">
+      <Card as="form" padding="lg" onSubmit={handleSubmit} className="space-y-5">
         {error && (
           <div
             role="alert"
@@ -145,7 +146,7 @@ export function ResetPassword() {
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? 'Đang đặt lại...' : 'Đặt lại mật khẩu'}
         </Button>
-      </form>
+      </Card>
     </div>
   )
 }

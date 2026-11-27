@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import Card from '../../../components/ui/Card'
 import Icon from '../../../components/ui/Icon'
 import Button from '../../../components/ui/Button'
 import RatingChart from '../../../components/game/RatingChart'
@@ -55,7 +56,7 @@ export function RatingHistorySection({ ratingHistory, isOwn = false }) {
         )}
       </div>
 
-      <div className="glass-panel border border-gold-shimmer/30 rounded-xl p-4">
+      <Card padding="sm">
         {status === 'loading' && (
           <div className="py-10 text-center">
             <span className="w-3 h-3 rounded-full bg-secondary animate-pulse inline-block" />
@@ -99,7 +100,7 @@ export function RatingHistorySection({ ratingHistory, isOwn = false }) {
             )}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   )
 }

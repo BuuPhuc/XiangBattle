@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import useRoom from '../../features/room/hooks/useRoom'
@@ -171,7 +172,7 @@ export function Room() {
         <div className="space-y-6">
           <TimeControlPicker />
 
-          <div className="glass-panel border border-gold-shimmer/30 p-6 rounded-xl flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+          <Card padding="md" className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
             <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
               <Icon name="bolt" size="lg" />
             </div>
@@ -186,10 +187,10 @@ export function Room() {
             >
               {pending ? 'Đang kết nối...' : 'Tìm trận nhanh'}
             </Button>
-          </div>
+          </Card>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="glass-panel border border-gold-shimmer/30 p-6 rounded-xl flex flex-col items-center gap-4 text-center">
+            <Card padding="md" className="flex flex-col items-center gap-4 text-center">
               <Icon name="add_circle" size="xl" className="text-primary" />
               <h2 className="font-headline-sm text-headline-sm text-on-surface">Tạo phòng</h2>
               <p className="font-body-sm text-body-sm text-on-surface-variant">Tạo phòng mới và nhận mã để mời đối thủ.</p>
@@ -199,11 +200,13 @@ export function Room() {
               <Button onClick={() => createRoom(timeControlId)} disabled={pending} className="w-full disabled:opacity-50">
                 {pending ? 'Đang tạo...' : 'Tạo phòng'}
               </Button>
-            </div>
+            </Card>
 
-            <form
+            <Card
+              as="form"
+              padding="md"
               onSubmit={handleJoinSubmit}
-              className="glass-panel border border-gold-shimmer/30 p-6 rounded-xl flex flex-col items-center gap-4 text-center"
+              className="flex flex-col items-center gap-4 text-center"
             >
               <Icon name="login" size="xl" className="text-primary" />
               <h2 className="font-headline-sm text-headline-sm text-on-surface">Tham gia phòng</h2>
@@ -218,13 +221,13 @@ export function Room() {
               <Button type="submit" variant="outline" disabled={pending || !joinCode.trim()} className="w-full disabled:opacity-50">
                 {pending ? 'Đang tham gia...' : 'Tham gia'}
               </Button>
-            </form>
+            </Card>
           </div>
         </div>
       )}
 
       {room && room.status === 'waiting' && (
-        <div className="glass-panel border border-gold-shimmer/30 p-8 rounded-xl flex flex-col items-center gap-4 text-center">
+        <Card padding="lg" className="flex flex-col items-center gap-4 text-center">
           <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Mã phòng</span>
           <span className="font-headline-lg text-headline-lg text-primary tracking-[0.3em]">{room.roomId}</span>
           <TimeControlBadge timeControl={room.timeControl} />
@@ -235,7 +238,7 @@ export function Room() {
           <Button onClick={leaveRoom} variant="outline" size="sm">
             Hủy phòng
           </Button>
-        </div>
+        </Card>
       )}
     </div>
   )

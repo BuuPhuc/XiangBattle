@@ -4,6 +4,7 @@ import { academyPaths } from '../../features/academy/paths.js'
 import useAcademyProgress from '../../features/academy/hooks/useAcademyProgress'
 import { LoadingState, NotFoundState, PageHeader, ProgressBar, ProgressNotice } from './sections/AcademyParts'
 import LessonCard from './sections/LessonCard'
+import Card from '../../components/ui/Card'
 
 // One course: its lessons (for "Quân cờ và nước đi", one per piece), each
 // with its own progress and a button straight into its challenges.
@@ -28,7 +29,7 @@ export function AcademyCourse() {
         <LoadingState />
       ) : (
         <>
-          <div className="glass-panel border border-gold-shimmer/30 rounded-xl p-4 space-y-2">
+          <Card padding="sm" className="space-y-2">
             <div className="flex items-center justify-between gap-3">
               <span className="font-label-md text-label-md font-bold text-on-surface-variant">Tiến độ khóa học</span>
               <span className="font-label-md text-label-md text-on-surface tabular-nums">
@@ -36,7 +37,7 @@ export function AcademyCourse() {
               </span>
             </div>
             <ProgressBar done={courseProgress.done} total={courseProgress.total} label="Tiến độ khóa học" />
-          </div>
+          </Card>
 
           <div className="space-y-3">
             {course.lessons.map((lesson) => (

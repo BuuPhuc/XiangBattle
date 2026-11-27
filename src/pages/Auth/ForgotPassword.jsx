@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import authService from '../../services/authService'
 
@@ -36,7 +37,7 @@ export function ForgotPassword() {
       </div>
 
       {sentMessage ? (
-        <div className="glass-panel border border-gold-shimmer/30 p-8 rounded-xl space-y-5 text-center">
+        <Card padding="lg" className="space-y-5 text-center">
           <div
             role="status"
             className="px-4 py-3 rounded-lg bg-secondary/10 border border-secondary/30 text-secondary font-label-md text-label-md"
@@ -49,9 +50,9 @@ export function ForgotPassword() {
           <Link to="/login" className="inline-block">
             <Button>Quay lại đăng nhập</Button>
           </Link>
-        </div>
+        </Card>
       ) : (
-        <form onSubmit={handleSubmit} className="glass-panel border border-gold-shimmer/30 p-8 rounded-xl space-y-5">
+        <Card as="form" padding="lg" onSubmit={handleSubmit} className="space-y-5">
           {error && (
             <div
               role="alert"
@@ -86,7 +87,7 @@ export function ForgotPassword() {
               Đăng nhập
             </Link>
           </p>
-        </form>
+        </Card>
       )}
     </div>
   )

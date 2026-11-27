@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Card from '../../../components/ui/Card'
 import Badge from '../../../components/ui/Badge'
 import { countCourseChallenges, getCourseProgress } from '../../../features/academy/catalog.js'
 import { COURSE_LEVELS } from '../../../features/academy/constants.js'
@@ -10,9 +11,11 @@ export function CourseCard({ course, completedIds }) {
   const level = COURSE_LEVELS.find((item) => item.id === course.level)
 
   return (
-    <Link
+    <Card
+      as={Link}
+      interactive
       to={academyPaths.course(course.id)}
-      className="group glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden flex flex-col hover:border-primary/40 hover:shadow-lg transition-all duration-200"
+      className="group overflow-hidden flex flex-col"
     >
       <div className="h-32 flex items-center justify-center gap-3 bg-board-felt border-b border-gold-shimmer/30">
         {course.thumbnail.map((type) => (
@@ -46,7 +49,7 @@ export function CourseCard({ course, completedIds }) {
           </p>
         </div>
       </div>
-    </Link>
+    </Card>
   )
 }
 

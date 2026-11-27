@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import ChessBoard from '../../components/game/ChessBoard'
@@ -71,7 +72,7 @@ function PuzzleBoard({ puzzle }) {
           Danh sách cờ thế
         </Link>
 
-        <div className="glass-panel border border-gold-shimmer/30 rounded-xl p-5 space-y-3">
+        <Card className="p-5 space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="font-label-sm text-label-sm text-on-surface-variant">Chiếu bí {puzzle.moves} nước · #{number}</p>
@@ -85,7 +86,7 @@ function PuzzleBoard({ puzzle }) {
           <p className="font-label-md text-label-md text-on-surface-variant" data-testid="puzzle-turn" aria-live="polite">
             {turnText(game)}
           </p>
-        </div>
+        </Card>
 
         <div className="min-h-16" aria-live="polite">
           {game.message && (

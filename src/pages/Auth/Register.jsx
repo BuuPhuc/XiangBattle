@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import useAuth from '../../components/hooks/useAuth'
@@ -92,7 +93,7 @@ export function Register() {
         <p className="font-body-md text-body-md text-on-surface-variant">Tham gia XiangBattle để lưu lại thành tích của bạn.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="glass-panel border border-gold-shimmer/30 p-8 rounded-xl space-y-5">
+      <Card as="form" padding="lg" onSubmit={handleSubmit} className="space-y-5">
         {formError && (
           <div className="px-4 py-3 rounded-lg bg-error/10 border border-error/30 text-error font-label-md text-label-md text-center">
             {formError}
@@ -148,7 +149,7 @@ export function Register() {
             Đăng nhập
           </Link>
         </p>
-      </form>
+      </Card>
     </div>
   )
 }
