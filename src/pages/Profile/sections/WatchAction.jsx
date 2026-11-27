@@ -15,7 +15,7 @@ export function WatchAction({ userId }) {
         to={`/watch/${game.roomId}`}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary font-label-md text-label-md hover:bg-primary/20 transition-colors"
       >
-        <Icon name="visibility" className="text-[18px]" />
+        <Icon name="visibility" size="md" />
         Đang chơi — Xem ván
       </Link>
     </div>

@@ -48,7 +48,7 @@ export function PlayerRankRow({ player, highlight = false, className = '' }) {
         </div>
       </div>
       <div className="flex-shrink-0 text-right w-16 flex items-center justify-end gap-1">
-        <Icon name="star" className="text-[16px] text-gold-shimmer" filled />
+        <Icon name="star" size="sm" className="text-gold-shimmer" filled />
         <span className="font-label-md text-label-md font-bold text-primary">{player.rating}</span>
       </div>
     </Link>

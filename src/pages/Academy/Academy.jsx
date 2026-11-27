@@ -59,7 +59,7 @@ export function Academy() {
       </div>
 
       <div className="relative">
-        <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant/60" />
+        <Icon name="search" size="md" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60" />
         <input
           type="text"
           value={search}
@@ -76,7 +76,7 @@ export function Academy() {
         <LoadingState />
       ) : courses.length === 0 ? (
         <div className="py-16 text-center px-4 space-y-2">
-          <Icon name="menu_book" className="text-4xl text-on-surface-variant/40 block" />
+          <Icon name="menu_book" size="xl" className="text-on-surface-variant/40 block" />
           <p className="font-body-md text-body-md text-on-surface-variant">
             {search.trim() ? 'Không tìm thấy khóa học phù hợp.' : 'Chưa có khóa học nào ở cấp độ này.'}
           </p>

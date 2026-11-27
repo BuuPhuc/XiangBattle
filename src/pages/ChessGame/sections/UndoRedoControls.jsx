@@ -16,7 +16,7 @@ export function UndoRedoControls({ canUndo, canRedo, onUndo, onRedo }) {
         onClick={onUndo}
         disabled={!canUndo}
       >
-        <Icon name="undo" className="text-[16px]" />
+        <Icon name="undo" size="sm" />
         Hoàn tác
       </Button>
       <Button
@@ -26,7 +26,7 @@ export function UndoRedoControls({ canUndo, canRedo, onUndo, onRedo }) {
         onClick={onRedo}
         disabled={!canRedo}
       >
-        <Icon name="redo" className="text-[16px]" />
+        <Icon name="redo" size="sm" />
         Làm lại
       </Button>
     </div>

@@ -37,7 +37,7 @@ export function ChatInput({ onSend }) {
         className="w-9 h-9 flex-shrink-0 rounded-full bg-primary text-on-primary flex items-center justify-center disabled:opacity-40 hover:scale-105 transition-transform"
         aria-label="Gửi tin nhắn"
       >
-        <Icon name="send" className="text-[18px]" />
+        <Icon name="send" size="md" />
       </button>
     </div>
   )

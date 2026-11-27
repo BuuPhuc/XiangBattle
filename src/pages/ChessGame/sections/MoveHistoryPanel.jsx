@@ -113,7 +113,7 @@ export function MoveHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, 
             disabled={page === 1}
             aria-label="Trang đầu"
           >
-            <Icon name="first_page" className="text-[18px]" />
+            <Icon name="first_page" size="md" />
           </Button>
           <Button
             variant="icon"
@@ -122,7 +122,7 @@ export function MoveHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, 
             disabled={page === 1}
             aria-label="Trang trước"
           >
-            <Icon name="chevron_left" className="text-[18px]" />
+            <Icon name="chevron_left" size="md" />
           </Button>
           <span className="font-label-sm text-label-sm text-on-surface-variant px-3">{page}</span>
           <Button
@@ -132,7 +132,7 @@ export function MoveHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, 
             disabled={page === totalPages}
             aria-label="Trang sau"
           >
-            <Icon name="chevron_right" className="text-[18px]" />
+            <Icon name="chevron_right" size="md" />
           </Button>
           <Button
             variant="icon"
@@ -141,7 +141,7 @@ export function MoveHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, 
             disabled={page === totalPages}
             aria-label="Trang cuối"
           >
-            <Icon name="last_page" className="text-[18px]" />
+            <Icon name="last_page" size="md" />
           </Button>
         </div>
       )}

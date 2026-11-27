@@ -87,12 +87,13 @@ export function AcademyLesson() {
                       done ? 'bg-jade-light text-secondary' : 'bg-surface-container text-on-surface-variant'
                     }`}
                   >
-                    {done ? <Icon name="check" className="text-[18px]" /> : index + 1}
+                    {done ? <Icon name="check" size="md" /> : index + 1}
                   </span>
                   <span className="flex-1 min-w-0 font-body-md text-body-md text-on-surface truncate">{challenge.title}</span>
                   <Icon
                     name={unlocked ? 'chevron_right' : 'lock'}
-                    className={`text-[20px] ${unlocked ? 'text-on-surface-variant' : 'text-on-surface-variant/40'}`}
+                    size="md"
+                    className={unlocked ? 'text-on-surface-variant' : 'text-on-surface-variant/40'}
                   />
                 </>
               )

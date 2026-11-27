@@ -20,7 +20,7 @@ export function AiTurnStatus({ thinking, botName }) {
         </>
       ) : (
         <>
-          <Icon name="touch_app" className="text-[18px] text-primary" />
+          <Icon name="touch_app" size="md" className="text-primary" />
           <span className="font-label-md text-label-md text-primary">Đến lượt bạn</span>
         </>
       )}

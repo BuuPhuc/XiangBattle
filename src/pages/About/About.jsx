@@ -113,7 +113,7 @@ export function About() {
               key={title}
               className="p-6 rounded-2xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-2"
             >
-              <Icon name={icon} className="text-3xl text-secondary" />
+              <Icon name={icon} size="lg" className="text-secondary" />
               <h3 className="font-label-md text-label-md text-on-surface">{title}</h3>
               <p className="text-label-sm font-label-sm text-on-surface-variant">{desc}</p>
             </div>
@@ -129,7 +129,7 @@ export function About() {
         <ul className="space-y-3">
           {STORED_DATA.map((item) => (
             <li key={item} className="flex gap-3 text-body-md font-body-md text-on-surface-variant">
-              <Icon name="check_circle" className="text-secondary text-xl flex-shrink-0" />
+              <Icon name="check_circle" size="md" className="text-secondary flex-shrink-0" />
               <span>{item}</span>
             </li>
           ))}

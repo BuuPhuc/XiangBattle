@@ -22,7 +22,7 @@ export function RequestRow({ request, mode, onAccept, onReject, onCancel, busy }
           {name}
         </Link>
         <p className="font-label-sm text-label-sm text-on-surface-variant/70 flex items-center gap-1.5 mt-0.5">
-          <Icon name="star" className="text-[14px] text-gold-shimmer" filled />
+          <Icon name="star" size="xs" className="text-gold-shimmer" filled />
           {request.rating} điểm
         </p>
       </div>

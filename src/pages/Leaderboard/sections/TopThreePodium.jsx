@@ -33,7 +33,7 @@ export function TopThreePodium({ players, currentUserId }) {
             <Avatar src={player.avatarUrl} name={name} size={64} className="mx-auto mt-3 mb-2" />
             <p className="font-label-md text-label-md font-bold text-on-surface truncate">{name}</p>
             <p className="font-headline-sm text-headline-sm text-primary flex items-center justify-center gap-1 mt-1">
-              <Icon name="star" className="text-[18px] text-gold-shimmer" filled />
+              <Icon name="star" size="md" className="text-gold-shimmer" filled />
               {player.rating}
             </p>
             <p className="font-label-sm text-label-sm text-on-surface-variant/70 mt-1">

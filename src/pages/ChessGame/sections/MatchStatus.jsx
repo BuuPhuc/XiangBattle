@@ -9,7 +9,7 @@ import Icon from '../../../components/ui/Icon'
 export function MatchStatus({ viewedMoveNumber, onReturnToLive }) {
   return (
     <div className="mb-3 px-6 py-2 glass-panel border border-gold-shimmer/30 rounded-full flex items-center gap-3">
-      <Icon name="visibility" className="text-[18px] text-on-surface-variant" />
+      <Icon name="visibility" size="md" className="text-on-surface-variant" />
       <span className="font-label-md text-label-md text-on-surface-variant">
         {viewedMoveNumber === 0 ? 'Đang xem: vị trí ban đầu' : `Đang xem nước đi #${viewedMoveNumber}`}
       </span>
@@ -18,7 +18,7 @@ export function MatchStatus({ viewedMoveNumber, onReturnToLive }) {
         size="sm"
         onClick={onReturnToLive}
       >
-        <Icon name="undo" className="text-[16px]" />
+        <Icon name="undo" size="sm" />
         Về hiện tại
       </Button>
     </div>

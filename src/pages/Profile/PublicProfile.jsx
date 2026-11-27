@@ -97,7 +97,7 @@ export function PublicProfile() {
   if (status === 'not-found') {
     return (
       <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-4">
-        <Icon name="person_off" className="text-5xl text-on-surface-variant/50" />
+        <Icon name="person_off" size="2xl" className="text-on-surface-variant/50" />
         <p className="font-body-md text-body-md text-on-surface-variant">Không tìm thấy người chơi.</p>
         <Link to="/play">
           <Button variant="outline">Về trang chính</Button>
@@ -128,7 +128,7 @@ export function PublicProfile() {
         <h1 className="font-headline-lg text-headline-lg text-on-surface">{profile.username}</h1>
         {profile.bio && <p className="font-body-md text-body-md text-on-surface-variant mt-2 italic">"{profile.bio}"</p>}
         <p className="font-label-sm text-label-sm text-on-surface-variant/70 mt-3 flex items-center justify-center gap-1.5">
-          <Icon name="event" className="text-[16px]" />
+          <Icon name="event" size="sm" />
           Tham gia từ {formatDate(profile.createdAt)}
         </p>
         <FriendAction userId={userId} />

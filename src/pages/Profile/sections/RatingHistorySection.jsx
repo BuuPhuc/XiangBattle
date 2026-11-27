@@ -32,7 +32,7 @@ export function RatingHistorySection({ ratingHistory, isOwn = false }) {
     <div data-testid="rating-history">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <h2 className="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
-          <Icon name="show_chart" className="text-[20px]" />
+          <Icon name="show_chart" size="md" />
           Lịch sử điểm xếp hạng
         </h2>
         {status === 'ready' && points.length > 0 && (
@@ -76,7 +76,7 @@ export function RatingHistorySection({ ratingHistory, isOwn = false }) {
             {isOwn && (
               <Link to="/room?mode=quick" className="inline-block pt-1">
                 <Button size="sm">
-                  <Icon name="bolt" className="text-[18px]" />
+                  <Icon name="bolt" size="md" />
                   Chơi ngay
                 </Button>
               </Link>

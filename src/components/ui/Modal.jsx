@@ -73,7 +73,7 @@ export function ModalIcon({ name, tone = 'danger', size = 'md', filled = false }
         TILE_TONE[tone]
       )}
     >
-      <Icon name={name} className={size === 'lg' ? 'text-4xl' : 'text-3xl'} filled={filled} />
+      <Icon name={name} size={size === 'lg' ? 'xl' : 'lg'} filled={filled} />
     </div>
   )
 }

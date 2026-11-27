@@ -24,7 +24,7 @@ export function PrimaryActions() {
       >
         <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
         <div className="w-16 h-16 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow z-10 relative">
-          <Icon name="person" className="text-4xl" />
+          <Icon name="person" size="xl" />
           <div className="absolute inset-0 rounded-full bg-gold-shimmer/30 blur-md -z-10 group-hover:opacity-100 opacity-0 transition-opacity" />
         </div>
         <span className="font-headline-md text-headline-md text-primary tracking-wide z-10">CHƠI NGAY</span>

@@ -71,7 +71,7 @@ function WatchMessage({ icon, title, detail, action }) {
   return (
     <div className="max-w-md mx-auto text-center py-20 px-4">
       <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
-        <Icon name={icon} className="text-4xl" />
+        <Icon name={icon} size="xl" />
       </div>
       <h1 className="font-headline-md text-headline-md text-on-surface mb-2">{title}</h1>
       {detail && <p className="font-body-md text-body-md text-on-surface-variant mb-6">{detail}</p>}
@@ -181,7 +181,7 @@ function SpectatorBoard({ spectate }) {
           className="w-full mb-3 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary font-label-md text-label-md"
           data-testid="watch-banner"
         >
-          <Icon name="visibility" className="text-[18px]" />
+          <Icon name="visibility" size="md" />
           Bạn đang xem ván đấu · {seat('red')?.username || 'Khách'} (Đỏ) vs {seat('black')?.username || 'Khách'} (Đen)
         </div>
 
@@ -230,7 +230,7 @@ function SpectatorBoard({ spectate }) {
             size="md"
             onClick={() => setFlipped((value) => !value)}
           >
-            <Icon name="swap_vert" className="text-[18px]" />
+            <Icon name="swap_vert" size="md" />
             Lật bàn cờ
           </Button>
         </div>

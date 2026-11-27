@@ -61,7 +61,7 @@ export function PieceBadge({ type, size = 48 }) {
 export function StatusBadge({ status }) {
   return (
     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-sm text-label-sm ${STATUS_CLASS[status]}`}>
-      {status === LESSON_STATUS.COMPLETED && <Icon name="check_circle" filled className="text-[14px]" />}
+      {status === LESSON_STATUS.COMPLETED && <Icon name="check_circle" size="xs" filled />}
       {STATUS_LABEL[status]}
     </span>
   )
@@ -96,7 +96,7 @@ export function LoadingState({ label = 'Đang tải tiến độ học tập...'
 export function NotFoundState({ message, backTo, backLabel }) {
   return (
     <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-4">
-      <Icon name="school" className="text-5xl text-on-surface-variant/40 block" />
+      <Icon name="school" size="2xl" className="text-on-surface-variant/40 block" />
       <h1 className="font-headline-sm text-headline-sm text-on-surface">{message}</h1>
       <Button as={Link} to={backTo} variant="outline">
         <Icon name="arrow_back" />
@@ -128,7 +128,7 @@ export function ProgressNotice({ progress }) {
   if (progress.status === 'ready' && progress.isGuest) {
     return (
       <div className="px-4 py-2.5 rounded-lg bg-secondary/10 border border-secondary/30 flex items-center gap-2">
-        <Icon name="info" className="text-[18px] text-secondary" />
+        <Icon name="info" size="md" className="text-secondary" />
         <p className="font-body-sm text-body-sm text-on-surface">
           <Link to="/login" className="font-semibold text-primary hover:underline">
             Đăng nhập

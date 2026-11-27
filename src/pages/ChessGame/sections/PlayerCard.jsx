@@ -45,7 +45,7 @@ export function PlayerCard({ name, elo, side, moveTime, gameTime, clockActive, o
   const avatarContent = avatarUrl ? (
     <img src={avatarUrl} alt={name} onError={() => setAvatarUrl(null)} className="w-full h-full rounded-full object-cover" />
   ) : (
-    <Icon name="person" className="text-2xl" />
+    <Icon name="person" />
   )
 
   return (

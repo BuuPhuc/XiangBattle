@@ -15,7 +15,7 @@ export function RatedBadge({ rated, className }) {
       data-testid="rated-badge"
       title={rated ? 'Ván xếp hạng — kết quả tính vào điểm xếp hạng' : 'Ván giao hữu — không tính điểm'}
     >
-      <Icon name={rated ? 'leaderboard' : 'handshake'} className="text-[14px]" />
+      <Icon name={rated ? 'leaderboard' : 'handshake'} size="xs" />
       {rated ? 'Tính điểm' : 'Giao hữu'}
     </span>
   )

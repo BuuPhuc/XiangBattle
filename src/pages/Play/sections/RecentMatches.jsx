@@ -19,7 +19,7 @@ function Message({ icon, children }) {
   return (
     <div className="p-12 flex flex-col items-center justify-center text-center gap-4">
       <div className="w-16 h-16 rounded-full bg-surface-variant flex items-center justify-center text-outline">
-        <Icon name={icon} className="text-3xl" />
+        <Icon name={icon} size="lg" />
       </div>
       {children}
     </div>
@@ -51,7 +51,7 @@ function SignedInRecentMatches({ user }) {
           <Message icon="cloud_off">
             <p className="font-body-lg text-body-lg text-on-surface-variant">Không thể tải lịch sử đấu.</p>
             <Button variant="outline-sm" size="sm" onClick={reload}>
-              <Icon name="refresh" className="text-[18px]" />
+              <Icon name="refresh" size="md" />
               Thử lại
             </Button>
           </Message>

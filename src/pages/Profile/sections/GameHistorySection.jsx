@@ -16,7 +16,7 @@ export function GameHistorySection({ userId }) {
   return (
     <div>
       <h2 className="font-headline-sm text-headline-sm text-on-surface mb-3 flex items-center gap-2">
-        <Icon name="history" className="text-[20px]" />
+        <Icon name="history" size="md" />
         Ván đấu gần đây
       </h2>
       <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden">
@@ -32,13 +32,13 @@ export function GameHistorySection({ userId }) {
         )}
         {status === 'hidden' && (
           <div className="py-10 text-center px-4 space-y-2">
-            <Icon name="lock" className="text-4xl text-on-surface-variant/40 block" />
+            <Icon name="lock" size="xl" className="text-on-surface-variant/40 block" />
             <p className="font-body-sm text-body-sm text-on-surface-variant">{error}</p>
           </div>
         )}
         {status === 'empty' && (
           <div className="py-10 text-center px-4 space-y-2">
-            <Icon name="sports_esports" className="text-4xl text-on-surface-variant/40 block" />
+            <Icon name="sports_esports" size="xl" className="text-on-surface-variant/40 block" />
             <p className="font-body-sm text-body-sm text-on-surface-variant">Chưa có ván đấu nào</p>
           </div>
         )}

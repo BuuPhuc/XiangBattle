@@ -117,7 +117,7 @@ export function NotificationPanel({ onClose }) {
 
         {status === 'ready' && notifications.length === 0 && (
           <div className="py-10 text-center px-4 space-y-2">
-            <Icon name="notifications_off" className="text-4xl text-on-surface-variant/40 block" />
+            <Icon name="notifications_off" size="xl" className="text-on-surface-variant/40 block" />
             <p className="font-body-sm text-body-sm text-on-surface-variant">Bạn chưa có thông báo mới.</p>
           </div>
         )}

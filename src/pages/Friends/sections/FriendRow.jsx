@@ -30,7 +30,7 @@ export function FriendRow({ friend, onRemove, removing, challenge, liveGame }) {
           {name}
         </Link>
         <p className="font-label-sm text-label-sm text-on-surface-variant/70 flex items-center gap-1.5 mt-0.5">
-          <Icon name="star" className="text-[14px] text-gold-shimmer" filled />
+          <Icon name="star" size="xs" className="text-gold-shimmer" filled />
           {friend.rating}
           <span className="mx-1">·</span>
           {liveGame ? (
@@ -44,7 +44,7 @@ export function FriendRow({ friend, onRemove, removing, challenge, liveGame }) {
         {liveGame && (
           <Link to={`/watch/${liveGame.roomId}`}>
             <Button variant="outline-sm" size="sm">
-              <Icon name="visibility" className="text-[16px] mr-1" />
+              <Icon name="visibility" size="sm" className="mr-1" />
               Xem ván
             </Button>
           </Link>

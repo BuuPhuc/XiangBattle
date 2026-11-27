@@ -99,7 +99,7 @@ export function Profile() {
         <h1 className="font-headline-lg text-headline-lg text-on-surface">{user.username}</h1>
         {user.bio && <p className="font-body-md text-body-md text-on-surface-variant mt-2 italic">"{user.bio}"</p>}
         <p className="font-label-sm text-label-sm text-on-surface-variant/70 mt-3 flex items-center justify-center gap-1.5">
-          <Icon name="event" className="text-[16px]" />
+          <Icon name="event" size="sm" />
           Tham gia từ {formatJoinDate(user.createdAt)}
         </p>
 

@@ -44,7 +44,7 @@ export function MatchActions({
           disabled={!canResign}
           className="flex-1 disabled:opacity-40"
         >
-          <Icon name="flag" className="text-[18px]" />
+          <Icon name="flag" size="md" />
           Đầu hàng
         </Button>
         <Button
@@ -53,7 +53,7 @@ export function MatchActions({
           disabled={!canOfferDraw || drawOfferPending}
           className="flex-1 disabled:opacity-40"
         >
-          <Icon name="handshake" className="text-[18px]" />
+          <Icon name="handshake" size="md" />
           {drawOfferPending ? 'Đang chờ phản hồi...' : 'Xin hòa'}
         </Button>
       </div>

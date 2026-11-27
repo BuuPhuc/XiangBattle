@@ -15,7 +15,7 @@ function TimeControlBadge({ timeControl }) {
   if (!timeControl) return null
   return (
     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary font-label-md text-label-md tabular-nums">
-      <Icon name="timer" className="text-[18px]" />
+      <Icon name="timer" size="md" />
       Ván {formatTimeControlShort(timeControl)}
     </span>
   )
@@ -173,7 +173,7 @@ export function Room() {
 
           <div className="glass-panel border border-gold-shimmer/30 p-6 rounded-xl flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
             <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-              <Icon name="bolt" className="text-3xl" />
+              <Icon name="bolt" size="lg" />
             </div>
             <div className="flex-1 text-center sm:text-left">
               <h2 className="font-headline-sm text-headline-sm text-on-surface">Chơi ngay</h2>
@@ -190,7 +190,7 @@ export function Room() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="glass-panel border border-gold-shimmer/30 p-6 rounded-xl flex flex-col items-center gap-4 text-center">
-              <Icon name="add_circle" className="text-4xl text-primary" />
+              <Icon name="add_circle" size="xl" className="text-primary" />
               <h2 className="font-headline-sm text-headline-sm text-on-surface">Tạo phòng</h2>
               <p className="font-body-sm text-body-sm text-on-surface-variant">Tạo phòng mới và nhận mã để mời đối thủ.</p>
               <p className="font-label-sm text-label-sm text-on-surface-variant/80" data-testid="room-friendly-note">
@@ -205,7 +205,7 @@ export function Room() {
               onSubmit={handleJoinSubmit}
               className="glass-panel border border-gold-shimmer/30 p-6 rounded-xl flex flex-col items-center gap-4 text-center"
             >
-              <Icon name="login" className="text-4xl text-primary" />
+              <Icon name="login" size="xl" className="text-primary" />
               <h2 className="font-headline-sm text-headline-sm text-on-surface">Tham gia phòng</h2>
               <input
                 type="text"

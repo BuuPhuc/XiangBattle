@@ -78,7 +78,7 @@ function ChallengeMenu({ busy, onChallenge }) {
   return (
     <span ref={buttonRef} className="inline-flex">
       <Button size="sm" disabled={busy} onClick={toggle} aria-expanded={open} className="disabled:opacity-50">
-        <Icon name="swords" className="text-[16px]" />
+        <Icon name="swords" size="sm" />
         {busy ? 'Đang gửi...' : 'Thách đấu'}
       </Button>
       {open &&
@@ -111,7 +111,7 @@ function ChallengeMenu({ busy, onChallenge }) {
                 <span className="flex-1 min-w-0 font-label-sm text-label-sm text-on-surface-variant">
                   {describeTimeControl(control)}
                 </span>
-                {control.id === usualId && <Icon name="check" className="text-[16px] text-primary flex-shrink-0" />}
+                {control.id === usualId && <Icon name="check" size="sm" className="text-primary flex-shrink-0" />}
               </button>
             ))}
           </div>,
@@ -132,7 +132,7 @@ export function ChallengeButton({ state, busy, timeControlId, onChallenge, onCan
   if (state === 'accepted') {
     return (
       <Button variant="outline" size="sm" disabled className="cursor-default opacity-80">
-        <Icon name="check" className="text-[16px]" />
+        <Icon name="check" size="sm" />
         Đã chấp nhận
       </Button>
     )
@@ -147,7 +147,7 @@ export function ChallengeButton({ state, busy, timeControlId, onChallenge, onCan
           </span>
         )}
         <Button size="sm" disabled={busy} onClick={onAccept} className="disabled:opacity-50" title="Chấp nhận lời mời thách đấu">
-          <Icon name="swords" className="text-[16px]" />
+          <Icon name="swords" size="sm" />
           {busy ? 'Đang vào trận...' : 'Nhận thách đấu'}
         </Button>
         <Button variant="outline-sm" size="sm" disabled={busy} onClick={onReject} className="disabled:opacity-50">
@@ -161,7 +161,7 @@ export function ChallengeButton({ state, busy, timeControlId, onChallenge, onCan
     return (
       <>
         <Button variant="outline" size="sm" disabled className="cursor-default opacity-80">
-          <Icon name="schedule" className="text-[16px]" />
+          <Icon name="schedule" size="sm" />
           Đang chờ...{clock && <span className="tabular-nums"> ({clock})</span>}
         </Button>
         <Button
@@ -181,7 +181,7 @@ export function ChallengeButton({ state, busy, timeControlId, onChallenge, onCan
   if (state === 'blocked') {
     return (
       <Button variant="outline-sm" size="sm" disabled className="cursor-not-allowed opacity-50">
-        <Icon name="block" className="text-[16px]" />
+        <Icon name="block" size="sm" />
         Không thể thách đấu
       </Button>
     )

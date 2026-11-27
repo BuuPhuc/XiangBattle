@@ -36,7 +36,7 @@ export function LiveGames() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-headline-lg text-headline-lg text-on-surface flex items-center gap-2">
-            <Icon name="live_tv" className="text-primary text-[32px]" />
+            <Icon name="live_tv" size="lg" className="text-primary" />
             Ván đang diễn ra
           </h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-1">
@@ -48,7 +48,7 @@ export function LiveGames() {
           size="md"
           onClick={refresh}
         >
-          <Icon name="refresh" className="text-[18px]" />
+          <Icon name="refresh" size="md" />
           Làm mới
         </Button>
       </div>
@@ -57,7 +57,7 @@ export function LiveGames() {
         <p className="text-center py-16 font-label-md text-label-md text-on-surface-variant">Đang tải…</p>
       ) : games.length === 0 ? (
         <div className="glass-panel border border-gold-shimmer/30 rounded-xl text-center py-16 px-4">
-          <Icon name="visibility_off" className="text-[40px] text-on-surface-variant" />
+          <Icon name="visibility_off" size="xl" className="text-on-surface-variant" />
           <p className="font-headline-sm text-headline-sm text-on-surface mt-3">Hiện chưa có ván nào đang diễn ra</p>
           <p className="font-body-md text-body-md text-on-surface-variant mt-1 mb-6">Hay là bạn mở một ván?</p>
           <Link
@@ -83,13 +83,13 @@ export function LiveGames() {
                 </div>
                 <div className="flex items-center gap-4 font-label-md text-label-md text-on-surface-variant">
                   <span className="inline-flex items-center gap-1 tabular-nums">
-                    <Icon name="timer" className="text-[18px] text-primary" />
+                    <Icon name="timer" size="md" className="text-primary" />
                     {formatTimeControlShort(game.timeControl)}
                   </span>
                   {game.rated !== undefined && <RatedBadge rated={game.rated} />}
                   <span className="tabular-nums">{game.moveCount} nước</span>
                   <span className="inline-flex items-center gap-1 tabular-nums" title="Người đang xem">
-                    <Icon name="visibility" className="text-[18px]" />
+                    <Icon name="visibility" size="md" />
                     {game.spectatorCount}
                   </span>
                 </div>
@@ -97,7 +97,7 @@ export function LiveGames() {
                   to={`/watch/${game.roomId}`}
                   className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:opacity-90"
                 >
-                  <Icon name="visibility" className="text-[18px]" />
+                  <Icon name="visibility" size="md" />
                   Xem
                 </Link>
               </li>

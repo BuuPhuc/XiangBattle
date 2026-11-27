@@ -117,7 +117,7 @@ export function Leaderboard() {
 
       {status === 'empty' && (
         <div className="py-16 text-center px-4 space-y-2">
-          <Icon name="groups" className="text-4xl text-on-surface-variant/40 block" />
+          <Icon name="groups" size="xl" className="text-on-surface-variant/40 block" />
           <p className="font-body-md text-body-md text-on-surface-variant">Chưa có người chơi</p>
         </div>
       )}

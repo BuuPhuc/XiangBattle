@@ -80,7 +80,7 @@ export function FriendAction({ userId }) {
       <div className="flex items-center justify-center gap-2 flex-wrap">
         {relation === 'NONE' && (
           <Button size="sm" disabled={busy} onClick={handleAdd}>
-            <Icon name="person_add" className="text-[18px]" />
+            <Icon name="person_add" size="md" />
             Thêm bạn
           </Button>
         )}
@@ -88,7 +88,7 @@ export function FriendAction({ userId }) {
         {relation === 'REQUEST_SENT' && (
           <>
             <Button variant="outline" size="sm" disabled className="cursor-default">
-              <Icon name="schedule" className="text-[18px]" />
+              <Icon name="schedule" size="md" />
               Đã gửi lời mời
             </Button>
             <Button variant="outline-sm" size="sm" disabled={busy} onClick={handleCancel}>
@@ -111,7 +111,7 @@ export function FriendAction({ userId }) {
         {relation === 'FRIENDS' && (
           <>
             <Button variant="outline" size="sm" disabled className="cursor-default">
-              <Icon name="check" className="text-[18px]" />
+              <Icon name="check" size="md" />
               Bạn bè
             </Button>
             <Button variant="outline-sm" size="sm" disabled={busy} onClick={handleRemove}>

@@ -19,7 +19,7 @@ function TabButton({ active, onClick, icon, label, badge }) {
           : 'text-on-surface-variant border-transparent hover:text-on-surface'
       )}
     >
-      <Icon name={icon} className="text-[18px]" />
+      <Icon name={icon} size="md" />
       {label}
       {badge > 0 && (
         <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white text-[10px] font-bold flex items-center justify-center leading-none">
@@ -70,7 +70,7 @@ export function GameHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, 
       ) : (
         <div className="p-4 border-b border-outline-variant/30 bg-surface-container-low rounded-t-xl flex-shrink-0">
           <h4 className="font-label-md text-label-md text-on-surface flex items-center gap-2">
-            <Icon name="history" className="text-[18px]" />
+            <Icon name="history" size="md" />
             Lịch sử trận đấu
           </h4>
         </div>

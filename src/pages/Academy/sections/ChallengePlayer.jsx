@@ -104,7 +104,7 @@ export function ChallengePlayer({ course, lesson, challenge, index, lessonProgre
                   key={`${game.feedback.type}:${game.wrongSquare?.attempt ?? game.stepIndex}`}
                   className={`academy-fade-in px-4 py-3 rounded-xl border flex items-start gap-2 ${feedbackStyle.box}`}
                 >
-                  <Icon name={feedbackStyle.icon} filled className={`text-[20px] ${feedbackStyle.text}`} />
+                  <Icon name={feedbackStyle.icon} size="md" filled className={feedbackStyle.text} />
                   <p className={`font-body-md text-body-md font-semibold ${feedbackStyle.text}`}>{game.feedback.message}</p>
                 </div>
               )}
@@ -128,7 +128,7 @@ export function ChallengePlayer({ course, lesson, challenge, index, lessonProgre
                     className="w-full py-1.5"
                     onClick={onRetry}
                   >
-                    <Icon name="replay" className="text-[18px]" />
+                    <Icon name="replay" size="md" />
                     Làm lại
                   </Button>
                 </div>

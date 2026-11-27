@@ -25,7 +25,7 @@ export function AnalysisPanel({ analysis, evaluation, shownMove, nextBest, summa
     <section className="glass-panel border border-gold-shimmer/30 rounded-xl p-4 space-y-3" data-testid="analysis-panel">
       <div className="flex items-center justify-between gap-2">
         <h4 className="font-label-md text-label-md text-on-surface flex items-center gap-2">
-          <Icon name="query_stats" className="text-[18px]" />
+          <Icon name="query_stats" size="md" />
           Phân tích ván
         </h4>
         {evaluation && (
@@ -42,7 +42,7 @@ export function AnalysisPanel({ analysis, evaluation, shownMove, nextBest, summa
             {Math.max(1, Math.round(progress.total / 60))} phút.
           </p>
           <Button onClick={start} className="w-full">
-            <Icon name="query_stats" className="text-[18px]" />
+            <Icon name="query_stats" size="md" />
             Phân tích ván
           </Button>
         </div>

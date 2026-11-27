@@ -44,7 +44,7 @@ export function LessonComplete({ course, lesson, lessonProgress, nextLesson, onR
           className="w-full py-1.5"
           onClick={onReplay}
         >
-          <Icon name="replay" className="text-[18px]" />
+          <Icon name="replay" size="md" />
           Chơi lại
         </Button>
       </div>

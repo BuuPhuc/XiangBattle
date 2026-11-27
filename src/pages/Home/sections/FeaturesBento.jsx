@@ -3,7 +3,7 @@ import Icon from '../../../components/ui/Icon'
 function Badge({ icon, children }) {
   return (
     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/50 text-label-sm font-label-sm text-on-surface border border-outline-variant/20">
-      {icon ? <Icon name={icon} className="text-[16px]" /> : <span className="w-2 h-2 rounded-full bg-secondary" />}
+      {icon ? <Icon name={icon} size="sm" /> : <span className="w-2 h-2 rounded-full bg-secondary" />}
       {children}
     </span>
   )
@@ -28,7 +28,7 @@ export function FeaturesBento() {
             <div className="absolute right-0 bottom-0 w-64 h-64 bg-secondary-container/20 rounded-full blur-3xl group-hover:scale-110 transition-transform" />
             <div className="flex flex-col h-full justify-between">
               <div className="space-y-2">
-                <Icon name="language" className="text-4xl text-secondary" />
+                <Icon name="language" size="xl" className="text-secondary" />
                 <h3 className="text-headline-md font-headline-md text-on-surface">Chơi Online Toàn Cầu</h3>
                 <p className="text-body-md font-body-md text-on-surface-variant max-w-sm">
                   Ghép cặp theo điểm xếp hạng: ưu tiên đối thủ ngang tài ngang sức, chờ lâu sẽ mở rộng để bạn không phải đợi mãi.
@@ -45,7 +45,7 @@ export function FeaturesBento() {
             <div className="absolute inset-0 bg-gradient-to-br from-surface to-surface-container-highest/50 -z-10" />
             <div className="flex flex-col h-full justify-between">
               <div className="space-y-2">
-                <Icon name="smart_toy" className="text-4xl text-primary" />
+                <Icon name="smart_toy" size="xl" className="text-primary" />
                 <h3 className="text-headline-md font-headline-md text-on-surface">Đấu trí với AI</h3>
                 <p className="text-body-md font-body-md text-on-surface-variant">
                   Nhiều cấp độ khó, từ nhập môn đến Kiện tướng.
@@ -58,7 +58,7 @@ export function FeaturesBento() {
             <div className="absolute inset-0 bg-gradient-to-br from-surface to-tertiary-fixed/20 -z-10" />
             <div className="flex flex-col h-full justify-between">
               <div className="space-y-2">
-                <Icon name="diversity_3" className="text-4xl text-tertiary" />
+                <Icon name="diversity_3" size="xl" className="text-tertiary" />
                 <h3 className="text-headline-md font-headline-md text-on-surface">Giao lưu Bạn bè</h3>
                 <p className="text-body-md font-body-md text-on-surface-variant">
                   Tạo phòng riêng, mời bạn bè cùng so tài.
@@ -72,7 +72,7 @@ export function FeaturesBento() {
             <div className="absolute left-0 bottom-0 w-64 h-64 bg-primary-container/10 rounded-full blur-3xl group-hover:scale-110 transition-transform" />
             <div className="flex flex-col h-full justify-between">
               <div className="space-y-2">
-                <Icon name="history" className="text-4xl text-primary" />
+                <Icon name="history" size="xl" className="text-primary" />
                 <h3 className="text-headline-md font-headline-md text-on-surface">Lưu trữ &amp; Phân tích</h3>
                 <p className="text-body-md font-body-md text-on-surface-variant max-w-sm">
                   Tự động lưu lịch sử ván đấu. Xem lại từng nước đi, để máy chấm điểm và chỉ ra nước hớ để rút kinh nghiệm.
