@@ -1,3 +1,4 @@
+import Button from '../../../components/ui/Button'
 import Icon from '../../../components/ui/Icon'
 
 // The old "Lượt của Đỏ/Đen" live-turn banner is gone for good — whose turn
@@ -12,14 +13,14 @@ export function MatchStatus({ viewedMoveNumber, onReturnToLive }) {
       <span className="font-label-md text-label-md text-on-surface-variant">
         {viewedMoveNumber === 0 ? 'Đang xem: vị trí ban đầu' : `Đang xem nước đi #${viewedMoveNumber}`}
       </span>
-      <button
-        type="button"
+      <Button
+        variant="link"
+        size="sm"
         onClick={onReturnToLive}
-        className="font-label-sm text-label-sm text-primary hover:underline flex items-center gap-1"
       >
         <Icon name="undo" className="text-[16px]" />
         Về hiện tại
-      </button>
+      </Button>
     </div>
   )
 }

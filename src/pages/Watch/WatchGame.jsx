@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import ChessBoard from '../../components/game/ChessBoard'
+import Button from '../../components/ui/Button'
 import Icon from '../../components/ui/Icon'
 import useAuth from '../../components/hooks/useAuth'
 import { useGame } from '../../features/game/hooks/useGame'
@@ -192,13 +193,9 @@ function SpectatorBoard({ spectate }) {
             <Icon name="flag" className="text-secondary" />
             <span className="font-label-md text-label-md text-on-surface">Ván đấu kết thúc: {resultText}</span>
             {dbGameId && isAuthenticated && (
-              <button
-                type="button"
-                onClick={() => navigate(`/replay/${dbGameId}`)}
-                className="font-label-md text-label-md text-primary hover:underline"
-              >
+              <Button variant="link" size="md" onClick={() => navigate(`/replay/${dbGameId}`)}>
                 Xem lại ván đấu
-              </button>
+              </Button>
             )}
             <Link to="/live" className="font-label-md text-label-md text-primary hover:underline">
               Xem ván khác
@@ -228,14 +225,14 @@ function SpectatorBoard({ spectate }) {
           />
         </div>
         <div className="w-full mt-3 flex justify-center">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="md"
             onClick={() => setFlipped((value) => !value)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-outline-variant/40 text-on-surface-variant hover:text-primary hover:border-primary/40 font-label-md text-label-md transition-colors"
           >
             <Icon name="swap_vert" className="text-[18px]" />
             Lật bàn cờ
-          </button>
+          </Button>
         </div>
       </div>
 

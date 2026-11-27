@@ -14,8 +14,6 @@ const FEEDBACK_STYLE = {
   error: { box: 'bg-error-container/40 border-error/30', text: 'text-error', icon: 'cancel' },
 }
 
-const NAV_BUTTON_CLASS =
-  'p-2 rounded-lg text-on-surface-variant hover:bg-surface-container disabled:opacity-30 disabled:hover:bg-transparent transition-colors'
 
 // One challenge, played: the shared board on the left (top on small
 // screens), the instruction / feedback / hint / navigation panel beside it.
@@ -124,14 +122,15 @@ export function ChallengePlayer({ course, lesson, challenge, index, lessonProgre
                       <Icon name="arrow_forward" />
                     </Button>
                   )}
-                  <button
-                    type="button"
+                  <Button
+                    variant="quiet"
+                    size="md"
+                    className="w-full py-1.5"
                     onClick={onRetry}
-                    className="w-full flex items-center justify-center gap-1.5 py-1.5 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
                   >
                     <Icon name="replay" className="text-[18px]" />
                     Làm lại
-                  </button>
+                  </Button>
                 </div>
               )}
 
@@ -198,25 +197,25 @@ export function ChallengePlayer({ course, lesson, challenge, index, lessonProgre
                   Danh sách thử thách
                 </Link>
                 <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    className={NAV_BUTTON_CLASS}
+                  <Button
+                    variant="icon"
+                    size="md"
                     onClick={() => goTo(index - 1)}
                     disabled={index === 0}
                     aria-label="Thử thách trước"
                   >
                     <Icon name="chevron_left" />
-                  </button>
-                  <button
-                    type="button"
-                    className={NAV_BUTTON_CLASS}
+                  </Button>
+                  <Button
+                    variant="icon"
+                    size="md"
                     onClick={() => goTo(index + 1)}
                     disabled={isLast || !challengeDone}
                     aria-label="Thử thách tiếp theo"
                     title={!isLast && !challengeDone ? 'Hoàn thành thử thách này để mở thử thách tiếp theo' : undefined}
                   >
                     <Icon name="chevron_right" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

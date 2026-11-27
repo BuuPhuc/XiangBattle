@@ -114,13 +114,13 @@ export function ProgressNotice({ progress }) {
     return (
       <div className="px-4 py-2.5 rounded-lg bg-error-container/40 border border-error/30 flex items-center justify-between gap-3 flex-wrap">
         <p className="font-body-sm text-body-sm text-error">{progress.error}</p>
-        <button
-          type="button"
+        <Button
+          variant="link"
+          size="md"
           onClick={progress.reload}
-          className="font-label-md text-label-md font-semibold text-primary hover:underline"
         >
           Thử lại
-        </button>
+        </Button>
       </div>
     )
   }

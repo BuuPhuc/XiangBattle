@@ -1,3 +1,4 @@
+import Button from '../../../components/ui/Button'
 import { Link } from 'react-router-dom'
 import Avatar from '../../../components/ui/Avatar'
 import useAuth from '../../../components/hooks/useAuth'
@@ -42,9 +43,9 @@ export function OnlineFriends() {
     return (
       <div className={ROW_CLASS}>
         <div className={TEXT_CLASS}>Không thể tải danh sách bạn bè trực tuyến.</div>
-        <button type="button" onClick={reload} className="text-label-sm font-label-sm font-semibold text-primary hover:underline">
+        <Button variant="link" size="sm" onClick={reload}>
           Thử lại
-        </button>
+        </Button>
       </div>
     )
   }

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Button from '../../components/ui/Button'
 import Icon from '../../components/ui/Icon'
 import Avatar from '../../components/ui/Avatar'
 import { formatTimeControlShort } from '../../features/game/timeControls.js'
@@ -42,14 +43,14 @@ export function LiveGames() {
             Chọn một ván để xem trực tiếp. Danh sách tự cập nhật.
           </p>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="md"
           onClick={refresh}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-outline-variant/40 text-on-surface-variant hover:text-primary hover:border-primary/40 font-label-md text-label-md transition-colors"
         >
           <Icon name="refresh" className="text-[18px]" />
           Làm mới
-        </button>
+        </Button>
       </div>
 
       {!loaded ? (

@@ -54,9 +54,9 @@ export function AnalysisPanel({ analysis, evaluation, shownMove, nextBest, summa
             <span>
               Đang phân tích… {progress.done}/{progress.total}
             </span>
-            <button type="button" onClick={cancel} className="text-primary hover:underline">
+            <Button variant="link" size="sm" onClick={cancel}>
               Dừng
-            </button>
+            </Button>
           </div>
           <div
             className="h-2 rounded-full bg-surface-container-high overflow-hidden"

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import Button from '../../components/ui/Button'
 import Icon from '../../components/ui/Icon'
 import friendService from '../../services/friendService'
 import userService from '../../services/userService'
@@ -305,13 +306,13 @@ export function Friends() {
       {status === 'error' && (
         <div className="py-16 text-center space-y-4">
           <p className="font-body-md text-body-md text-error">{error}</p>
-          <button
-            type="button"
+          <Button
+            variant="link"
+            size="md"
             onClick={load}
-            className="font-label-md text-label-md font-semibold text-primary hover:underline"
           >
             Thử lại
-          </button>
+          </Button>
         </div>
       )}
 

@@ -38,14 +38,15 @@ export function LessonComplete({ course, lesson, lessonProgress, nextLesson, onR
         >
           Về khóa học
         </Button>
-        <button
-          type="button"
+        <Button
+          variant="quiet"
+          size="md"
+          className="w-full py-1.5"
           onClick={onReplay}
-          className="w-full flex items-center justify-center gap-1.5 py-1.5 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
         >
           <Icon name="replay" className="text-[18px]" />
           Chơi lại
-        </button>
+        </Button>
       </div>
     </div>
   )

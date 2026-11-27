@@ -191,45 +191,45 @@ export function Replay() {
         </div>
 
         <div className="w-full mt-3 glass-panel border border-gold-shimmer/30 rounded-xl px-4 py-2.5 flex items-center justify-center gap-2">
-          <button
-            type="button"
+          <Button
+            variant="icon"
+            size="md"
             onClick={goToStart}
             disabled={!canGoPrev}
-            className="p-2 rounded hover:bg-surface-container disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
             aria-label="Về đầu"
           >
             <Icon name="first_page" />
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="icon"
+            size="md"
             onClick={goPrev}
             disabled={!canGoPrev}
-            className="p-2 rounded hover:bg-surface-container disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
             aria-label="Nước trước"
           >
             <Icon name="chevron_left" />
-          </button>
+          </Button>
           <span className="font-label-md text-label-md text-on-surface-variant px-3 tabular-nums">
             {currentMoveIndex + 1} / {moveHistory.length}
           </span>
-          <button
-            type="button"
+          <Button
+            variant="icon"
+            size="md"
             onClick={handleNext}
             disabled={!canGoNext}
-            className="p-2 rounded hover:bg-surface-container disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
             aria-label="Nước tiếp theo"
           >
             <Icon name="chevron_right" />
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="icon"
+            size="md"
             onClick={goToEnd}
             disabled={!canGoNext}
-            className="p-2 rounded hover:bg-surface-container disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
             aria-label="Đến cuối"
           >
             <Icon name="last_page" />
-          </button>
+          </Button>
         </div>
 
         <div className="w-full mt-3 flex justify-center">
