@@ -28,7 +28,9 @@ export function Field({ label, aside, hint, error, className, children }) {
             <span className="font-label-sm text-label-sm text-on-surface-variant/70">{aside}</span>
           </div>
         ) : (
-          <label htmlFor={id} className="block font-label-sm text-label-sm text-on-surface-variant">
+          // Inline on purpose: it then sits in a full-height line box, which
+          // gives the label-to-box gap every form had before Field existed.
+          <label htmlFor={id} className="font-label-sm text-label-sm text-on-surface-variant">
             {label}
           </label>
         )}
