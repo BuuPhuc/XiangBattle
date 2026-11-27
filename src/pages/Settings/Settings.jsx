@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
+import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import useAuth from '../../components/hooks/useAuth'
@@ -100,7 +101,7 @@ function GuestSettings() {
 
   return (
     <>
-      <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden">
+      <Card className="overflow-hidden">
         <SettingRow icon="volume_up" label="Âm thanh" description="Lưu trên trình duyệt này." htmlFor="setting-sound">
           <ToggleSwitch
             id="setting-sound"
@@ -111,7 +112,7 @@ function GuestSettings() {
             }}
           />
         </SettingRow>
-      </div>
+      </Card>
       <p className="font-body-sm text-body-sm text-on-surface-variant text-center">
         <Link to="/login" className="text-primary font-bold hover:underline">
           Đăng nhập
@@ -215,7 +216,7 @@ function AccountSettings() {
 
   return (
     <>
-      <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden">
+      <Card className="overflow-hidden">
         <SettingRow icon="volume_up" label="Âm thanh" htmlFor="setting-sound">
           <ToggleSwitch
             id="setting-sound"
@@ -260,7 +261,7 @@ function AccountSettings() {
             disabled={saving}
           />
         </SettingRow>
-      </div>
+      </Card>
 
       <SaveBar onSave={handleSave} hasChanges={hasChanges} saving={saving} feedback={feedback} />
     </>

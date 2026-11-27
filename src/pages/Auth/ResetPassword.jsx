@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import Alert from '../../components/ui/Alert'
+import { Field, Input } from '../../components/ui/Input'
+import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import authService from '../../services/authService'
 import { endSessionAndLeave, setOwnSessionEndInFlight } from '../../features/auth/sessionEnd'
@@ -96,56 +99,42 @@ export function ResetPassword() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="glass-panel border border-gold-shimmer/30 p-8 rounded-xl space-y-5">
+      <Card as="form" padding="lg" onSubmit={handleSubmit} className="space-y-5">
         {error && (
-          <div
-            role="alert"
-            className="px-4 py-3 rounded-lg bg-error/10 border border-error/30 text-error font-label-md text-label-md text-center space-y-2"
-          >
+          <Alert className="text-center space-y-2">
             <p>{error.message}</p>
             {error.linkProblem && (
               <Link to="/forgot-password" className="inline-block text-primary font-bold hover:underline">
                 Gửi lại liên kết
               </Link>
             )}
-          </div>
+          </Alert>
         )}
 
-        <div className="space-y-1">
-          <label htmlFor="reset-password" className="font-label-sm text-label-sm text-on-surface-variant">
-            Mật khẩu mới
-          </label>
-          <input
-            id="reset-password"
+        <Field label="Mật khẩu mới" hint={`Ít nhất ${PASSWORD_MIN_LENGTH} ký tự.`}>
+          <Input
             type="password"
             autoComplete="new-password"
             value={form.password}
             onChange={handleChange('password')}
             required
-            className="w-full px-4 py-2 rounded-lg border border-outline-variant bg-surface-container focus:outline-none focus:border-primary"
           />
-          <p className="font-label-sm text-label-sm text-on-surface-variant/70">Ít nhất {PASSWORD_MIN_LENGTH} ký tự.</p>
-        </div>
+        </Field>
 
-        <div className="space-y-1">
-          <label htmlFor="reset-confirm" className="font-label-sm text-label-sm text-on-surface-variant">
-            Nhập lại mật khẩu mới
-          </label>
-          <input
-            id="reset-confirm"
+        <Field label="Nhập lại mật khẩu mới">
+          <Input
             type="password"
             autoComplete="new-password"
             value={form.confirm}
             onChange={handleChange('confirm')}
             required
-            className="w-full px-4 py-2 rounded-lg border border-outline-variant bg-surface-container focus:outline-none focus:border-primary"
           />
-        </div>
+        </Field>
 
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? 'Đang đặt lại...' : 'Đặt lại mật khẩu'}
         </Button>
-      </form>
+      </Card>
     </div>
   )
 }

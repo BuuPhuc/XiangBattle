@@ -1,5 +1,8 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Alert from '../../components/ui/Alert'
+import { Field, Input, Textarea } from '../../components/ui/Input'
+import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import Avatar from '../../components/ui/Avatar'
@@ -82,11 +85,9 @@ export function EditProfile() {
     <div className="max-w-xl mx-auto py-12 px-4">
       <h1 className="font-headline-lg text-headline-lg text-on-surface mb-6 text-center">Chỉnh sửa hồ sơ</h1>
 
-      <form onSubmit={handleSubmit} className="glass-panel border border-gold-shimmer/30 p-8 rounded-xl space-y-6">
+      <Card as="form" padding="lg" onSubmit={handleSubmit} className="space-y-6">
         {formError && (
-          <div className="px-4 py-3 rounded-lg bg-error/10 border border-error/30 text-error font-label-md text-label-md text-center">
-            {formError}
-          </div>
+          <Alert className="text-center">{formError}</Alert>
         )}
 
         <div className="flex flex-col items-center gap-3">
@@ -99,21 +100,12 @@ export function EditProfile() {
           {avatarError && <p className="font-label-sm text-label-sm text-error text-center">{avatarError}</p>}
         </div>
 
-        <div className="space-y-1">
-          <label className="font-label-sm text-label-sm text-on-surface-variant">Email</label>
-          <input
-            type="email"
-            value={user.email || ''}
-            readOnly
-            disabled
-            className="w-full px-4 py-2 rounded-lg border border-outline-variant bg-surface-container-high text-on-surface-variant cursor-not-allowed"
-          />
-          <p className="font-label-sm text-label-sm text-on-surface-variant/70">Email không thể thay đổi.</p>
-        </div>
+        <Field label="Email" hint="Email không thể thay đổi.">
+          <Input type="email" value={user.email || ''} readOnly disabled />
+        </Field>
 
-        <div className="space-y-1">
-          <label className="font-label-sm text-label-sm text-on-surface-variant">Tên đăng nhập</label>
-          <input
+        <Field label="Tên đăng nhập">
+          <Input
             type="text"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
@@ -121,26 +113,18 @@ export function EditProfile() {
             minLength={3}
             maxLength={20}
             placeholder="player01"
-            className="w-full px-4 py-2 rounded-lg border border-outline-variant bg-surface-container focus:outline-none focus:border-primary"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <label className="font-label-sm text-label-sm text-on-surface-variant">Tiểu sử</label>
-            <span className="font-label-sm text-label-sm text-on-surface-variant/70">
-              {bio.length}/{BIO_MAX_LENGTH}
-            </span>
-          </div>
-          <textarea
+        <Field label="Tiểu sử" aside={`${bio.length}/${BIO_MAX_LENGTH}`}>
+          <Textarea
             value={bio}
             onChange={(event) => setBio(event.target.value.slice(0, BIO_MAX_LENGTH))}
             rows={4}
             maxLength={BIO_MAX_LENGTH}
             placeholder="Yêu thích cờ tướng..."
-            className="w-full px-4 py-2 rounded-lg border border-outline-variant bg-surface-container focus:outline-none focus:border-primary resize-none"
           />
-        </div>
+        </Field>
 
         <div className="flex gap-3">
           <Button type="button" variant="outline" className="flex-1" onClick={() => navigate('/profile')}>
@@ -150,7 +134,7 @@ export function EditProfile() {
             {saving ? 'Đang lưu...' : 'Lưu thông tin'}
           </Button>
         </div>
-      </form>
+      </Card>
     </div>
   )
 }

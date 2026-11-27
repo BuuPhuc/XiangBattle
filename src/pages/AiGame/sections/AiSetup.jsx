@@ -36,7 +36,7 @@ export function AiSetup({ initialLevelId = 'medium', initialColor = 'red', onSta
     <div className="max-w-3xl mx-auto space-y-10 pb-24 px-4">
       <div className="text-center space-y-3 pt-8 md:pt-12">
         <div className="w-16 h-16 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center mx-auto">
-          <Icon name="smart_toy" className="text-4xl" />
+          <Icon name="smart_toy" size="xl" />
         </div>
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">
           Đối đầu với máy

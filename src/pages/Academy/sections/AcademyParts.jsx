@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Icon from '../../../components/ui/Icon'
+import Badge from '../../../components/ui/Badge'
 import Button from '../../../components/ui/Button'
 import { LESSON_STATUS, PIECE_CHARS, PIECE_NAMES } from '../../../features/academy/constants.js'
 
@@ -11,10 +12,10 @@ const STATUS_LABEL = {
   [LESSON_STATUS.COMPLETED]: 'Hoàn thành',
 }
 
-const STATUS_CLASS = {
-  [LESSON_STATUS.NOT_STARTED]: 'bg-surface-container text-on-surface-variant',
-  [LESSON_STATUS.IN_PROGRESS]: 'bg-tertiary-fixed/60 text-on-tertiary-fixed-variant',
-  [LESSON_STATUS.COMPLETED]: 'bg-jade-light text-secondary',
+const STATUS_TONE = {
+  [LESSON_STATUS.NOT_STARTED]: 'neutral',
+  [LESSON_STATUS.IN_PROGRESS]: 'warning',
+  [LESSON_STATUS.COMPLETED]: 'success',
 }
 
 export function BackButton({ to, label }) {
@@ -60,10 +61,9 @@ export function PieceBadge({ type, size = 48 }) {
 
 export function StatusBadge({ status }) {
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-sm text-label-sm ${STATUS_CLASS[status]}`}>
-      {status === LESSON_STATUS.COMPLETED && <Icon name="check_circle" filled className="text-[14px]" />}
+    <Badge tone={STATUS_TONE[status]} icon={status === LESSON_STATUS.COMPLETED ? 'check_circle' : undefined} iconFilled>
       {STATUS_LABEL[status]}
-    </span>
+    </Badge>
   )
 }
 
@@ -96,7 +96,7 @@ export function LoadingState({ label = 'Đang tải tiến độ học tập...'
 export function NotFoundState({ message, backTo, backLabel }) {
   return (
     <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-4">
-      <Icon name="school" className="text-5xl text-on-surface-variant/40 block" />
+      <Icon name="school" size="2xl" className="text-on-surface-variant/40 block" />
       <h1 className="font-headline-sm text-headline-sm text-on-surface">{message}</h1>
       <Button as={Link} to={backTo} variant="outline">
         <Icon name="arrow_back" />
@@ -114,13 +114,13 @@ export function ProgressNotice({ progress }) {
     return (
       <div className="px-4 py-2.5 rounded-lg bg-error-container/40 border border-error/30 flex items-center justify-between gap-3 flex-wrap">
         <p className="font-body-sm text-body-sm text-error">{progress.error}</p>
-        <button
-          type="button"
+        <Button
+          variant="link"
+          size="md"
           onClick={progress.reload}
-          className="font-label-md text-label-md font-semibold text-primary hover:underline"
         >
           Thử lại
-        </button>
+        </Button>
       </div>
     )
   }
@@ -128,7 +128,7 @@ export function ProgressNotice({ progress }) {
   if (progress.status === 'ready' && progress.isGuest) {
     return (
       <div className="px-4 py-2.5 rounded-lg bg-secondary/10 border border-secondary/30 flex items-center gap-2">
-        <Icon name="info" className="text-[18px] text-secondary" />
+        <Icon name="info" size="md" className="text-secondary" />
         <p className="font-body-sm text-body-sm text-on-surface">
           <Link to="/login" className="font-semibold text-primary hover:underline">
             Đăng nhập

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import XiangqiBoard from '../../components/ui/XiangqiBoard'
 import { PUZZLES, PUZZLE_LEVELS } from '../../features/puzzles/data/puzzles'
@@ -9,10 +10,12 @@ import PuzzleStatus from './sections/PuzzleStatus'
 
 function PuzzleCard({ puzzle, number, entry }) {
   return (
-    <Link
+    <Card
+      as={Link}
+      interactive
       to={`/puzzles/${puzzle.id}`}
       data-testid={`puzzle-card-${puzzle.id}`}
-      className="group glass-panel border border-gold-shimmer/30 rounded-xl p-3 flex flex-col gap-2 hover:border-primary/50 hover:-translate-y-0.5 transition-all"
+      className="group p-3 flex flex-col gap-2 hover:-translate-y-0.5"
     >
       <XiangqiBoard
         className="w-full rounded-lg"
@@ -29,7 +32,7 @@ function PuzzleCard({ puzzle, number, entry }) {
         </div>
         <PuzzleStatus entry={entry} />
       </div>
-    </Link>
+    </Card>
   )
 }
 

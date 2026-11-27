@@ -66,7 +66,7 @@ export function NotificationItem({ notification, onOpen, onRespond }) {
           notification.read ? 'bg-surface-container-high text-on-surface-variant' : 'bg-primary/10 text-primary',
         )}
       >
-        <Icon name={iconForType(notification.type)} className="text-[20px]" />
+        <Icon name={iconForType(notification.type)} size="md" />
       </div>
 
       <div className="flex-grow min-w-0">

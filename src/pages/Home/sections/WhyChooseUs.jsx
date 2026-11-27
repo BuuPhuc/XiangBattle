@@ -21,7 +21,7 @@ export function WhyChooseUs() {
               }`}
             >
               <div className="w-16 h-16 rounded-2xl bg-surface-container flex items-center justify-center group-hover:bg-tertiary-fixed/30 group-hover:-translate-y-1 transition-all duration-300 wood-shadow">
-                <Icon name={icon} className="text-3xl text-primary" />
+                <Icon name={icon} size="lg" className="text-primary" />
               </div>
               <h3 className="font-label-md text-label-md text-on-surface">{label}</h3>
             </div>

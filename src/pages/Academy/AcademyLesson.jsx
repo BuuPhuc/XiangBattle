@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
+import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import { findCourse, findLesson, getLessonProgress } from '../../features/academy/catalog.js'
@@ -46,7 +47,7 @@ export function AcademyLesson() {
         <LoadingState />
       ) : (
         <>
-          <div className="glass-panel border border-gold-shimmer/30 rounded-xl p-6 space-y-5">
+          <Card padding="md" className="space-y-5">
             <div className="flex items-center gap-4">
               <PieceBadge type={lesson.piece} size={72} />
               <div className="min-w-0 space-y-1.5">
@@ -74,9 +75,9 @@ export function AcademyLesson() {
               <Icon name="play_arrow" filled />
               {LESSON_ACTION_LABEL[lessonProgress.status]}
             </Button>
-          </div>
+          </Card>
 
-          <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden divide-y divide-outline-variant/20">
+          <Card className="overflow-hidden divide-y divide-outline-variant/20">
             {lesson.challenges.map((challenge, index) => {
               const done = progress.completedIds.has(challenge.id)
               const unlocked = index <= lessonProgress.firstIncompleteIndex
@@ -87,12 +88,13 @@ export function AcademyLesson() {
                       done ? 'bg-jade-light text-secondary' : 'bg-surface-container text-on-surface-variant'
                     }`}
                   >
-                    {done ? <Icon name="check" className="text-[18px]" /> : index + 1}
+                    {done ? <Icon name="check" size="md" /> : index + 1}
                   </span>
                   <span className="flex-1 min-w-0 font-body-md text-body-md text-on-surface truncate">{challenge.title}</span>
                   <Icon
                     name={unlocked ? 'chevron_right' : 'lock'}
-                    className={`text-[20px] ${unlocked ? 'text-on-surface-variant' : 'text-on-surface-variant/40'}`}
+                    size="md"
+                    className={unlocked ? 'text-on-surface-variant' : 'text-on-surface-variant/40'}
                   />
                 </>
               )
@@ -111,7 +113,7 @@ export function AcademyLesson() {
                 </div>
               )
             })}
-          </div>
+          </Card>
         </>
       )}
     </div>

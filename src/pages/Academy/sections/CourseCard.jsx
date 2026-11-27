@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import Card from '../../../components/ui/Card'
+import Badge from '../../../components/ui/Badge'
 import { countCourseChallenges, getCourseProgress } from '../../../features/academy/catalog.js'
 import { COURSE_LEVELS } from '../../../features/academy/constants.js'
 import { academyPaths } from '../../../features/academy/paths.js'
@@ -9,9 +11,11 @@ export function CourseCard({ course, completedIds }) {
   const level = COURSE_LEVELS.find((item) => item.id === course.level)
 
   return (
-    <Link
+    <Card
+      as={Link}
+      interactive
       to={academyPaths.course(course.id)}
-      className="group glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden flex flex-col hover:border-primary/40 hover:shadow-lg transition-all duration-200"
+      className="group overflow-hidden flex flex-col"
     >
       <div className="h-32 flex items-center justify-center gap-3 bg-board-felt border-b border-gold-shimmer/30">
         {course.thumbnail.map((type) => (
@@ -22,9 +26,7 @@ export function CourseCard({ course, completedIds }) {
       <div className="p-4 flex flex-col gap-3 flex-1">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           {level && (
-            <span className="px-2.5 py-1 rounded-full bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
-              {level.label}
-            </span>
+            <Badge>{level.label}</Badge>
           )}
           <StatusBadge status={progress.status} />
         </div>
@@ -47,7 +49,7 @@ export function CourseCard({ course, completedIds }) {
           </p>
         </div>
       </div>
-    </Link>
+    </Card>
   )
 }
 

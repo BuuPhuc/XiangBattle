@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import ChessGame from '../ChessGame/ChessGame'
@@ -35,9 +36,9 @@ export function AiGame() {
 
   return (
     <div className="space-y-3">
-      <div className="w-full max-w-container-max mx-auto glass-panel border border-gold-shimmer/30 rounded-xl px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+      <Card className="w-full max-w-container-max mx-auto px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 font-label-md text-label-md text-on-surface">
-          <Icon name="smart_toy" className="text-[20px] text-on-surface-variant" />
+          <Icon name="smart_toy" size="md" className="text-on-surface-variant" />
           <span>
             Đối đầu máy · <strong>{level.label}</strong> · Bạn cầm {game.playerColor === 'red' ? 'Đỏ' : 'Đen'}
           </span>
@@ -45,15 +46,15 @@ export function AiGame() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline-sm" size="sm" onClick={() => start(setup)}>
-            <Icon name="refresh" className="text-[18px]" />
+            <Icon name="refresh" size="md" />
             Chơi lại
           </Button>
           <Button variant="outline-sm" size="sm" onClick={() => setGame(null)}>
-            <Icon name="tune" className="text-[18px]" />
+            <Icon name="tune" size="md" />
             Ván mới
           </Button>
         </div>
-      </div>
+      </Card>
 
       <ChessGame key={game.key} aiGame={{ playerColor: game.playerColor, levelId: game.levelId }} />
     </div>

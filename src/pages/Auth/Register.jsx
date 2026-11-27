@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import Alert from '../../components/ui/Alert'
+import { Field, Input } from '../../components/ui/Input'
+import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import useAuth from '../../components/hooks/useAuth'
@@ -62,15 +65,7 @@ export function Register() {
         </p>
 
         {resendMessage && (
-          <div
-            className={
-              resendStatus === 'error'
-                ? 'px-4 py-3 rounded-lg bg-error/10 border border-error/30 text-error font-label-md text-label-md'
-                : 'px-4 py-3 rounded-lg bg-secondary/10 border border-secondary/30 text-secondary font-label-md text-label-md'
-            }
-          >
-            {resendMessage}
-          </div>
+          <Alert tone={resendStatus === 'error' ? 'error' : 'success'}>{resendMessage}</Alert>
         )}
 
         <div className="flex flex-col items-center gap-3">
@@ -92,16 +87,13 @@ export function Register() {
         <p className="font-body-md text-body-md text-on-surface-variant">Tham gia XiangBattle để lưu lại thành tích của bạn.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="glass-panel border border-gold-shimmer/30 p-8 rounded-xl space-y-5">
+      <Card as="form" padding="lg" onSubmit={handleSubmit} className="space-y-5">
         {formError && (
-          <div className="px-4 py-3 rounded-lg bg-error/10 border border-error/30 text-error font-label-md text-label-md text-center">
-            {formError}
-          </div>
+          <Alert className="text-center">{formError}</Alert>
         )}
 
-        <div className="space-y-1">
-          <label className="font-label-sm text-label-sm text-on-surface-variant">Tên người dùng</label>
-          <input
+        <Field label="Tên người dùng">
+          <Input
             type="text"
             value={form.username}
             onChange={handleChange('username')}
@@ -109,34 +101,29 @@ export function Register() {
             minLength={3}
             maxLength={20}
             placeholder="player01"
-            className="w-full px-4 py-2 rounded-lg border border-outline-variant bg-surface-container focus:outline-none focus:border-primary"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-1">
-          <label className="font-label-sm text-label-sm text-on-surface-variant">Email</label>
-          <input
+        <Field label="Email">
+          <Input
             type="email"
             value={form.email}
             onChange={handleChange('email')}
             required
             placeholder="player01@gmail.com"
-            className="w-full px-4 py-2 rounded-lg border border-outline-variant bg-surface-container focus:outline-none focus:border-primary"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-1">
-          <label className="font-label-sm text-label-sm text-on-surface-variant">Mật khẩu</label>
-          <input
+        <Field label="Mật khẩu">
+          <Input
             type="password"
             value={form.password}
             onChange={handleChange('password')}
             required
             minLength={8}
             placeholder="Tối thiểu 8 ký tự"
-            className="w-full px-4 py-2 rounded-lg border border-outline-variant bg-surface-container focus:outline-none focus:border-primary"
           />
-        </div>
+        </Field>
 
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? 'Đang đăng ký...' : 'Đăng ký'}
@@ -148,7 +135,7 @@ export function Register() {
             Đăng nhập
           </Link>
         </p>
-      </form>
+      </Card>
     </div>
   )
 }

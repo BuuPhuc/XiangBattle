@@ -29,14 +29,14 @@ export function UserSearchResult({ user, onSendRequest, onCancel, onAccept, onRe
           {name}
         </Link>
         <p className="font-label-sm text-label-sm text-on-surface-variant/70 flex items-center gap-1.5 mt-0.5">
-          <Icon name="star" className="text-[14px] text-gold-shimmer" filled />
+          <Icon name="star" size="xs" className="text-gold-shimmer" filled />
           {user.rating} điểm
         </p>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         {user.relationshipStatus === 'NONE' && (
           <Button size="sm" disabled={busy} onClick={() => onSendRequest(user)}>
-            <Icon name="person_add" className="text-[16px]" />
+            <Icon name="person_add" size="sm" />
             Kết bạn
           </Button>
         )}
@@ -65,7 +65,7 @@ export function UserSearchResult({ user, onSendRequest, onCancel, onAccept, onRe
 
         {user.relationshipStatus === 'FRIENDS' && (
           <Button variant="outline" size="sm" disabled className="cursor-default">
-            <Icon name="check" className="text-[16px]" />
+            <Icon name="check" size="sm" />
             Bạn bè
           </Button>
         )}

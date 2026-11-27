@@ -1,3 +1,4 @@
+import Card from '../../../components/ui/Card'
 import Icon from '../../../components/ui/Icon'
 import GameHistoryCard from '../../../components/game/GameHistoryCard'
 import useUserGames from '../../../features/history/useUserGames'
@@ -16,10 +17,10 @@ export function GameHistorySection({ userId }) {
   return (
     <div>
       <h2 className="font-headline-sm text-headline-sm text-on-surface mb-3 flex items-center gap-2">
-        <Icon name="history" className="text-[20px]" />
+        <Icon name="history" size="md" />
         Ván đấu gần đây
       </h2>
-      <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden">
+      <Card className="overflow-hidden">
         {status === 'loading' && (
           <div className="py-10 text-center">
             <span className="w-3 h-3 rounded-full bg-secondary animate-pulse inline-block" />
@@ -32,18 +33,18 @@ export function GameHistorySection({ userId }) {
         )}
         {status === 'hidden' && (
           <div className="py-10 text-center px-4 space-y-2">
-            <Icon name="lock" className="text-4xl text-on-surface-variant/40 block" />
+            <Icon name="lock" size="xl" className="text-on-surface-variant/40 block" />
             <p className="font-body-sm text-body-sm text-on-surface-variant">{error}</p>
           </div>
         )}
         {status === 'empty' && (
           <div className="py-10 text-center px-4 space-y-2">
-            <Icon name="sports_esports" className="text-4xl text-on-surface-variant/40 block" />
+            <Icon name="sports_esports" size="xl" className="text-on-surface-variant/40 block" />
             <p className="font-body-sm text-body-sm text-on-surface-variant">Chưa có ván đấu nào</p>
           </div>
         )}
         {status === 'ready' && games.map((game) => <GameHistoryCard key={game.gameId} game={game} />)}
-      </div>
+      </Card>
     </div>
   )
 }

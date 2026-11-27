@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import Card from '../../../components/ui/Card'
 import Icon from '../../../components/ui/Icon'
 import Button from '../../../components/ui/Button'
 import RatingChart from '../../../components/game/RatingChart'
@@ -32,7 +33,7 @@ export function RatingHistorySection({ ratingHistory, isOwn = false }) {
     <div data-testid="rating-history">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <h2 className="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
-          <Icon name="show_chart" className="text-[20px]" />
+          <Icon name="show_chart" size="md" />
           Lịch sử điểm xếp hạng
         </h2>
         {status === 'ready' && points.length > 0 && (
@@ -55,7 +56,7 @@ export function RatingHistorySection({ ratingHistory, isOwn = false }) {
         )}
       </div>
 
-      <div className="glass-panel border border-gold-shimmer/30 rounded-xl p-4">
+      <Card padding="sm">
         {status === 'loading' && (
           <div className="py-10 text-center">
             <span className="w-3 h-3 rounded-full bg-secondary animate-pulse inline-block" />
@@ -76,7 +77,7 @@ export function RatingHistorySection({ ratingHistory, isOwn = false }) {
             {isOwn && (
               <Link to="/room?mode=quick" className="inline-block pt-1">
                 <Button size="sm">
-                  <Icon name="bolt" className="text-[18px]" />
+                  <Icon name="bolt" size="md" />
                   Chơi ngay
                 </Button>
               </Link>
@@ -99,7 +100,7 @@ export function RatingHistorySection({ ratingHistory, isOwn = false }) {
             )}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   )
 }

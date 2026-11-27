@@ -22,6 +22,7 @@ import { useAiOpponent } from '../../features/ai/hooks/useAiOpponent'
 import { AI_LEVELS } from '../../features/ai/engine/levels.js'
 import { useGameSounds } from '../../features/sound/useGameSounds'
 import { selectArrowsEnabled } from '../../store/slices/settingsSlice'
+import Alert from '../../components/ui/Alert'
 import LogoutConfirmModal from '../../components/ui/LogoutConfirmModal'
 import MatchInfoBar from './sections/MatchInfoBar'
 
@@ -395,9 +396,7 @@ export function ChessGame({ onlineGame, aiGame }) {
       {/* Left: the board, bigger, with match actions right below it */}
       <div className="flex-grow flex flex-col items-center order-1 w-full xl:max-w-[780px]">
         {isOnline && moveError && (
-          <div className="mb-4 px-4 py-2 rounded-lg bg-error/10 border border-error/30 text-error font-label-md text-label-md text-center">
-            {moveError}
-          </div>
+          <Alert className="mb-4 text-center">{moveError}</Alert>
         )}
         {!isGameOver && isViewingHistory && (
           <MatchStatus viewedMoveNumber={currentMoveIndex + 1} onReturnToLive={() => goToMove(moveHistory.length - 1)} />

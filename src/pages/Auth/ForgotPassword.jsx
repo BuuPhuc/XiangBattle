@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import Alert from '../../components/ui/Alert'
+import { Field, Input } from '../../components/ui/Input'
+import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import authService from '../../services/authService'
 
@@ -36,45 +39,30 @@ export function ForgotPassword() {
       </div>
 
       {sentMessage ? (
-        <div className="glass-panel border border-gold-shimmer/30 p-8 rounded-xl space-y-5 text-center">
-          <div
-            role="status"
-            className="px-4 py-3 rounded-lg bg-secondary/10 border border-secondary/30 text-secondary font-label-md text-label-md"
-          >
-            {sentMessage}
-          </div>
+        <Card padding="lg" className="space-y-5 text-center">
+          <Alert tone="success">{sentMessage}</Alert>
           <p className="font-body-sm text-body-sm text-on-surface-variant">
             Liên kết chỉ dùng được một lần và hết hạn sau 30 phút. Không thấy email? Hãy xem cả thư mục Spam.
           </p>
           <Link to="/login" className="inline-block">
             <Button>Quay lại đăng nhập</Button>
           </Link>
-        </div>
+        </Card>
       ) : (
-        <form onSubmit={handleSubmit} className="glass-panel border border-gold-shimmer/30 p-8 rounded-xl space-y-5">
+        <Card as="form" padding="lg" onSubmit={handleSubmit} className="space-y-5">
           {error && (
-            <div
-              role="alert"
-              className="px-4 py-3 rounded-lg bg-error/10 border border-error/30 text-error font-label-md text-label-md text-center"
-            >
-              {error}
-            </div>
+            <Alert className="text-center">{error}</Alert>
           )}
 
-          <div className="space-y-1">
-            <label htmlFor="forgot-email" className="font-label-sm text-label-sm text-on-surface-variant">
-              Email
-            </label>
-            <input
-              id="forgot-email"
+          <Field label="Email">
+            <Input
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
               placeholder="player01@gmail.com"
-              className="w-full px-4 py-2 rounded-lg border border-outline-variant bg-surface-container focus:outline-none focus:border-primary"
             />
-          </div>
+          </Field>
 
           <Button type="submit" className="w-full" disabled={submitting}>
             {submitting ? 'Đang gửi...' : 'Gửi liên kết đặt lại'}
@@ -86,7 +74,7 @@ export function ForgotPassword() {
               Đăng nhập
             </Link>
           </p>
-        </form>
+        </Card>
       )}
     </div>
   )

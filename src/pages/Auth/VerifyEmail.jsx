@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import Alert from '../../components/ui/Alert'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import authService from '../../services/authService'
@@ -83,15 +84,7 @@ export function VerifyEmail() {
         <p className="font-body-md text-body-md text-on-surface-variant">Vui lòng gửi lại email xác nhận.</p>
 
         {resendMessage && (
-          <div
-            className={
-              resendStatus === 'error'
-                ? 'px-4 py-3 rounded-lg bg-error/10 border border-error/30 text-error font-label-md text-label-md'
-                : 'px-4 py-3 rounded-lg bg-secondary/10 border border-secondary/30 text-secondary font-label-md text-label-md'
-            }
-          >
-            {resendMessage}
-          </div>
+          <Alert tone={resendStatus === 'error' ? 'error' : 'success'}>{resendMessage}</Alert>
         )}
 
         {email && (

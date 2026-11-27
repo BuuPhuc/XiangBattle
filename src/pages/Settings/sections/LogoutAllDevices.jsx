@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import Card from '../../../components/ui/Card'
 import Icon from '../../../components/ui/Icon'
 import Button from '../../../components/ui/Button'
 import LogoutConfirmModal from '../../../components/ui/LogoutConfirmModal'
@@ -30,7 +31,7 @@ export function LogoutAllDevices() {
   }
 
   return (
-    <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden">
+    <Card className="overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4">
         <div className="flex items-center gap-3 flex-grow min-w-0">
           <Icon name="devices" className="text-error flex-shrink-0" />
@@ -59,7 +60,7 @@ export function LogoutAllDevices() {
           onCancel={close}
         />
       )}
-    </div>
+    </Card>
   )
 }
 

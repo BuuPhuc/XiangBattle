@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import Card from '../../components/ui/Card'
+import Button from '../../components/ui/Button'
 import Icon from '../../components/ui/Icon'
 import Avatar from '../../components/ui/Avatar'
 import { formatTimeControlShort } from '../../features/game/timeControls.js'
@@ -35,28 +37,28 @@ export function LiveGames() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-headline-lg text-headline-lg text-on-surface flex items-center gap-2">
-            <Icon name="live_tv" className="text-primary text-[32px]" />
+            <Icon name="live_tv" size="lg" className="text-primary" />
             Ván đang diễn ra
           </h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-1">
             Chọn một ván để xem trực tiếp. Danh sách tự cập nhật.
           </p>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="md"
           onClick={refresh}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-outline-variant/40 text-on-surface-variant hover:text-primary hover:border-primary/40 font-label-md text-label-md transition-colors"
         >
-          <Icon name="refresh" className="text-[18px]" />
+          <Icon name="refresh" size="md" />
           Làm mới
-        </button>
+        </Button>
       </div>
 
       {!loaded ? (
         <p className="text-center py-16 font-label-md text-label-md text-on-surface-variant">Đang tải…</p>
       ) : games.length === 0 ? (
-        <div className="glass-panel border border-gold-shimmer/30 rounded-xl text-center py-16 px-4">
-          <Icon name="visibility_off" className="text-[40px] text-on-surface-variant" />
+        <Card className="text-center py-16 px-4">
+          <Icon name="visibility_off" size="xl" className="text-on-surface-variant" />
           <p className="font-headline-sm text-headline-sm text-on-surface mt-3">Hiện chưa có ván nào đang diễn ra</p>
           <p className="font-body-md text-body-md text-on-surface-variant mt-1 mb-6">Hay là bạn mở một ván?</p>
           <Link
@@ -65,16 +67,19 @@ export function LiveGames() {
           >
             Chơi cờ
           </Link>
-        </div>
+        </Card>
       ) : (
         <ul className="space-y-3" data-testid="live-games">
           {games.map((game) => {
             const red = game.players.find((p) => p.color === 'red')
             const black = game.players.find((p) => p.color === 'black')
             return (
-              <li
+              <Card
+                as="li"
                 key={game.roomId}
-                className="glass-panel border border-outline-variant/30 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4"
+                tone="subtle"
+                padding="sm"
+                className="flex flex-col sm:flex-row sm:items-center gap-4"
               >
                 <div className="flex-1 min-w-0 space-y-2">
                   {red && <PlayerLine player={red} />}
@@ -82,13 +87,13 @@ export function LiveGames() {
                 </div>
                 <div className="flex items-center gap-4 font-label-md text-label-md text-on-surface-variant">
                   <span className="inline-flex items-center gap-1 tabular-nums">
-                    <Icon name="timer" className="text-[18px] text-primary" />
+                    <Icon name="timer" size="md" className="text-primary" />
                     {formatTimeControlShort(game.timeControl)}
                   </span>
                   {game.rated !== undefined && <RatedBadge rated={game.rated} />}
                   <span className="tabular-nums">{game.moveCount} nước</span>
                   <span className="inline-flex items-center gap-1 tabular-nums" title="Người đang xem">
-                    <Icon name="visibility" className="text-[18px]" />
+                    <Icon name="visibility" size="md" />
                     {game.spectatorCount}
                   </span>
                 </div>
@@ -96,10 +101,10 @@ export function LiveGames() {
                   to={`/watch/${game.roomId}`}
                   className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:opacity-90"
                 >
-                  <Icon name="visibility" className="text-[18px]" />
+                  <Icon name="visibility" size="md" />
                   Xem
                 </Link>
-              </li>
+              </Card>
             )
           })}
         </ul>

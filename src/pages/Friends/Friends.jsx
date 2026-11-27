@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import Input from '../../components/ui/Input'
+import Card from '../../components/ui/Card'
+import Button from '../../components/ui/Button'
 import Icon from '../../components/ui/Icon'
 import friendService from '../../services/friendService'
 import userService from '../../services/userService'
@@ -305,33 +308,32 @@ export function Friends() {
       {status === 'error' && (
         <div className="py-16 text-center space-y-4">
           <p className="font-body-md text-body-md text-error">{error}</p>
-          <button
-            type="button"
+          <Button
+            variant="link"
+            size="md"
             onClick={load}
-            className="font-label-md text-label-md font-semibold text-primary hover:underline"
           >
             Thử lại
-          </button>
+          </Button>
         </div>
       )}
 
       {status === 'ready' && activeTab === 'friends' && (
         <div className="space-y-3">
-          <div className="relative">
-            <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant/60" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm kiếm bạn bè"
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-outline-variant/30 bg-surface-container/40 font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:border-primary"
-            />
-          </div>
+          <Input
+            variant="search"
+            icon="search"
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm kiếm bạn bè"
+            aria-label="Tìm kiếm bạn bè"
+          />
 
-          <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden">
+          <Card className="overflow-hidden">
             {filteredFriends.length === 0 ? (
               <div className="py-10 text-center px-4 space-y-2">
-                <Icon name="group_off" className="text-4xl text-on-surface-variant/40 block" />
+                <Icon name="group_off" size="xl" className="text-on-surface-variant/40 block" />
                 <p className="font-body-sm text-body-sm text-on-surface-variant">
                   {friends.length === 0 ? 'Chưa có bạn bè nào' : 'Không tìm thấy bạn bè phù hợp'}
                 </p>
@@ -348,29 +350,28 @@ export function Friends() {
                 />
               ))
             )}
-          </div>
+          </Card>
         </div>
       )}
 
       {status === 'ready' && activeTab === 'received' && (
         <div className="space-y-5">
           <div className="space-y-2">
-            <div className="relative">
-              <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant/60" />
-              <input
-                type="text"
-                value={userQuery}
-                onChange={(e) => setUserQuery(e.target.value)}
-                placeholder="Tìm kiếm theo tên người dùng..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-outline-variant/30 bg-surface-container/40 font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:border-primary"
-              />
-            </div>
+            <Input
+              variant="search"
+              icon="search"
+              type="text"
+              value={userQuery}
+              onChange={(e) => setUserQuery(e.target.value)}
+              placeholder="Tìm kiếm theo tên người dùng..."
+              aria-label="Tìm người chơi"
+            />
 
             {userQuery.trim() && (
-              <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden">
+              <Card className="overflow-hidden">
                 {userSearchStatus === 'loading' && (
                   <p className="py-6 text-center font-body-sm text-body-sm text-on-surface-variant flex items-center justify-center gap-2">
-                    <Icon name="search" className="text-[16px]" />
+                    <Icon name="search" size="sm" />
                     Đang tìm kiếm...
                   </p>
                 )}
@@ -390,16 +391,16 @@ export function Friends() {
                       busy={busyIds.has(result.id)}
                     />
                   ))}
-              </div>
+              </Card>
             )}
           </div>
 
           <div>
             <h2 className="font-label-md text-label-md font-bold text-on-surface-variant mb-2">Lời mời đang chờ</h2>
-            <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden">
+            <Card className="overflow-hidden">
               {received.length === 0 ? (
                 <div className="py-10 text-center px-4 space-y-2">
-                  <Icon name="mail" className="text-4xl text-on-surface-variant/40 block" />
+                  <Icon name="mail" size="xl" className="text-on-surface-variant/40 block" />
                   <p className="font-body-sm text-body-sm text-on-surface-variant">Không có lời mời kết bạn</p>
                 </div>
               ) : (
@@ -414,16 +415,16 @@ export function Friends() {
                   />
                 ))
               )}
-            </div>
+            </Card>
           </div>
         </div>
       )}
 
       {status === 'ready' && activeTab === 'sent' && (
-        <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden">
+        <Card className="overflow-hidden">
           {sent.length === 0 ? (
             <div className="py-10 text-center px-4 space-y-2">
-              <Icon name="outgoing_mail" className="text-4xl text-on-surface-variant/40 block" />
+              <Icon name="outgoing_mail" size="xl" className="text-on-surface-variant/40 block" />
               <p className="font-body-sm text-body-sm text-on-surface-variant">Bạn chưa gửi lời mời kết bạn nào</p>
             </div>
           ) : (
@@ -431,7 +432,7 @@ export function Friends() {
               <RequestRow key={request.id} request={request} mode="sent" onCancel={handleCancel} busy={busyIds.has(request.id)} />
             ))
           )}
-        </div>
+        </Card>
       )}
     </div>
   )

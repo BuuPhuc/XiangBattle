@@ -1,3 +1,4 @@
+import Button from '../../../components/ui/Button'
 import Icon from '../../../components/ui/Icon'
 
 // Split out of MatchActions so undo/redo — pure local board navigation, no
@@ -8,24 +9,26 @@ import Icon from '../../../components/ui/Icon'
 export function UndoRedoControls({ canUndo, canRedo, onUndo, onRedo }) {
   return (
     <div className="flex gap-2">
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="sm"
+        className="flex-1"
         onClick={onUndo}
         disabled={!canUndo}
-        className="flex-1 py-1.5 px-3 rounded-lg border border-outline-variant text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:hover:bg-transparent"
       >
-        <Icon name="undo" className="text-[16px]" />
+        <Icon name="undo" size="sm" />
         Hoàn tác
-      </button>
-      <button
-        type="button"
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="flex-1"
         onClick={onRedo}
         disabled={!canRedo}
-        className="flex-1 py-1.5 px-3 rounded-lg border border-outline-variant text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:hover:bg-transparent"
       >
-        <Icon name="redo" className="text-[16px]" />
+        <Icon name="redo" size="sm" />
         Làm lại
-      </button>
+      </Button>
     </div>
   )
 }

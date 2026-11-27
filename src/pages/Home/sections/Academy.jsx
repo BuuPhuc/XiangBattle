@@ -26,7 +26,7 @@ export function Academy() {
               href="#"
               className="px-6 py-3 rounded-full bg-surface-container border border-outline-variant/30 text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors flex items-center gap-2"
             >
-              <Icon name={icon} className="text-[20px]" />
+              <Icon name={icon} size="md" />
               {label}
             </a>
           ))}

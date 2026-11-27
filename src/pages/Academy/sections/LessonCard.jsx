@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { getLessonProgress } from '../../../features/academy/catalog.js'
 import { LESSON_ACTION_LABEL, LESSON_STATUS } from '../../../features/academy/constants.js'
@@ -11,7 +12,7 @@ export function LessonCard({ course, lesson, completedIds }) {
   const progress = getLessonProgress(lesson, completedIds)
 
   return (
-    <div className="glass-panel border border-gold-shimmer/30 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4 hover:border-primary/40 transition-colors">
+    <Card padding="sm" interactive className="flex flex-col sm:flex-row sm:items-center gap-4">
       <Link to={academyPaths.lesson(course.id, lesson.id)} className="group flex items-center gap-4 flex-1 min-w-0">
         <PieceBadge type={lesson.piece} size={56} />
         <div className="min-w-0 flex-1 space-y-1.5">
@@ -42,7 +43,7 @@ export function LessonCard({ course, lesson, completedIds }) {
       >
         {LESSON_ACTION_LABEL[progress.status]}
       </Button>
-    </div>
+    </Card>
   )
 }
 

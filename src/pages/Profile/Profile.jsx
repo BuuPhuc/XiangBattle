@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import Avatar from '../../components/ui/Avatar'
@@ -11,10 +12,10 @@ import useRatingHistory from '../../features/history/useRatingHistory'
 
 function StatCard({ label, value }) {
   return (
-    <div className="glass-panel border border-gold-shimmer/30 rounded-xl px-4 py-5 text-center">
+    <Card className="px-4 py-5 text-center">
       <p className="font-headline-sm text-headline-sm text-on-surface">{value}</p>
       <p className="font-label-sm text-label-sm text-on-surface-variant mt-1">{label}</p>
-    </div>
+    </Card>
   )
 }
 
@@ -94,12 +95,12 @@ export function Profile() {
 
   return (
     <div className="max-w-3xl mx-auto py-12 px-4 space-y-6">
-      <div className="glass-panel border border-gold-shimmer/30 rounded-2xl p-8 text-center">
+      <Card padding="lg" radius="2xl" className="text-center">
         <Avatar src={user.avatarUrl} name={user.displayName || user.username} size={96} className="mx-auto mb-4" />
         <h1 className="font-headline-lg text-headline-lg text-on-surface">{user.username}</h1>
         {user.bio && <p className="font-body-md text-body-md text-on-surface-variant mt-2 italic">"{user.bio}"</p>}
         <p className="font-label-sm text-label-sm text-on-surface-variant/70 mt-3 flex items-center justify-center gap-1.5">
-          <Icon name="event" className="text-[16px]" />
+          <Icon name="event" size="sm" />
           Tham gia từ {formatJoinDate(user.createdAt)}
         </p>
 
@@ -109,7 +110,7 @@ export function Profile() {
             Chỉnh sửa hồ sơ
           </Button>
         </Link>
-      </div>
+      </Card>
 
       <div>
         <h2 className="font-headline-sm text-headline-sm text-on-surface mb-3">Thống kê</h2>

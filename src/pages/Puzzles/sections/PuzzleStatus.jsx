@@ -6,7 +6,7 @@ export function PuzzleStatus({ entry }) {
   if (entry?.solved) {
     return (
       <span data-testid="puzzle-status" data-status="solved" className="inline-flex items-center gap-1 text-secondary font-label-sm text-label-sm font-bold">
-        <Icon name="check_circle" filled className="text-base" />
+        <Icon name="check_circle" size="sm" filled />
         Đã giải
       </span>
     )
@@ -14,7 +14,7 @@ export function PuzzleStatus({ entry }) {
   if (entry?.viewedSolution) {
     return (
       <span data-testid="puzzle-status" data-status="viewed" className="inline-flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
-        <Icon name="visibility" className="text-base" />
+        <Icon name="visibility" size="sm" />
         Đã xem lời giải
       </span>
     )

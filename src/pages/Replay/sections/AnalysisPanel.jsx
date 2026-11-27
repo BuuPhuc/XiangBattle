@@ -1,3 +1,4 @@
+import Card from '../../../components/ui/Card'
 import Icon from '../../../components/ui/Icon'
 import Button from '../../../components/ui/Button'
 import { cn } from '../../../components/utils/cn'
@@ -22,10 +23,10 @@ export function AnalysisPanel({ analysis, evaluation, shownMove, nextBest, summa
   const percent = progress.total ? Math.round((progress.done / progress.total) * 100) : 0
 
   return (
-    <section className="glass-panel border border-gold-shimmer/30 rounded-xl p-4 space-y-3" data-testid="analysis-panel">
+    <Card as="section" padding="sm" className="space-y-3" data-testid="analysis-panel">
       <div className="flex items-center justify-between gap-2">
         <h4 className="font-label-md text-label-md text-on-surface flex items-center gap-2">
-          <Icon name="query_stats" className="text-[18px]" />
+          <Icon name="query_stats" size="md" />
           Phân tích ván
         </h4>
         {evaluation && (
@@ -42,7 +43,7 @@ export function AnalysisPanel({ analysis, evaluation, shownMove, nextBest, summa
             {Math.max(1, Math.round(progress.total / 60))} phút.
           </p>
           <Button onClick={start} className="w-full">
-            <Icon name="query_stats" className="text-[18px]" />
+            <Icon name="query_stats" size="md" />
             Phân tích ván
           </Button>
         </div>
@@ -54,9 +55,9 @@ export function AnalysisPanel({ analysis, evaluation, shownMove, nextBest, summa
             <span>
               Đang phân tích… {progress.done}/{progress.total}
             </span>
-            <button type="button" onClick={cancel} className="text-primary hover:underline">
+            <Button variant="link" size="sm" onClick={cancel}>
               Dừng
-            </button>
+            </Button>
           </div>
           <div
             className="h-2 rounded-full bg-surface-container-high overflow-hidden"
@@ -99,7 +100,7 @@ export function AnalysisPanel({ analysis, evaluation, shownMove, nextBest, summa
           Phân tích bằng máy của XiangBattle, nhìn trước khoảng 6 nước — chỉ mang tính tham khảo.
         </p>
       )}
-    </section>
+    </Card>
   )
 }
 

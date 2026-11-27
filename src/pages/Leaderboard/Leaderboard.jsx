@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import { loginPathFor } from '../../features/auth/returnPath'
 import Button from '../../components/ui/Button'
@@ -96,9 +97,9 @@ export function Leaderboard() {
       {myRank && !isMyRankOnPage && (
         <div>
           <h2 className="font-label-md text-label-md font-bold text-on-surface-variant mb-2">Xếp hạng của bạn</h2>
-          <div className="glass-panel border border-primary/40 rounded-xl overflow-hidden">
+          <Card tone="highlight" className="overflow-hidden">
             <PlayerRankRow player={myRank} highlight />
-          </div>
+          </Card>
         </div>
       )}
 
@@ -117,7 +118,7 @@ export function Leaderboard() {
 
       {status === 'empty' && (
         <div className="py-16 text-center px-4 space-y-2">
-          <Icon name="groups" className="text-4xl text-on-surface-variant/40 block" />
+          <Icon name="groups" size="xl" className="text-on-surface-variant/40 block" />
           <p className="font-body-md text-body-md text-on-surface-variant">Chưa có người chơi</p>
         </div>
       )}
@@ -127,7 +128,7 @@ export function Leaderboard() {
           <TopThreePodium players={topThree} currentUserId={currentUser && currentUser.id} />
 
           {rest.length > 0 && (
-            <div className="glass-panel border border-gold-shimmer/30 rounded-xl overflow-hidden divide-y divide-outline-variant/20">
+            <Card className="overflow-hidden divide-y divide-outline-variant/20">
               {rest.map((player) => (
                 <PlayerRankRow
                   key={player.id}
@@ -135,7 +136,7 @@ export function Leaderboard() {
                   highlight={currentUser && String(player.id) === String(currentUser.id)}
                 />
               ))}
-            </div>
+            </Card>
           )}
 
           {pagination && pagination.totalPages > 1 && (

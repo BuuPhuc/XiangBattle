@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Button from '../../../components/ui/Button'
 import Icon from '../../../components/ui/Icon'
 import { cn } from '../../../components/utils/cn'
 import { groupMovesIntoRows } from '../../../features/game/utils/historyUtils'
@@ -105,39 +106,43 @@ export function MoveHistoryPanel({ moveHistory, currentMoveIndex, onSelectMove, 
 
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-1 p-2 border-t border-outline-variant/30">
-          <button
-            className="p-1.5 rounded hover:bg-surface-container disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          <Button
+            variant="icon"
+            size="sm"
             onClick={() => setPage(1)}
             disabled={page === 1}
             aria-label="Trang đầu"
           >
-            <Icon name="first_page" className="text-[18px]" />
-          </button>
-          <button
-            className="p-1.5 rounded hover:bg-surface-container disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+            <Icon name="first_page" size="md" />
+          </Button>
+          <Button
+            variant="icon"
+            size="sm"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Trang trước"
           >
-            <Icon name="chevron_left" className="text-[18px]" />
-          </button>
+            <Icon name="chevron_left" size="md" />
+          </Button>
           <span className="font-label-sm text-label-sm text-on-surface-variant px-3">{page}</span>
-          <button
-            className="p-1.5 rounded hover:bg-surface-container disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          <Button
+            variant="icon"
+            size="sm"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Trang sau"
           >
-            <Icon name="chevron_right" className="text-[18px]" />
-          </button>
-          <button
-            className="p-1.5 rounded hover:bg-surface-container disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+            <Icon name="chevron_right" size="md" />
+          </Button>
+          <Button
+            variant="icon"
+            size="sm"
             onClick={() => setPage(totalPages)}
             disabled={page === totalPages}
             aria-label="Trang cuối"
           >
-            <Icon name="last_page" className="text-[18px]" />
-          </button>
+            <Icon name="last_page" size="md" />
+          </Button>
         </div>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Card from '../../../components/ui/Card'
 import Icon from '../../../components/ui/Icon'
 import Button from '../../../components/ui/Button'
 import { academyPaths } from '../../../features/academy/paths.js'
@@ -14,8 +15,6 @@ const FEEDBACK_STYLE = {
   error: { box: 'bg-error-container/40 border-error/30', text: 'text-error', icon: 'cancel' },
 }
 
-const NAV_BUTTON_CLASS =
-  'p-2 rounded-lg text-on-surface-variant hover:bg-surface-container disabled:opacity-30 disabled:hover:bg-transparent transition-colors'
 
 // One challenge, played: the shared board on the left (top on small
 // screens), the instruction / feedback / hint / navigation panel beside it.
@@ -86,7 +85,7 @@ export function ChallengePlayer({ course, lesson, challenge, index, lessonProgre
           />
         ) : (
           <>
-            <div className="glass-panel border border-outline-variant/40 rounded-2xl p-5 space-y-2">
+            <Card tone="subtle" radius="2xl" className="p-5 space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <h1 className="font-label-md text-label-md font-bold text-on-surface">{challenge.title}</h1>
                 {game.stepCount > 1 && (
@@ -96,7 +95,7 @@ export function ChallengePlayer({ course, lesson, challenge, index, lessonProgre
                 )}
               </div>
               <p className="font-body-md text-body-md text-on-surface-variant">{challenge.instruction}</p>
-            </div>
+            </Card>
 
             {/* aria-live so a screen reader hears "Chính xác!" / the retry
                 message as it appears. */}
@@ -106,7 +105,7 @@ export function ChallengePlayer({ course, lesson, challenge, index, lessonProgre
                   key={`${game.feedback.type}:${game.wrongSquare?.attempt ?? game.stepIndex}`}
                   className={`academy-fade-in px-4 py-3 rounded-xl border flex items-start gap-2 ${feedbackStyle.box}`}
                 >
-                  <Icon name={feedbackStyle.icon} filled className={`text-[20px] ${feedbackStyle.text}`} />
+                  <Icon name={feedbackStyle.icon} size="md" filled className={feedbackStyle.text} />
                   <p className={`font-body-md text-body-md font-semibold ${feedbackStyle.text}`}>{game.feedback.message}</p>
                 </div>
               )}
@@ -124,14 +123,15 @@ export function ChallengePlayer({ course, lesson, challenge, index, lessonProgre
                       <Icon name="arrow_forward" />
                     </Button>
                   )}
-                  <button
-                    type="button"
+                  <Button
+                    variant="quiet"
+                    size="md"
+                    className="w-full py-1.5"
                     onClick={onRetry}
-                    className="w-full flex items-center justify-center gap-1.5 py-1.5 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
                   >
-                    <Icon name="replay" className="text-[18px]" />
+                    <Icon name="replay" size="md" />
                     Làm lại
-                  </button>
+                  </Button>
                 </div>
               )}
 
@@ -142,7 +142,7 @@ export function ChallengePlayer({ course, lesson, challenge, index, lessonProgre
               )}
             </div>
 
-            <div className="glass-panel border border-gold-shimmer/30 rounded-2xl p-5 space-y-4 xl:mt-auto">
+            <Card radius="2xl" className="p-5 space-y-4 xl:mt-auto">
               <div className="flex items-center justify-between gap-3">
                 <span className="font-label-md text-label-md font-bold text-on-surface">
                   Thử thách {index + 1} / {total}
@@ -198,28 +198,28 @@ export function ChallengePlayer({ course, lesson, challenge, index, lessonProgre
                   Danh sách thử thách
                 </Link>
                 <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    className={NAV_BUTTON_CLASS}
+                  <Button
+                    variant="icon"
+                    size="md"
                     onClick={() => goTo(index - 1)}
                     disabled={index === 0}
                     aria-label="Thử thách trước"
                   >
                     <Icon name="chevron_left" />
-                  </button>
-                  <button
-                    type="button"
-                    className={NAV_BUTTON_CLASS}
+                  </Button>
+                  <Button
+                    variant="icon"
+                    size="md"
                     onClick={() => goTo(index + 1)}
                     disabled={isLast || !challengeDone}
                     aria-label="Thử thách tiếp theo"
                     title={!isLast && !challengeDone ? 'Hoàn thành thử thách này để mở thử thách tiếp theo' : undefined}
                   >
                     <Icon name="chevron_right" />
-                  </button>
+                  </Button>
                 </div>
               </div>
-            </div>
+            </Card>
           </>
         )}
       </div>

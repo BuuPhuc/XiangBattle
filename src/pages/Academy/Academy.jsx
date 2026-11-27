@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import Input from '../../components/ui/Input'
 import Icon from '../../components/ui/Icon'
 import { COURSES } from '../../features/academy/catalog.js'
 import { COURSE_LEVELS } from '../../features/academy/constants.js'
@@ -58,17 +59,15 @@ export function Academy() {
         })}
       </div>
 
-      <div className="relative">
-        <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant/60" />
-        <input
-          type="text"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Tìm kiếm khóa học"
-          aria-label="Tìm kiếm khóa học"
-          className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-outline-variant/30 bg-surface-container/40 font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:border-primary"
-        />
-      </div>
+      <Input
+        variant="search"
+        icon="search"
+        type="text"
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        placeholder="Tìm kiếm khóa học"
+        aria-label="Tìm kiếm khóa học"
+      />
 
       <ProgressNotice progress={progress} />
 
@@ -76,7 +75,7 @@ export function Academy() {
         <LoadingState />
       ) : courses.length === 0 ? (
         <div className="py-16 text-center px-4 space-y-2">
-          <Icon name="menu_book" className="text-4xl text-on-surface-variant/40 block" />
+          <Icon name="menu_book" size="xl" className="text-on-surface-variant/40 block" />
           <p className="font-body-md text-body-md text-on-surface-variant">
             {search.trim() ? 'Không tìm thấy khóa học phù hợp.' : 'Chưa có khóa học nào ở cấp độ này.'}
           </p>

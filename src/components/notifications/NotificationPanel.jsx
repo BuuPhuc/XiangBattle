@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import Button from '../ui/Button'
 import Icon from '../ui/Icon'
 import useNotifications from '../../features/notifications/notificationContext'
 import { saveRoomId } from '../../features/room/roomSession'
@@ -82,14 +83,14 @@ export function NotificationPanel({ onClose }) {
     <div className="flex flex-col max-h-[min(32rem,calc(100vh-6rem))]">
       <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-outline-variant/30 flex-shrink-0">
         <h2 className="font-label-md text-label-md font-bold text-on-surface">Thông báo</h2>
-        <button
-          type="button"
+        <Button
+          variant="link"
+          size="sm"
           onClick={markAllRead}
           disabled={unreadCount === 0}
-          className="font-label-sm text-label-sm font-semibold text-primary hover:underline disabled:opacity-40 disabled:no-underline disabled:cursor-default"
         >
           Đánh dấu tất cả đã đọc
-        </button>
+        </Button>
       </div>
 
       {actionError && (
@@ -104,19 +105,19 @@ export function NotificationPanel({ onClose }) {
         {status === 'error' && (
           <div className="py-10 text-center px-4 space-y-3">
             <p className="font-body-sm text-body-sm text-error">Không thể tải thông báo.</p>
-            <button
-              type="button"
+            <Button
+              variant="link"
+              size="md"
               onClick={loadNotifications}
-              className="font-label-md text-label-md font-semibold text-primary hover:underline"
             >
               Thử lại
-            </button>
+            </Button>
           </div>
         )}
 
         {status === 'ready' && notifications.length === 0 && (
           <div className="py-10 text-center px-4 space-y-2">
-            <Icon name="notifications_off" className="text-4xl text-on-surface-variant/40 block" />
+            <Icon name="notifications_off" size="xl" className="text-on-surface-variant/40 block" />
             <p className="font-body-sm text-body-sm text-on-surface-variant">Bạn chưa có thông báo mới.</p>
           </div>
         )}

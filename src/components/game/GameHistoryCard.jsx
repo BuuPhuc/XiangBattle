@@ -87,7 +87,7 @@ export function GameHistoryCard({ game, showColor = false }) {
         {/* Opens the replay and starts Phân tích ván straight away. */}
         <Link to={`/replay/${game.gameId}?analyze=1`} aria-label={`Phân tích ván với ${opponentName}`}>
           <Button variant="outline-sm" size="sm">
-            <Icon name="query_stats" className="text-[16px]" />
+            <Icon name="query_stats" size="sm" />
             Phân tích
           </Button>
         </Link>

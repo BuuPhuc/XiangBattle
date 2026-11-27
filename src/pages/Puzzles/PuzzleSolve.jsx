@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import ChessBoard from '../../components/game/ChessBoard'
@@ -67,11 +68,11 @@ function PuzzleBoard({ puzzle }) {
 
       <aside className="w-full xl:w-96 flex flex-col gap-4 order-2" aria-label="Thế cờ">
         <Link to="/puzzles" className="inline-flex items-center gap-1 font-label-md text-label-md text-primary hover:underline">
-          <Icon name="arrow_back" className="text-base" />
+          <Icon name="arrow_back" size="sm" />
           Danh sách cờ thế
         </Link>
 
-        <div className="glass-panel border border-gold-shimmer/30 rounded-xl p-5 space-y-3">
+        <Card className="p-5 space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="font-label-sm text-label-sm text-on-surface-variant">Chiếu bí {puzzle.moves} nước · #{number}</p>
@@ -85,7 +86,7 @@ function PuzzleBoard({ puzzle }) {
           <p className="font-label-md text-label-md text-on-surface-variant" data-testid="puzzle-turn" aria-live="polite">
             {turnText(game)}
           </p>
-        </div>
+        </Card>
 
         <div className="min-h-16" aria-live="polite">
           {game.message && (
@@ -97,7 +98,7 @@ function PuzzleBoard({ puzzle }) {
 
         <div className="flex flex-wrap gap-2">
           <Button variant="outline-sm" size="sm" onClick={game.hint} disabled={busy} className={CONTROL_CLASS}>
-            <Icon name="lightbulb" className="text-base" /> Gợi ý
+            <Icon name="lightbulb" size="sm" /> Gợi ý
           </Button>
           <Button
             variant="outline-sm"
@@ -106,16 +107,16 @@ function PuzzleBoard({ puzzle }) {
             disabled={game.phase === PHASE.DEMO || game.phase === PHASE.CHECKING}
             className={CONTROL_CLASS}
           >
-            <Icon name="visibility" className="text-base" /> Xem lời giải
+            <Icon name="visibility" size="sm" /> Xem lời giải
           </Button>
           <Button variant="outline-sm" size="sm" onClick={game.reset} className={CONTROL_CLASS}>
-            <Icon name="restart_alt" className="text-base" /> Làm lại
+            <Icon name="restart_alt" size="sm" /> Làm lại
           </Button>
         </div>
 
         <Button as={Link} to={`/puzzles/${nextPuzzleId(puzzle.id)}`} variant={game.phase === PHASE.SOLVED ? 'primary' : 'outline'}>
           Thế tiếp theo
-          <Icon name="arrow_forward" className="text-base" />
+          <Icon name="arrow_forward" size="sm" />
         </Button>
       </aside>
     </div>
@@ -129,7 +130,7 @@ export function PuzzleSolve() {
   if (!puzzle) {
     return (
       <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-4">
-        <Icon name="extension_off" className="text-5xl text-on-surface-variant/50 block" />
+        <Icon name="extension_off" size="2xl" className="text-on-surface-variant/50 block" />
         <p className="font-body-md text-body-md text-on-surface-variant">Không tìm thấy thế cờ này.</p>
         <Button as={Link} to="/puzzles" variant="outline">
           Về danh sách cờ thế

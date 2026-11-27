@@ -12,7 +12,7 @@ export function SignInPrompt() {
 
   return (
     <div className="max-w-md mx-auto py-24 px-4 text-center space-y-5" data-testid="sign-in-prompt">
-      <Icon name="lock" className="text-5xl text-on-surface-variant/50 block" />
+      <Icon name="lock" size="2xl" className="text-on-surface-variant/50 block" />
       <h1 className="font-headline-sm text-headline-sm text-on-surface">Bạn cần đăng nhập</h1>
       <p className="font-body-md text-body-md text-on-surface-variant">
         Đăng nhập để dùng tính năng này. Chưa có tài khoản? Đăng ký miễn phí chỉ trong một phút.

@@ -149,7 +149,7 @@ export function AppSidebar() {
           >
             <Icon name={SOCIAL_ITEM.icon} filled={isSocialRoute} />
             <span className="flex-1 text-left">{SOCIAL_ITEM.label}</span>
-            <Icon name="chevron_right" className="text-[18px]" />
+            <Icon name="chevron_right" size="md" />
           </button>
 
           {socialOpen && (
