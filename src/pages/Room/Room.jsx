@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import Input from '../../components/ui/Input'
+import Alert from '../../components/ui/Alert'
 import Card from '../../components/ui/Card'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
@@ -118,9 +120,7 @@ export function Room() {
       <div className="space-y-2">
         {!opponentConnected && (
           <div className="max-w-xl mx-auto px-4 text-center">
-            <div className="px-4 py-1.5 rounded-lg bg-error/10 border border-error/30 text-error font-label-sm text-label-sm">
-              Đối thủ mất kết nối — đang chờ họ quay lại...
-            </div>
+            <Alert size="sm">Đối thủ mất kết nối — đang chờ họ quay lại...</Alert>
           </div>
         )}
         <ChessGame
@@ -157,15 +157,13 @@ export function Room() {
       </div>
 
       {notice && (
-        <div className="px-4 py-3 rounded-lg bg-secondary/10 border border-secondary/30 text-secondary font-label-md text-label-md text-center">
+        <Alert tone="success" className="text-center">
           {notice}
-        </div>
+        </Alert>
       )}
 
       {error && (
-        <div className="px-4 py-3 rounded-lg bg-error/10 border border-error/30 text-error font-label-md text-label-md text-center">
-          {error}
-        </div>
+        <Alert className="text-center">{error}</Alert>
       )}
 
       {!room && (
@@ -210,13 +208,14 @@ export function Room() {
             >
               <Icon name="login" size="xl" className="text-primary" />
               <h2 className="font-headline-sm text-headline-sm text-on-surface">Tham gia phòng</h2>
-              <input
+              <Input
                 type="text"
                 value={joinCode}
                 onChange={(event) => setJoinCode(event.target.value)}
                 placeholder="Mã phòng"
+                aria-label="Mã phòng"
                 maxLength={6}
-                className="w-full text-center tracking-[0.3em] uppercase font-label-lg text-label-lg px-4 py-2 rounded-lg border border-outline-variant bg-surface-container focus:outline-none focus:border-primary"
+                className="text-center tracking-[0.3em] uppercase font-label-lg text-label-lg"
               />
               <Button type="submit" variant="outline" disabled={pending || !joinCode.trim()} className="w-full disabled:opacity-50">
                 {pending ? 'Đang tham gia...' : 'Tham gia'}

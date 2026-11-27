@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import Alert from '../../components/ui/Alert'
+import { Field, Input } from '../../components/ui/Input'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import useAuth from '../../components/hooks/useAuth'
@@ -67,58 +69,51 @@ export function Login() {
 
       <Card as="form" padding="lg" onSubmit={handleSubmit} className="space-y-5">
         {sessionNotice && !formError && (
-          <div
-            role="status"
-            className="px-4 py-3 rounded-lg bg-secondary/10 border border-secondary/30 text-secondary font-label-md text-label-md text-center"
-          >
+          <Alert tone="success" className="text-center">
             {sessionNotice}
-          </div>
+          </Alert>
         )}
 
         {formError && (
-          <div className="px-4 py-3 rounded-lg bg-error/10 border border-error/30 text-error font-label-md text-label-md text-center space-y-2">
+          <Alert className="text-center space-y-2">
             <p>{formError}</p>
             {needsVerification && (
               <Button type="button" variant="outline" size="sm" onClick={handleResend} disabled={resendStatus === 'sending'}>
                 {resendStatus === 'sending' ? 'Đang gửi...' : 'Gửi lại email xác nhận'}
               </Button>
             )}
-          </div>
+          </Alert>
         )}
 
         {resendMessage && (
-          <div className="px-4 py-3 rounded-lg bg-secondary/10 border border-secondary/30 text-secondary font-label-md text-label-md text-center">
+          <Alert tone="success" className="text-center">
             {resendMessage}
-          </div>
+          </Alert>
         )}
 
-        <div className="space-y-1">
-          <label className="font-label-sm text-label-sm text-on-surface-variant">Email</label>
-          <input
+        <Field label="Email">
+          <Input
             type="email"
             value={form.email}
             onChange={handleChange('email')}
             required
             placeholder="player01@gmail.com"
-            className="w-full px-4 py-2 rounded-lg border border-outline-variant bg-surface-container focus:outline-none focus:border-primary"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-1">
-          <label className="font-label-sm text-label-sm text-on-surface-variant">Mật khẩu</label>
-          <input
+        <Field label="Mật khẩu">
+          <Input
             type="password"
             value={form.password}
             onChange={handleChange('password')}
             required
-            className="w-full px-4 py-2 rounded-lg border border-outline-variant bg-surface-container focus:outline-none focus:border-primary"
           />
           <div className="text-right">
             <Link to="/forgot-password" className="font-label-sm text-label-sm text-primary hover:underline">
               Quên mật khẩu?
             </Link>
           </div>
-        </div>
+        </Field>
 
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
