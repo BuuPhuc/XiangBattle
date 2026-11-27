@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Icon from '../../../components/ui/Icon'
+import Badge from '../../../components/ui/Badge'
 import Button from '../../../components/ui/Button'
 import { LESSON_STATUS, PIECE_CHARS, PIECE_NAMES } from '../../../features/academy/constants.js'
 
@@ -11,10 +12,10 @@ const STATUS_LABEL = {
   [LESSON_STATUS.COMPLETED]: 'Hoàn thành',
 }
 
-const STATUS_CLASS = {
-  [LESSON_STATUS.NOT_STARTED]: 'bg-surface-container text-on-surface-variant',
-  [LESSON_STATUS.IN_PROGRESS]: 'bg-tertiary-fixed/60 text-on-tertiary-fixed-variant',
-  [LESSON_STATUS.COMPLETED]: 'bg-jade-light text-secondary',
+const STATUS_TONE = {
+  [LESSON_STATUS.NOT_STARTED]: 'neutral',
+  [LESSON_STATUS.IN_PROGRESS]: 'warning',
+  [LESSON_STATUS.COMPLETED]: 'success',
 }
 
 export function BackButton({ to, label }) {
@@ -60,10 +61,9 @@ export function PieceBadge({ type, size = 48 }) {
 
 export function StatusBadge({ status }) {
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-sm text-label-sm ${STATUS_CLASS[status]}`}>
-      {status === LESSON_STATUS.COMPLETED && <Icon name="check_circle" size="xs" filled />}
+    <Badge tone={STATUS_TONE[status]} icon={status === LESSON_STATUS.COMPLETED ? 'check_circle' : undefined} iconFilled>
       {STATUS_LABEL[status]}
-    </span>
+    </Badge>
   )
 }
 

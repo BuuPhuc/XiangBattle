@@ -1,11 +1,13 @@
+import SharedBadge from '../../../components/ui/Badge'
 import Icon from '../../../components/ui/Icon'
 
+// A feature tag on the bento cards; without an icon it shows a green dot.
 function Badge({ icon, children }) {
   return (
-    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/50 text-label-sm font-label-sm text-on-surface border border-outline-variant/20">
-      {icon ? <Icon name={icon} size="sm" /> : <span className="w-2 h-2 rounded-full bg-secondary" />}
+    <SharedBadge tone="glass" icon={icon}>
+      {!icon && <span className="w-2 h-2 rounded-full bg-secondary" />}
       {children}
-    </span>
+    </SharedBadge>
   )
 }
 

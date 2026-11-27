@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Badge from '../../../components/ui/Badge'
 import { countCourseChallenges, getCourseProgress } from '../../../features/academy/catalog.js'
 import { COURSE_LEVELS } from '../../../features/academy/constants.js'
 import { academyPaths } from '../../../features/academy/paths.js'
@@ -22,9 +23,7 @@ export function CourseCard({ course, completedIds }) {
       <div className="p-4 flex flex-col gap-3 flex-1">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           {level && (
-            <span className="px-2.5 py-1 rounded-full bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
-              {level.label}
-            </span>
+            <Badge>{level.label}</Badge>
           )}
           <StatusBadge status={progress.status} />
         </div>
